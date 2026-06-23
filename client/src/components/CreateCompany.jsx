@@ -119,7 +119,8 @@ export default function CreateCompany() {
       Object.keys(formData).forEach((key) => companyData.append(key, formData[key]));
 
       const response = await axios.post("http://localhost:5000/api/companies", companyData, {
-        headers: { "Content-Type": "multipart/form-data" },
+        withCredentials: true,
+        headers: {"Content-Type": "multipart/form-data" },
       });
 
       setSnackbar({ open: true, message: response.data.message, severity: "success" });
