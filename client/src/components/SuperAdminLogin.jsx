@@ -1,6 +1,6 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, LogIn, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
@@ -114,10 +114,21 @@ const SuperAdminLogin = () => {
               </motion.button>
             </form>
           </div>
-
-          <p className="text-center text-slate-600 text-xs mt-6">
-            Restricted access — authorized personnel only
-          </p>
+<div className="text-center mt-6 space-y-2">
+  <p className="text-slate-600 text-xs">
+    Restricted access — authorized personnel only
+  </p>
+  <p className="text-slate-500 text-sm flex items-center justify-center gap-1.5">
+    New admin?{" "}
+    <Link
+      to="/create-super-admin"
+      className="text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center gap-1 transition-colors"
+    >
+      Register as Super Admin
+      <LogIn className="w-3.5 h-3.5" />
+    </Link>
+  </p>
+</div>
         </motion.div>
       </div>
     </div>

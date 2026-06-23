@@ -23,8 +23,14 @@ import ResetPassword from "./components/ResetPassword";
 import ForgotPassword from "./components/ForgotPassword";
 import CreateEmployeeSalary from "./components/CreateEmployeeSalary";
 import EditEmployeeSalary from "./components/EditEmployeeSalary";
+import LandingPage from "./components/LandingPage";
 
 const router = createBrowserRouter([
+  // landing page
+  {
+    path: "/",
+    element: <LandingPage />,
+  },
   // create super admin
   {
     path: "/create-super-admin",
@@ -33,7 +39,7 @@ const router = createBrowserRouter([
 
 // admin login
   {
-    path: "/",
+    path: "/admin-login",
     element: <SuperAdminLogin />,
   },
 
