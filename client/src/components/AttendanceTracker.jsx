@@ -257,6 +257,7 @@ const AttendanceTracker = () => {
                             <th className="px-4 py-3 text-left font-medium">
                               <span className="flex items-center gap-1"><LogOut size={12}/>Check Out</span>
                             </th>
+                            <th className="px-4 py-3 text-left font-medium">Shift</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -283,6 +284,20 @@ const AttendanceTracker = () => {
                                   <Clock size={12}/>{item.checkOutTime || "—"}
                                 </span>
                               </td>
+                                    <td>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium
+          ${
+            item.shift === "day"
+              ? "bg-yellow-500/20 text-yellow-400"
+              : item.shift === "afternoon"
+              ? "bg-orange-500/20 text-orange-400"
+              : "bg-indigo-500/20 text-indigo-400"
+          }`}
+        >
+          {item.shift}
+        </span>
+      </td>
                             </TableRow>
                           ))}
                         </tbody>
@@ -414,6 +429,7 @@ const AttendanceTracker = () => {
                             <th className="px-4 py-3 text-left font-medium">
                               <span className="flex items-center gap-1"><LogOut size={12}/>Check Out</span>
                             </th>
+                            <th className="px-4 py-3 text-left font-medium">Shift</th>
                             <th className="px-4 py-3 text-left font-medium">Status</th>
                           </tr>
                         </thead>
@@ -432,6 +448,20 @@ const AttendanceTracker = () => {
                                   <Clock size={12}/>{item.checkOutTime || "—"}
                                 </span>
                               </td>
+                              <td>
+  <span
+    className={`px-2 py-1 rounded-full text-xs font-medium
+    ${
+      item.shift === "day"
+        ? "bg-yellow-500/20 text-yellow-400"
+        : item.shift === "afternoon"
+        ? "bg-orange-500/20 text-orange-400"
+        : "bg-indigo-500/20 text-indigo-400"
+    }`}
+  >
+    {item.shift}
+  </span>
+</td>
                               <td className="px-4 py-3.5">
                                 {item.checkInTime ? (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full

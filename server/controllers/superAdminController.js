@@ -181,7 +181,11 @@ export const getAttendanceByDate = async (req, res) => {
       path: "employeeId",
       select: "name empId email",
     });
-
+const shiftSummary = {
+  day: attendance.filter(a => a.shift === "day").length,
+  afternoon: attendance.filter(a => a.shift === "afternoon").length,
+  night: attendance.filter(a => a.shift === "night").length,
+};
     // -----------------------------
     // 👉 UTC → IST conversion (response)
     // -----------------------------
@@ -203,11 +207,11 @@ export const getAttendanceByDate = async (req, res) => {
 
       return obj;
     });
-
-    return res.status(200).json({
-      success: true,
-      attendance: converted,
-    });
+return res.status(200).json({
+  success: true,
+  shiftSummary,
+  attendance: converted,
+});
 
   } catch (error) {
     console.log(error);
@@ -255,6 +259,12 @@ export const getEmployeeMonthlyAttendance = async (req, res) => {
       },
     }).sort({ date: 1 });
 
+    const shiftSummary = {
+  day: attendance.filter(a => a.shift === "day").length,
+  afternoon: attendance.filter(a => a.shift === "afternoon").length,
+  night: attendance.filter(a => a.shift === "night").length,
+};
+
     const monthlyAttendance = attendance.map((item) => {
       const obj = item.toObject();
 
@@ -273,16 +283,21 @@ export const getEmployeeMonthlyAttendance = async (req, res) => {
       return obj;
     });
 
-    return res.status(200).json({
-      success: true,
-      employee: {
-        _id: employee._id,
-        name: employee.name,
-        empId: employee.empId,
-      },
-      totalDays: monthlyAttendance.length,
-      attendance: monthlyAttendance,
-    });
+return res.status(200).json({
+  success: true,
+
+  employee: {
+    _id: employee._id,
+    name: employee.name,
+    empId: employee.empId,
+  },
+
+  totalDays: monthlyAttendance.length,
+
+  shiftSummary,
+
+  attendance: monthlyAttendance,
+});
 
   } catch (error) {
     return res.status(500).json({

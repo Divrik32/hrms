@@ -2,6 +2,16 @@ import Attendance from "../models/attendanceModel.js";
 import Employee from "../models/employeeModel.js";
 
 
+const getTimingStatus = (totalMinutes, earlyLimit, lateLimit) => {
+  if (totalMinutes < earlyLimit) {
+    return "early";
+  }
+  if (totalMinutes >lateLimit) {
+    return "late";
+  }
+  return "inTime";
+};
+
 // ===============================
 // Helper: Date (dd-mm-yyyy)
 // ===============================
@@ -99,16 +109,16 @@ export const checkIn = async (req, res) => {
       timing = "inTime";
     }
 
-    attendance = await Attendance.create({
-      employeeId,
-      companyId: employee.companyId,
-      departmentId: employee.departmentId,
-      date: today,
-      status: "Present",
-      timing,
-      checkInTime: time,
-      checkOutTime: "",
-    });
+attendance = await Attendance.create({
+  employeeId,
+  companyId: employee.companyId,
+  departmentId: employee.departmentId,
+  date: today,
+  shift: "day",
+  status: "Present",
+  timing,
+  checkInTime: time,
+});
 
     return res.status(200).json({
       success: true,
@@ -124,7 +134,6 @@ export const checkIn = async (req, res) => {
     });
   }
 };
-
 
 // ===============================
 // CHECK-OUT
@@ -160,6 +169,198 @@ export const checkOut = async (req, res) => {
       "CheckOut Error:",
       error
     );
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const afternoonCheckIn = async (req, res) => {
+  try {
+    const employeeId = req.user._id;
+
+    const employee = await Employee.findById(employeeId);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const openAttendance = await Attendance.findOne({
+      employeeId,
+      shift: "afternoon",
+      checkOutTime: "",
+    });
+
+    if (openAttendance) {
+      return res.status(400).json({
+        success: false,
+        message: "Already checked in",
+      });
+    }
+
+    const now = new Date();
+
+    const totalMinutes =
+      now.getHours() * 60 + now.getMinutes();
+
+    const timing = getTimingStatus(
+      totalMinutes,
+      11 * 60 + 51,
+      12 * 60 + 20
+    );
+
+    const attendance = await Attendance.create({
+      employeeId,
+      companyId: employee.companyId,
+      departmentId: employee.departmentId,
+      date: new Date(),
+      shift: "afternoon",
+      status: "Present",
+      timing,
+      checkInTime: getFormattedTime(),
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Afternoon check-in successful",
+      attendance,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const afternoonCheckOut = async (req, res) => {
+  try {
+    const employeeId = req.user._id;
+
+    const attendance = await Attendance.findOne({
+      employeeId,
+      shift: "afternoon",
+      checkOutTime: "",
+    }).sort({
+      createdAt: -1,
+    });
+
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: "No active afternoon shift found",
+      });
+    }
+
+    attendance.checkOutTime = getFormattedTime();
+
+    await attendance.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Afternoon check-out successful",
+      attendance,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const nightCheckIn = async (req, res) => {
+  try {
+    const employeeId = req.user._id;
+
+    const employee = await Employee.findById(employeeId);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const openAttendance = await Attendance.findOne({
+      employeeId,
+      shift: "night",
+      checkOutTime: "",
+    });
+
+    if (openAttendance) {
+      return res.status(400).json({
+        success: false,
+        message: "Already checked in",
+      });
+    }
+
+    const now = new Date();
+    const totalMinutes = now.getHours() * 60 + now.getMinutes();
+
+    const timing = getTimingStatus(
+      totalMinutes,
+      17 * 60 + 51,
+      18 * 60 + 20
+    );
+
+    const attendance = await Attendance.create({
+      employeeId,
+      companyId: employee.companyId,
+      departmentId: employee.departmentId,
+      date: new Date(),
+      shift: "night",
+      status: "Present",
+      timing,
+      checkInTime: getFormattedTime(),
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Night check-in successful",
+      attendance,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const nightCheckOut = async (req, res) => {
+  try {
+    const employeeId = req.user._id;
+
+    const attendance = await Attendance.findOne({
+      employeeId,
+      shift: "night",
+      checkOutTime: "",
+    }).sort({
+      createdAt: -1,
+    });
+
+    if (!attendance) {
+      return res.status(404).json({
+        success: false,
+        message: "No active night shift found",
+      });
+    }
+
+    attendance.checkOutTime = getFormattedTime();
+
+    await attendance.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Night check-out successful",
+      attendance,
+    });
+  } catch (error) {
     return res.status(500).json({
       success: false,
       message: error.message,

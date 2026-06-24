@@ -31,6 +31,17 @@ const attendanceSchema = new mongoose.Schema(
       default: "Present",
     },
 
+    shift: {
+      type: String,
+      enum: [
+        "day",
+        "afternoon",
+        "night",
+      ],
+      required: true,
+      default: "day",
+    },
+
     checkInTime: {
       type: String,
       default: "",
@@ -43,7 +54,7 @@ const attendanceSchema = new mongoose.Schema(
         "inTime",
         "late",
       ],
-      default: "inTime",
+      default: "inTime"
     },
 
     checkOutTime: {
