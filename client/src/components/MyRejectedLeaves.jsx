@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   XCircle,
@@ -163,8 +163,8 @@ const MyRejectedLeaves = () => {
 
   const fetchRejectedLeaves = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/leaves/my-rejected-leaves",
+      const res = await api.get(
+        "/leaves/my-rejected-leaves",
         { withCredentials: true }
       );
       setLeaves(res.data.leaves);

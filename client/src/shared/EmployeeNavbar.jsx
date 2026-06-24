@@ -1,5 +1,5 @@
 import { ShieldCheck, LogOut } from "lucide-react";
-import axios from "axios";
+import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -12,8 +12,8 @@ const EmployeeNavbar = ({ employee, sidebarOpen, setSidebarOpen }) => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/employees/logout",
+      await api.post(
+        "/employees/logout",
         {},
         { withCredentials: true }
       );

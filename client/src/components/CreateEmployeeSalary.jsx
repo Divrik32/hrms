@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, IndianRupee, Building2, CheckCircle2, Loader2, Sparkles } from "lucide-react";
@@ -35,14 +35,14 @@ const CreateEmployeeSalary = () => {
 
   const fetchCompanies = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/companies");
+      const res = await api.get("/companies");
       setCompanies(res.data.companies);
     } catch (error) { console.log(error); }
   };
 
   const fetchEmployeesByCompany = async (companyId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/employees/company/${companyId}`);
+      const res = await api.get(`/employees/company/${companyId}`);
       setEmployees(res.data.employees);
     } catch (error) { console.log(error); }
   };
@@ -64,8 +64,8 @@ const CreateEmployeeSalary = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await axios.post(
-        "http://localhost:5000/api/payroll/create-salary-structure",
+      const res = await api.post(
+        "/payroll/create-salary-structure",
         { ...formData, ctc },
         { withCredentials: true }
       );

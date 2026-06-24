@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Building2, LayoutGrid, LogOut, ShieldCheck, Mail, Tag, ChevronRight, CalendarClock, ClipboardCheck } from "lucide-react";
@@ -65,8 +65,8 @@ const SuperAdminDashboard = () => {
     async () => {
       try {
         const res =
-          await axios.get(
-            "http://localhost:5000/api/leaves/pending",
+          await api.get(
+            "/leaves/pending",
             {
               withCredentials: true,
             }
@@ -85,8 +85,8 @@ const SuperAdminDashboard = () => {
 
   const handleAttendanceTracker = async () => {
   try {
-    const res = await axios.get(
-      "http://localhost:5000/api/companies"
+    const res = await api.get(
+      "/companies"
     );
 
     const companies = res.data.companies;
@@ -103,8 +103,8 @@ const SuperAdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/superadmin/logout",
+      await api.post(
+        "/superadmin/logout",
         {},
         { withCredentials: true }
       );

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, IndianRupee, Building2, PencilLine, Loader2, RefreshCw, CheckCircle2 } from "lucide-react";
@@ -31,14 +31,14 @@ const EditEmployeeSalary = () => {
 
   const fetchCompanies = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/companies");
+      const res = await api.get("/companies");
       setCompanies(res.data.companies);
     } catch (error) { console.log(error); }
   };
 
   const fetchEmployeesByCompany = async (companyId) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/employees/company/${companyId}`);
+      const res = await api.get(`/employees/company/${companyId}`);
       setEmployees(res.data.employees);
     } catch (error) { console.log(error); }
   };
@@ -46,8 +46,8 @@ const EditEmployeeSalary = () => {
   const fetchSalaryStructure = async (employeeId) => {
     try {
       setSalaryLoading(true);
-      const res = await axios.get(
-        `http://localhost:5000/api/payroll/salary-structure/${employeeId}`,
+      const res = await api.get(
+        `/payroll/salary-structure/${employeeId}`,
         { withCredentials: true }
       );
       const salary = res.data.salaryStructure;
@@ -90,8 +90,8 @@ const EditEmployeeSalary = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await axios.put(
-        `http://localhost:5000/api/payroll/update-salary-structure/${formData.employeeId}`,
+      const res = await api.put(
+        `/payroll/update-salary-structure/${formData.employeeId}`,
         { companyId: formData.companyId, employeeId: formData.employeeId,
           inHandSalary: formData.inHandSalary, pf: formData.pf, esi: formData.esi, tax: formData.tax, ctc },
         { withCredentials: true }

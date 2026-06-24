@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -66,8 +66,8 @@ const ApplyLeaveRequest = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await axios.post(
-        "http://localhost:5000/api/leaves/apply",
+      const res = await api.post(
+        "/leaves/apply",
         {
           leaveType,
           fromDate,

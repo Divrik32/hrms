@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { Building2, Briefcase, FileText, ChevronDown, CheckCircle2, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
@@ -20,7 +20,7 @@ const CreateDepartment = () => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/companies");
+        const res = await api.get("/companies");
         setCompanies(res.data.companies || []);
       } catch (error) {
         console.log(error);
@@ -44,7 +44,7 @@ const CreateDepartment = () => {
     e.preventDefault();
     setStatus("loading");
     try {
-      const res = await axios.post("http://localhost:5000/api/departments", formData);
+      const res = await api.post("/departments", formData);
       setStatus("success");
       setStatusMessage(res.data.message);
       setFormData({ departmentName: "", companyId: "", description: "" });

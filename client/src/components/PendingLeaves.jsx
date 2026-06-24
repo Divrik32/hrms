@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion } from "framer-motion";
 import {
   CalendarClock,
@@ -24,8 +24,8 @@ const [actionType, setActionType] = useState(""); // approve / reject
     async () => {
       try {
         const res =
-          await axios.get(
-            "http://localhost:5000/api/leaves/pending",
+          await api.get(
+            "/leaves/pending",
             {
               withCredentials: true,
             }
@@ -49,8 +49,8 @@ const [actionType, setActionType] = useState(""); // approve / reject
     async (leaveId) => {
       try {
         const res =
-await axios.put(
-  `http://localhost:5000/api/leaves/approve/${leaveId}`,
+await api.put(
+  `/leaves/approve/${leaveId}`,
   {
     adminRemark,
   },
@@ -74,8 +74,8 @@ await axios.put(
 
 const rejectLeave = async (leaveId) => {
   try {
-const res = await axios.put(
-  `http://localhost:5000/api/leaves/reject/${leaveId}`,
+const res = await api.put(
+  `/leaves/reject/${leaveId}`,
   {
     adminRemark,
   },

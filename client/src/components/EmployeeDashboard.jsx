@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -70,11 +70,11 @@ const EmployeeDashboard = () => {
     try {
       setLoading(true);
       const urlMap = {
-        day:       "http://localhost:5000/api/attendance/checkin",
-        afternoon: "http://localhost:5000/api/attendance/afternoon-checkin",
-        night:     "http://localhost:5000/api/attendance/night-checkin",
+        day:       "/attendance/checkin",
+        afternoon: "/attendance/afternoon-checkin",
+        night:     "/attendance/night-checkin",
       };
-      const res = await axios.post(urlMap[selectedShift] ?? urlMap.day, {}, { withCredentials: true });
+      const res = await api.post(urlMap[selectedShift] ?? urlMap.day, {}, { withCredentials: true });
       setLastAction({ type: "in", message: res.data.message, timing: res.data.attendance?.timing });
       toast.success(res.data.message);
     } catch (err) {
@@ -88,11 +88,11 @@ const EmployeeDashboard = () => {
     try {
       setLoading(true);
       const urlMap = {
-        day:       "http://localhost:5000/api/attendance/checkout",
-        afternoon: "http://localhost:5000/api/attendance/afternoon-checkout",
-        night:     "http://localhost:5000/api/attendance/night-checkout",
+        day:       "/attendance/checkout",
+        afternoon: "/attendance/afternoon-checkout",
+        night:     "/attendance/night-checkout",
       };
-      const res = await axios.post(urlMap[selectedShift] ?? urlMap.day, {}, { withCredentials: true });
+      const res = await api.post(urlMap[selectedShift] ?? urlMap.day, {}, { withCredentials: true });
       setLastAction({ type: "out", message: res.data.message });
       toast.success(res.data.message);
     } catch (err) {

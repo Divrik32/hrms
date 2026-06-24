@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import EmployeeSection from "../components/EmployeeSection";
 import CompanyNavbar from "../shared/CompanyNavbar";
 import { Outlet, useParams } from "react-router-dom";
@@ -24,8 +24,8 @@ const CompanyDashboardLayout = () => {
 
   const fetchCompanies = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/companies"
+      const res = await api.get(
+        "/companies"
       );
       setCompanies(res.data.companies);
 
@@ -36,8 +36,8 @@ const CompanyDashboardLayout = () => {
 
   const fetchCompanyById = async () => {
   try {
-    const res = await axios.get(
-      `http://localhost:5000/api/companies/${companyId}`
+    const res = await api.get(
+      `/companies/${companyId}`
     );
 
     loadCompanyData(res.data.company);
@@ -54,8 +54,8 @@ const CompanyDashboardLayout = () => {
       setSelectedCompany(company);
 
       const departmentRes =
-        await axios.get(
-          `http://localhost:5000/api/departments/company/${company._id}`
+        await api.get(
+          `/departments/company/${company._id}`
         );
 
       setDepartments(
@@ -68,8 +68,8 @@ const CompanyDashboardLayout = () => {
         let department of departmentRes.data.departments
       ) {
         const empRes =
-          await axios.get(
-            `http://localhost:5000/api/employees/department/${department._id}`
+          await api.get(
+            `/employees/department/${department._id}`
           );
 
         employeesObj[department._id] = empRes.data.employees;

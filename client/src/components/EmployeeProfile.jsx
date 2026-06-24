@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -46,8 +46,8 @@ const EmployeeProfile = () => {
         //   );
 
         const res =
-          await axios.get(
-            `http://localhost:5000/api/employees/profile/me`,
+          await api.get(
+            `/employees/profile/me`,
             {
               withCredentials: true,
             }

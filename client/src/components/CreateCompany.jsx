@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Building2,
@@ -118,7 +118,7 @@ export default function CreateCompany() {
       const companyData = new FormData();
       Object.keys(formData).forEach((key) => companyData.append(key, formData[key]));
 
-      const response = await axios.post("http://localhost:5000/api/companies", companyData, {
+      const response = await api.post("/companies", companyData, {
         withCredentials: true,
         headers: {"Content-Type": "multipart/form-data" },
       });

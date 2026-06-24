@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarDays,
@@ -202,7 +202,7 @@ const MyLeaves = () => {
 
   const fetchMyLeaves = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/leaves/my-leaves", {
+      const res = await api.get("/leaves/my-leaves", {
         withCredentials: true,
       });
       setLeaves(res.data.leaves);
@@ -215,8 +215,8 @@ const MyLeaves = () => {
 
   const withdrawLeave = async (leaveId) => {
     try {
-      const res = await axios.delete(
-        `http://localhost:5000/api/leaves/withdraw/${leaveId}`,
+      const res = await api.delete(
+        `/leaves/withdraw/${leaveId}`,
         { withCredentials: true }
       );
       toast.success(res.data.message);

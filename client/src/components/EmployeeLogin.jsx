@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, LogIn, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
@@ -26,13 +26,14 @@ const EmployeeLogin = () => {
   };
 
   const handleSubmit = async (e) => {
+    console.log(import.meta.env.VITE_API_URL);
     e.preventDefault();
 
     try {
       setLoading(true);
 
-      const res = await axios.post(
-        "http://localhost:5000/api/employees/login",
+      const res = await api.post(
+        "/employees/login",
         formData,
         {
           withCredentials: true,

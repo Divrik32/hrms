@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User,
@@ -137,7 +137,7 @@ const CreateEmployee = () => {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/companies")
+      .get("/companies")
       .then((res) => setCompanies(res.data.companies || []))
       .catch((err) => console.log(err));
   }, []);
@@ -145,7 +145,7 @@ const CreateEmployee = () => {
   useEffect(() => {
     if (!formData.companyId) return;
     axios
-      .get(`http://localhost:5000/api/departments/company/${formData.companyId}`)
+      .get(`/departments/company/${formData.companyId}`)
       .then((res) => setDepartments(res.data.departments || []))
       .catch((err) => console.log(err));
   }, [formData.companyId]);
@@ -171,7 +171,7 @@ const CreateEmployee = () => {
     try {
       const data = new FormData();
       Object.keys(formData).forEach((key) => data.append(key, formData[key]));
-      const res = await axios.post("http://localhost:5000/api/employees", data, {
+      const res = await api.post("/employees", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       showToast("success", res.data.message || "Employee created successfully!");

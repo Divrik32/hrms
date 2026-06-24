@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -99,8 +99,8 @@ const AttendanceTracker = () => {
 
   const getEmployees = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/employees/company/${companyId}`
+      const res = await api.get(
+        `/employees/company/${companyId}`
       );
       setEmployees(res.data.employees || []);
     } catch (error) { console.log(error); }
@@ -109,8 +109,8 @@ const AttendanceTracker = () => {
   const getAttendanceByDate = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/superadmin/date",
+      const res = await api.post(
+        "/superadmin/date",
         { date },
         { withCredentials: true }
       );
@@ -122,8 +122,8 @@ const AttendanceTracker = () => {
   const getMonthlyAttendance = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/superadmin/monthly",
+      const res = await api.post(
+        "/superadmin/monthly",
         { employeeId, month, year },
         { withCredentials: true }
       );

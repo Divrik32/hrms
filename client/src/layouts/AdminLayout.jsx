@@ -4,7 +4,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import axios from "axios";
+import api from "../services/axios";
 import SuperAdminNavbar from "../shared/SuperAdminNavbar";
 
 const AdminLayout = () => {
@@ -16,8 +16,8 @@ const AdminLayout = () => {
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/superadmin/logout",
+      await api.post(
+        "/superadmin/logout",
         {},
         {
           withCredentials: true,

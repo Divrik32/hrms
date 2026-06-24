@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, KeyRound, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, CheckCircle2 } from "lucide-react";
@@ -24,8 +24,8 @@ const ResetPassword = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await axios.post(
-        "http://localhost:5000/api/employees/reset-password",
+      const res = await api.post(
+        "/employees/reset-password",
         form
       );
       toast.success(res.data.message);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Upload, ShieldCheck, CheckCircle } from "lucide-react";
 import toast from "react-hot-toast";
@@ -34,8 +34,8 @@ const CreateSuperAdmin = () => {
       Object.keys(formData).forEach((key) => {
         superAdminData.append(key, formData[key]);
       });
-      const res = await axios.post(
-        "http://localhost:5000/api/superadmin/register",
+      const res = await api.post(
+        "/superadmin/register",
         superAdminData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );

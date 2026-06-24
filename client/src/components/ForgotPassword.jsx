@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { Mail, Send, ArrowLeft, ShieldAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,8 +16,8 @@ const ForgotPassword = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await axios.post(
-        "http://localhost:5000/api/employees/forgot-password",
+      const res = await api.post(
+        "/employees/forgot-password",
         { email }
       );
       toast.success(res.data.message);

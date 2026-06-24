@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -26,7 +26,7 @@ const ProfileSection = () => {
 
   const getCompany = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/companies/${companyId}`);
+      const res = await api.get(`/companies/${companyId}`);
       setCompany(res.data.company);
     } catch (err) {
       console.log(err);

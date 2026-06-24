@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/axios";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Mail, Lock, LogIn, ShieldCheck } from "lucide-react";
@@ -18,8 +18,8 @@ const SuperAdminLogin = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/superadmin/login",
+      const res = await api.post(
+        "/superadmin/login",
         formData,
         { withCredentials: true }
       );
