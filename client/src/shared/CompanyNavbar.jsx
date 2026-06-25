@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Users, ArrowLeft, ChevronDown, Building2, LayoutDashboard, UserSquare2, CalendarClock, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { BACKEND_URL } from "../../utils/api";
+
 
 const NAV_LINKS = (id) => [
   {
@@ -83,7 +85,7 @@ const CompanyNavbar = ({ companies, selectedCompany, onCompanyChange }) => {
               <img
                 src={
                   selectedCompany?.logo
-                    ? `http://localhost:5000/uploads/${selectedCompany.logo}`
+                    ? `${BACKEND_URL}/uploads/${selectedCompany.logo}`
                     : "https://placehold.co/60"
                 }
                 alt={selectedCompany?.companyName}
@@ -150,7 +152,7 @@ const CompanyNavbar = ({ companies, selectedCompany, onCompanyChange }) => {
                           <img
                             src={
                               company?.logo
-                                ? `http://localhost:5000/uploads/${company.logo}`
+                                ? `${BACKEND_URL}/uploads/${company.logo}`
                                 : "https://placehold.co/40"
                             }
                             alt=""

@@ -8,6 +8,8 @@ import {
   AlertCircle, Briefcase, Building2,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { BACKEND_URL } from "../../utils/api";
+
 
 
 const fadeIn = (delay = 0) => ({
@@ -54,7 +56,7 @@ const ProfileSection = () => {
   );
 
   const logoSrc = company.logo
-    ? `http://localhost:5000/uploads/${company.logo}`
+    ? `${BACKEND_URL}/uploads/${company.logo}`
     : `https://placehold.co/80x80/2d1160/a78bfa?text=${encodeURIComponent((company.companyName || "C")[0])}`;
 
   return (

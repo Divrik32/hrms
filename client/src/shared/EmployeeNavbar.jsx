@@ -6,6 +6,8 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { BACKEND_URL } from "../../utils/api";
+
 
 const EmployeeNavbar = ({ employee, sidebarOpen, setSidebarOpen }) => {
   const navigate = useNavigate();
@@ -66,7 +68,7 @@ const EmployeeNavbar = ({ employee, sidebarOpen, setSidebarOpen }) => {
               <img
                 src={
                   employee.profilePic
-                    ? `http://localhost:5000/uploads/${employee.profilePic}`
+                    ? `${BACKEND_URL}/uploads/${employee.profilePic}`
                     : "https://placehold.co/40x40"
                 }
                 alt="profile"

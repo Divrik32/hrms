@@ -13,6 +13,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { BACKEND_URL } from "../../utils/api";
 
 
 const fadeIn = (delay = 0) => ({
@@ -92,7 +93,7 @@ const EmployeeProfile = () => {
 
  const profilePic =
   employee.profilePic
-    ? `http://localhost:5000/uploads/${employee.profilePic}`
+    ? `${BACKEND_URL}/uploads/${employee.profilePic}`
     : `https://placehold.co/120x120/2d1160/a78bfa?text=${employee.name?.charAt(0)}`;
 
 

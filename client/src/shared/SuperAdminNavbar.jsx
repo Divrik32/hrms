@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, LogOut, LayoutDashboard } from "lucide-react";
+import { BACKEND_URL } from "../../utils/api";
+
 
 const SuperAdminNavbar = ({
   user,
@@ -43,7 +45,7 @@ const SuperAdminNavbar = ({
             <img
               src={
                 user.profilePic
-                  ? `http://localhost:5000/uploads/${user.profilePic}`
+                  ? `${BACKEND_URL}/uploads/${user.profilePic}`
                   : "https://placehold.co/40x40"
               }
               alt="profile"
