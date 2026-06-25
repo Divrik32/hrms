@@ -156,21 +156,19 @@ export const logoutSuperAdmin =
 
 export const getAttendanceByDate = async (req, res) => {
   try {
-    const { date } = req.body; // "2026-06-15"
+    const { date } = req.body; // "2026-06-13"
 
-    // 👉 IST date as input
-    const inputDate = new Date(date);
+    const [year, month, day] = date.split("-").map(Number);
 
-    // 👉 Convert to UTC range (IST day boundary)
-    const startIST = new Date(inputDate);
-    startIST.setHours(0, 0, 0, 0);
+    // IST day start -> UTC
+    const startUTC = new Date(
+      Date.UTC(year, month - 1, day - 1, 18, 30, 0, 0)
+    );
 
-    const endIST = new Date(inputDate);
-    endIST.setHours(23, 59, 59, 999);
-
-    // 👉 Convert IST → UTC explicitly
-    const startUTC = new Date(startIST.toISOString());
-    const endUTC = new Date(endIST.toISOString());
+    // IST day end -> UTC
+    const endUTC = new Date(
+      Date.UTC(year, month - 1, day, 18, 29, 59, 999)
+    );
 
     const attendance = await Attendance.find({
       date: {
@@ -181,19 +179,17 @@ export const getAttendanceByDate = async (req, res) => {
       path: "employeeId",
       select: "name empId email",
     });
-const shiftSummary = {
-  day: attendance.filter(a => a.shift === "day").length,
-  afternoon: attendance.filter(a => a.shift === "afternoon").length,
-  night: attendance.filter(a => a.shift === "night").length,
-};
-    // -----------------------------
-    // 👉 UTC → IST conversion (response)
-    // -----------------------------
+
+    const shiftSummary = {
+      day: attendance.filter((a) => a.shift === "day").length,
+      afternoon: attendance.filter((a) => a.shift === "afternoon").length,
+      night: attendance.filter((a) => a.shift === "night").length,
+    };
 
     const converted = attendance.map((item) => {
       const obj = item.toObject();
 
-      obj.date = new Date(obj.date).toLocaleString("en-IN", {
+      obj.date = new Date(obj.date).toLocaleDateString("en-IN", {
         timeZone: "Asia/Kolkata",
       });
 
@@ -207,12 +203,12 @@ const shiftSummary = {
 
       return obj;
     });
-return res.status(200).json({
-  success: true,
-  shiftSummary,
-  attendance: converted,
-});
 
+    return res.status(200).json({
+      success: true,
+      shiftSummary,
+      attendance: converted,
+    });
   } catch (error) {
     console.log(error);
 
