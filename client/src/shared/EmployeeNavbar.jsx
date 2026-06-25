@@ -6,7 +6,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { BACKEND_URL } from "../../utils/api";
+import { BACKEND_URL } from "../services/axios";
 
 
 const EmployeeNavbar = ({ employee, sidebarOpen, setSidebarOpen }) => {

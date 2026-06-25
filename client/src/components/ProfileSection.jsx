@@ -8,7 +8,7 @@ import {
   AlertCircle, Briefcase, Building2,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { BACKEND_URL } from "../../utils/api";
+import { BACKEND_URL } from "../services/axios";
 
 
 

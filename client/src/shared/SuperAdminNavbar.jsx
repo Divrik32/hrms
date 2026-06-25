@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ShieldCheck, LogOut, LayoutDashboard } from "lucide-react";
-import { BACKEND_URL } from "../../utils/api";
+import { BACKEND_URL } from "../services/axios";
 
 
 const SuperAdminNavbar = ({

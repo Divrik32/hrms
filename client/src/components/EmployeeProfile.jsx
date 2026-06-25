@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../services/axios";
+import api, { BACKEND_URL } from "../services/axios";
 import { motion } from "framer-motion";
 import {
   Mail,
@@ -13,7 +13,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { BACKEND_URL } from "../../utils/api";
 
 
 const fadeIn = (delay = 0) => ({
