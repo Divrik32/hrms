@@ -136,7 +136,7 @@ const CreateEmployee = () => {
   ];
 
   useEffect(() => {
-    axios
+    api
       .get("/companies")
       .then((res) => setCompanies(res.data.companies || []))
       .catch((err) => console.log(err));
@@ -144,7 +144,7 @@ const CreateEmployee = () => {
 
   useEffect(() => {
     if (!formData.companyId) return;
-    axios
+    api
       .get(`/departments/company/${formData.companyId}`)
       .then((res) => setDepartments(res.data.departments || []))
       .catch((err) => console.log(err));

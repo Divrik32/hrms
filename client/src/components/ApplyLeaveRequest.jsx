@@ -67,7 +67,7 @@ const ApplyLeaveRequest = () => {
     try {
       setLoading(true);
       const res = await api.post(
-        "/api/leaves/apply",
+        "/leaves/apply",
         {
           leaveType,
           fromDate,

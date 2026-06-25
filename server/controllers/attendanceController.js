@@ -109,16 +109,16 @@ export const checkIn = async (req, res) => {
       timing = "inTime";
     }
 
-attendance = await Attendance.create({
-  employeeId,
-  companyId: employee.companyId,
-  departmentId: employee.departmentId,
-  date: today,
-  shift: "day",
-  status: "Present",
-  timing,
-  checkInTime: time,
-});
+   attendance = await Attendance.create({
+     employeeId,
+     companyId: employee.companyId,
+     departmentId: employee.departmentId,
+     date: today,
+     shift: "day",
+     status: "Present",
+     timing,
+     checkInTime: time,
+   });
 
     return res.status(200).json({
       success: true,
@@ -212,12 +212,14 @@ export const afternoonCheckIn = async (req, res) => {
       11 * 60 + 51,
       12 * 60 + 20
     );
+    const today = new Date();
+    today.setHours(0,0,0,0);
 
     const attendance = await Attendance.create({
       employeeId,
       companyId: employee.companyId,
       departmentId: employee.departmentId,
-      date: new Date(),
+      date: today,
       shift: "afternoon",
       status: "Present",
       timing,
@@ -307,12 +309,14 @@ export const nightCheckIn = async (req, res) => {
       17 * 60 + 51,
       18 * 60 + 20
     );
+    const today = new Date();
+    today.setHours(0,0,0,0);
 
     const attendance = await Attendance.create({
       employeeId,
       companyId: employee.companyId,
       departmentId: employee.departmentId,
-      date: new Date(),
+      date: today,      
       shift: "night",
       status: "Present",
       timing,
