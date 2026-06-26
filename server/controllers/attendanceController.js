@@ -31,6 +31,7 @@ const getFormattedDate = () => {
 // ===============================
 const getFormattedTime = () => {
   return new Date().toLocaleTimeString("en-US", {
+    timeZone: "Asia/Kolkata",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",

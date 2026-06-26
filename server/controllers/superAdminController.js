@@ -203,6 +203,8 @@ export const getAttendanceByDate = async (req, res) => {
 
       return obj;
     });
+    console.log(converted);
+    
 
     return res.status(200).json({
       success: true,
