@@ -3,6 +3,7 @@ import multer from "multer";
 
 import {
   createEmployee,
+  editEmployeeDetails,
   forgotPassword,
   getEmployeeById,
   getEmployeesByCompany,
@@ -27,6 +28,7 @@ const upload = multer({ storage });
 const router = express.Router();
 
 router.post("/", upload.single("profilePic"), createEmployee);
+router.put("/edit-profile", protectEmployee, upload.single("profilePic"), editEmployeeDetails);
 
 router.get("/profile/me", protectEmployee, getEmployeeById);
 

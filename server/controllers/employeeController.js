@@ -4,6 +4,8 @@ import Department from "../models/departmentModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import sendEmail from "../utils/sendEmail.js";
+import path from "path";
+import fs from "fs";
 
 // Create Employee
 export const createEmployee = async (
@@ -154,6 +156,93 @@ export const createEmployee = async (
         message:
           error.message,
       });
+  }
+};
+
+export const editEmployeeDetails = async (req, res) => {
+  try {
+    const employeeId = req.user._id;
+
+    const {
+      name,
+      phone,
+      presentAddress,
+      gender,
+      email,
+    } = req.body;
+
+    const employee = await Employee.findById(employeeId);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    // Email duplicate check
+    if (email && email !== employee.email) {
+      const existingEmail = await Employee.findOne({
+        email,
+        _id: { $ne: employeeId },
+      });
+
+      if (existingEmail) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists",
+        });
+      }
+    }
+
+    employee.name = name || employee.name;
+    employee.phone = phone || employee.phone;
+    employee.presentAddress = presentAddress || employee.presentAddress;
+    employee.gender = gender || employee.gender;
+    employee.email = email || employee.email;
+
+if (req.file) {
+
+  if (employee.profilePic) {
+
+    const oldPath = path.join(
+      "uploads",
+      employee.profilePic
+    );
+
+    if (fs.existsSync(oldPath)) {
+      fs.unlinkSync(oldPath);
+    }
+  }
+
+  employee.profilePic = req.file.filename;
+}
+
+    await employee.save();
+
+const updatedEmployee = await Employee.findById(employeeId)
+  .populate({
+    path: "companyId",
+    select: "-createdAt -updatedAt -__v",
+  })
+  .populate({
+    path: "departmentId",
+    select: "-createdAt -updatedAt -__v",
+  })
+  .select("-password");
+
+return res.status(200).json({
+  success: true,
+  message: "Employee details updated successfully",
+  employee: updatedEmployee,
+});
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
