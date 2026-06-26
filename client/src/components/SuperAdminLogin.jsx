@@ -82,7 +82,15 @@ const SuperAdminLogin = () => {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-slate-300">Password</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-slate-300">Password</label>
+                  <Link
+                    to="/superadmin/forgot-password"
+                    className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
@@ -114,6 +122,7 @@ const SuperAdminLogin = () => {
               </motion.button>
             </form>
           </div>
+
           <div className="text-center mt-6 space-y-2">
             <p className="text-slate-600 text-xs">
               Restricted access — authorized personnel only

@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Attendance from "../models/attendanceModel.js";
 import Employee from "../models/employeeModel.js";
+import sendEmail from "../utils/sendEmail.js";
 
 
 // Create Super Admin
@@ -221,7 +222,6 @@ export const getAttendanceByDate = async (req, res) => {
   }
 };
 
-
 export const getEmployeeMonthlyAttendance = async (req, res) => {
   try {
     const { employeeId, month, year } = req.body;
@@ -304,3 +304,215 @@ return res.status(200).json({
     });
   }
 };
+
+export const forgotPasswordSuperAdmin = async (
+  req,
+  res
+) => {
+  try {
+    const { email } = req.body;
+
+    const admin = await SuperAdmin.findOne({
+      email,
+    });
+
+    if (!admin) {
+      return res.status(404).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    const otp = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+
+    admin.resetOtp = otp;
+
+    admin.resetOtpExpire =
+      Date.now() + 10 * 60 * 1000;
+
+    await admin.save();
+
+    await sendEmail(
+      admin.email,
+      "Super Admin Password Reset OTP",
+      `
+        <h2>Password Reset</h2>
+        <p>Your OTP is:</p>
+        <h1>${otp}</h1>
+        <p>Valid for 10 minutes.</p>
+      `
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const verifySuperAdminOtp = async (
+  req,
+  res
+) => {
+  try {
+    const { email, otp } = req.body;
+
+    const admin = await SuperAdmin.findOne({
+      email,
+    });
+
+    if (
+      !admin ||
+      admin.resetOtp !== otp
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    if (
+      admin.resetOtpExpire < Date.now()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "OTP expired",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified",
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const resetSuperAdminPassword =
+  async (req, res) => {
+    try {
+      const {
+        email,
+        otp,
+        newPassword,
+      } = req.body;
+
+      const admin =
+        await SuperAdmin.findOne({
+          email,
+        });
+
+      if (
+        !admin ||
+        admin.resetOtp !== otp
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid OTP",
+        });
+      }
+
+      if (
+        admin.resetOtpExpire <
+        Date.now()
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "OTP expired",
+        });
+      }
+
+      const hashedPassword =
+        await bcrypt.hash(
+          newPassword,
+          10
+        );
+
+      admin.password =
+        hashedPassword;
+
+      admin.resetOtp = "";
+
+      admin.resetOtpExpire =
+        null;
+
+      await admin.save();
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Password reset successful",
+      });
+
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message,
+      });
+    }
+  };
+
+  export const resendSuperAdminOtp =
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      const admin =
+        await SuperAdmin.findOne({
+          email,
+        });
+
+      if (!admin) {
+        return res.status(404).json({
+          success: false,
+          message: "Admin not found",
+        });
+      }
+
+      const otp = Math.floor(
+        100000 +
+          Math.random() * 900000
+      ).toString();
+
+      admin.resetOtp = otp;
+
+      admin.resetOtpExpire =
+        Date.now() +
+        10 * 60 * 1000;
+
+      await admin.save();
+
+      await sendEmail(
+        email,
+        "New OTP",
+        `<h1>${otp}</h1>`
+      );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "OTP resent successfully",
+      });
+
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message,
+      });
+    }
+  };

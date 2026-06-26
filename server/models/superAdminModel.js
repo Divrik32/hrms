@@ -31,6 +31,16 @@ const superAdminSchema = new mongoose.Schema(
       default: "superadmin",
       enum: ["superadmin"],
     },
+
+    resetOtp: {
+      type: String,
+      default: "",
+    },
+
+    resetOtpExpire: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,

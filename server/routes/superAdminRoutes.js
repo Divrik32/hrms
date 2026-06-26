@@ -3,10 +3,14 @@ import multer from "multer";
 
 import {
   createSuperAdmin,
+  forgotPasswordSuperAdmin,
   getAttendanceByDate,
   getEmployeeMonthlyAttendance,
   loginSuperAdmin,
   logoutSuperAdmin,
+  resendSuperAdminOtp,
+  resetSuperAdminPassword,
+  verifySuperAdminOtp,
 } from "../controllers/superAdminController.js";
 
 import { protectSuperAdmin } from "../middleware/authMiddleware.js";
@@ -37,5 +41,13 @@ router.post("/date", protectSuperAdmin, getAttendanceByDate);
 
 // Employee Monthly Attendance
 router.post("/monthly", protectSuperAdmin, getEmployeeMonthlyAttendance);
+
+router.post("/forgot-password", forgotPasswordSuperAdmin);
+
+router.post("/verify-otp", verifySuperAdminOtp);
+
+router.post("/reset-password", resetSuperAdminPassword);
+
+router.post("/resend-otp", resendSuperAdminOtp);
 
 export default router;

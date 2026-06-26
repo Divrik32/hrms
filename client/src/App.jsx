@@ -24,6 +24,8 @@ import ForgotPassword from "./components/ForgotPassword";
 import CreateEmployeeSalary from "./components/CreateEmployeeSalary";
 import EditEmployeeSalary from "./components/EditEmployeeSalary";
 import LandingPage from "./components/LandingPage";
+import ForgotSuperAdmin from "./components/ForgotSuperAdmin";
+import ResetSuperAdmin from "./components/ResetSuperAdmin";
 
 const router = createBrowserRouter([
   // landing page
@@ -41,6 +43,14 @@ const router = createBrowserRouter([
   {
     path: "/admin-login",
     element: <SuperAdminLogin />,
+  },
+  {
+    path:"/superadmin/forgot-password",
+    element: <ForgotSuperAdmin />
+  },
+  {
+    path:"/superadmin/reset-password",
+    element: <ResetSuperAdmin/>
   },
 
   // admin protected routes
