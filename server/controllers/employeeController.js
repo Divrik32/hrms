@@ -402,7 +402,7 @@ async (req, res) => {
 
 // Employee Login
 export const loginEmployee = async (req, res) => {
-  try {
+  try {    
     const { email, password } = req.body;
 
     // find employee

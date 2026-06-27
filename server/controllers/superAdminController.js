@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import Attendance from "../models/attendanceModel.js";
 import Employee from "../models/employeeModel.js";
 import sendEmail from "../utils/sendEmail.js";
+import Company from "../models/companyModel.js";
 
 
 // Create Super Admin
@@ -298,6 +299,138 @@ return res.status(200).json({
 });
 
   } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getAllMonthlyAttendance = async (req, res) => {
+  try {
+    const { companyId, month, year } = req.body;
+
+    const company = await Company.findById(companyId);
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: "Company not found",
+      });
+    }
+
+    const employees = await Employee.find({
+      companyId,
+    }).select("name empId");
+
+    const startDate = new Date(
+      Date.UTC(
+        Number(year),
+        Number(month) - 1,
+        1,
+        0,
+        0,
+        0,
+        0
+      )
+    );
+
+    const endDate = new Date(
+      Date.UTC(
+        Number(year),
+        Number(month),
+        0,
+        23,
+        59,
+        59,
+        999
+      )
+    );
+
+    const attendance = await Attendance.find({
+      employeeId: {
+        $in: employees.map((e) => e._id),
+      },
+      date: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    });
+
+    const totalDays = new Date(
+      Number(year),
+      Number(month),
+      0
+    ).getDate();
+
+    const attendanceMap = {};
+
+attendance.forEach((att) => {
+  const empId = att.employeeId.toString();
+
+  const day = new Date(att.date).toLocaleDateString(
+    "en-IN",
+    {
+      timeZone: "Asia/Kolkata",
+      day: "numeric",
+    }
+  );
+
+  if (!attendanceMap[empId]) {
+    attendanceMap[empId] = {};
+  }
+
+  attendanceMap[empId][day] = {
+    shift: att.shift || "-",
+    checkInTime: att.checkInTime || "-",
+    checkOutTime: att.checkOutTime || "-",
+    timing: att.timing || "-",
+  };
+});
+
+    const tableData = employees.map((employee) => {
+      const row = {
+        employeeId: employee._id,
+        empId: employee.empId,
+        employeeName: employee.name,
+      };
+
+    for (let day = 1; day <= totalDays; day++) {
+      row[day] =
+        attendanceMap[
+          employee._id.toString()
+        ]?.[day] || {
+          shift: "-",
+          checkInTime: "-",
+          checkOutTime: "-",
+          timing: "-",
+        };
+    }
+
+      return row;
+    });
+
+    return res.status(200).json({
+      success: true,
+
+      company: {
+        _id: company._id,
+        companyName: company.companyName,
+      },
+
+      month,
+      year,
+
+      totalDays,
+
+      employeesCount:
+        employees.length,
+
+      tableData,
+    });
+  } catch (error) {
+    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: error.message,

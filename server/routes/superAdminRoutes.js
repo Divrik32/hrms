@@ -4,6 +4,7 @@ import multer from "multer";
 import {
   createSuperAdmin,
   forgotPasswordSuperAdmin,
+  getAllMonthlyAttendance,
   getAttendanceByDate,
   getEmployeeMonthlyAttendance,
   loginSuperAdmin,
@@ -41,6 +42,9 @@ router.post("/date", protectSuperAdmin, getAttendanceByDate);
 
 // Employee Monthly Attendance
 router.post("/monthly", protectSuperAdmin, getEmployeeMonthlyAttendance);
+
+// All Employee Monthly Attendance
+router.post("/all-monthly", getAllMonthlyAttendance);
 
 router.post("/forgot-password", forgotPasswordSuperAdmin);
 
