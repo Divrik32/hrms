@@ -43,34 +43,56 @@ const EditableRow = ({
 
   return (
     <div
-      className={`group relative flex justify-between items-center px-5 py-4 border-b border-white/5 transition-colors duration-200 ${
-        isEditing ? "bg-violet-500/5" : "hover:bg-white/[0.02]"
+      className={`relative flex flex-col px-4 py-3 border-b border-white/5 transition-colors duration-200 ${
+        isEditing ? "bg-violet-500/5" : ""
       }`}
     >
-      {/* Left — icon + label */}
-      <div className="flex items-center gap-3 text-slate-400">
-        <span className="text-slate-500">{icon}</span>
-        <span className="text-sm">{label}</span>
+      {/* Active editing left-border accent */}
+      {isEditing && (
+        <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-violet-500" />
+      )}
+
+      {/* Top row: icon + label + pencil (always visible on mobile) */}
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2 text-slate-400">
+          <span className="text-slate-500 flex-shrink-0">{icon}</span>
+          <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">
+            {label}
+          </span>
+        </div>
+
+        {/* Pencil — always visible (no hover dependency) */}
+        {!isEditing && (
+          <button
+            onClick={() => {
+              setEditField(field);
+              setEditValue(value);
+            }}
+            title={`Edit ${label}`}
+            className="flex items-center justify-center w-7 h-7 rounded-md bg-violet-500/15 active:bg-violet-500/30 text-violet-400 border border-violet-500/20 transition-all duration-150"
+          >
+            <Pencil size={13} />
+          </button>
+        )}
       </div>
 
-      {/* Right — value / edit controls */}
+      {/* Bottom row: value or edit controls */}
       <AnimatePresence mode="wait" initial={false}>
         {isEditing ? (
           <motion.div
             key="editing"
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 flex-wrap mt-1"
           >
             {field === "gender" ? (
-              /* ── Gender dropdown ── */
-              <div className="relative">
+              <div className="relative flex-1 min-w-0">
                 <select
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
-                  className="appearance-none bg-[#1a0f35] border border-violet-500/40 text-white text-sm pl-3 pr-8 py-1.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500/60 cursor-pointer transition"
+                  className="w-full appearance-none bg-[#1a0f35] border border-violet-500/40 text-white text-sm pl-3 pr-8 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500/60 cursor-pointer transition"
                 >
                   {["Male", "Female", "Other"].map((opt) => (
                     <option key={opt} value={opt}>
@@ -84,7 +106,6 @@ const EditableRow = ({
                 />
               </div>
             ) : (
-              /* ── Text input ── */
               <input
                 autoFocus
                 value={editValue}
@@ -93,7 +114,7 @@ const EditableRow = ({
                   if (e.key === "Enter") updateField(field);
                   if (e.key === "Escape") setEditField(null);
                 }}
-                className="bg-[#1a0f35] border border-violet-500/40 text-white text-sm px-3 py-1.5 rounded-lg w-52 focus:outline-none focus:ring-2 focus:ring-violet-500/60 placeholder:text-slate-600 transition"
+                className="flex-1 min-w-0 bg-[#1a0f35] border border-violet-500/40 text-white text-sm px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500/60 placeholder:text-slate-600 transition"
                 placeholder={`Edit ${label.toLowerCase()}`}
               />
             )}
@@ -102,18 +123,18 @@ const EditableRow = ({
             <button
               onClick={() => updateField(field)}
               title="Save"
-              className="flex items-center justify-center w-7 h-7 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 transition"
+              className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-emerald-500/15 active:bg-emerald-500/30 text-emerald-400 border border-emerald-500/20 transition"
             >
-              <Check size={14} strokeWidth={2.5} />
+              <Check size={16} strokeWidth={2.5} />
             </button>
 
             {/* Cancel */}
             <button
               onClick={() => setEditField(null)}
               title="Cancel"
-              className="flex items-center justify-center w-7 h-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 transition"
+              className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-lg bg-red-500/10 active:bg-red-500/20 text-red-400 border border-red-500/20 transition"
             >
-              <X size={14} strokeWidth={2.5} />
+              <X size={16} strokeWidth={2.5} />
             </button>
           </motion.div>
         ) : (
@@ -123,29 +144,13 @@ const EditableRow = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.12 }}
-            className="flex items-center gap-2"
           >
-            <span className="text-white font-medium text-sm">{value || "—"}</span>
-
-            {/* Edit pencil — visible on row hover */}
-            <button
-              onClick={() => {
-                setEditField(field);
-                setEditValue(value);
-              }}
-              title={`Edit ${label}`}
-              className="opacity-0 group-hover:opacity-100 flex items-center justify-center w-6 h-6 rounded-md bg-violet-500/15 hover:bg-violet-500/30 text-violet-400 hover:text-violet-200 border border-violet-500/20 transition-all duration-150"
-            >
-              <Pencil size={12} />
-            </button>
+            <span className="text-white font-medium text-sm break-all">
+              {value || "—"}
+            </span>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Active editing left-border accent */}
-      {isEditing && (
-        <span className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full bg-violet-500" />
-      )}
     </div>
   );
 };
@@ -219,7 +224,7 @@ const EmployeeProfile = () => {
 
   if (!employee) {
     return (
-      <div className="min-h-screen bg-[#07070e] flex flex-col justify-center items-center gap-3">
+      <div className="min-h-screen bg-[#07070e] flex flex-col justify-center items-center gap-3 px-4">
         <AlertCircle className="text-red-500 w-10 h-10" />
         <p className="text-white mt-1">Employee not found</p>
       </div>
@@ -238,18 +243,18 @@ const EmployeeProfile = () => {
       {/* ── HERO ── */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#2e0d60] via-[#1a0840] to-[#07070e]" />
-        <div className="relative max-w-3xl mx-auto px-6 py-8 flex items-center gap-5">
+        <div className="relative max-w-3xl mx-auto px-4 py-6 flex items-start gap-4">
 
           {/* Avatar */}
-          <motion.div {...fadeIn()}>
-            <div className="relative w-20 h-20 rounded-2xl overflow-hidden ring-2 ring-white/15">
+          <motion.div {...fadeIn()} className="flex-shrink-0">
+            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden ring-2 ring-white/15">
               <img
                 src={profilePic}
                 alt={employee.name}
                 className="w-full h-full object-cover"
               />
-              <label className="absolute inset-0 flex items-end justify-end p-1 bg-black/0 hover:bg-black/40 transition-all cursor-pointer group/avatar">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-600 opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+              <label className="absolute inset-0 flex items-end justify-end p-1 bg-black/0 active:bg-black/40 transition-all cursor-pointer">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-violet-600">
                   <Pencil size={11} />
                 </span>
                 <input
@@ -263,107 +268,100 @@ const EmployeeProfile = () => {
           </motion.div>
 
           {/* Name + badges */}
-          <div>
-{/* Name — editable */}
-<div>
-  <p className="text-[11px] uppercase tracking-widest text-slate-600 font-semibold mb-1.5">
-    Full name
-  </p>
+          <div className="flex-1 min-w-0">
 
-  <AnimatePresence mode="wait" initial={false}>
-    {editField === "name" ? (
-      <motion.div
-        key="editing"
-        initial={{ opacity: 0, y: -4 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -4 }}
-        transition={{ duration: 0.15 }}
-        className="flex items-center gap-2 flex-wrap"
-      >
-        {/* Left accent bar + input */}
-        <div className="relative">
-          <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-violet-500" />
-          <input
-            autoFocus
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") updateField("name");
-              if (e.key === "Escape") setEditField(null);
-            }}
-            className="bg-[#1a0f35]/90 border-[1.5px] border-violet-500/50 focus:border-violet-400
-            text-white text-lg font-semibold px-3.5 py-2 pl-4 rounded-xl w-56
-            outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
-            placeholder="Enter full name"
-          />
-        </div>
+            {/* Name — editable */}
+            <div>
+              <p className="text-[10px] uppercase tracking-widest text-slate-600 font-semibold mb-1">
+                Full name
+              </p>
 
-        {/* Save */}
-        <button
-          onClick={() => updateField("name")}
-          aria-label="Save name"
-          className="flex items-center justify-center w-8 h-8 rounded-[9px]
-                     bg-emerald-500/12 hover:bg-emerald-500/22 border border-emerald-500/25
-                     text-emerald-400 hover:text-emerald-300 transition-all"
-        >
-          <Check size={15} strokeWidth={2.5} />
-        </button>
+              <AnimatePresence mode="wait" initial={false}>
+                {editField === "name" ? (
+                  <motion.div
+                    key="editing"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-2 flex-wrap"
+                  >
+                    <div className="relative flex-1 min-w-0">
+                      <span className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-violet-500" />
+                      <input
+                        autoFocus
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") updateField("name");
+                          if (e.key === "Escape") setEditField(null);
+                        }}
+                        className="w-full bg-[#1a0f35]/90 border-[1.5px] border-violet-500/50 focus:border-violet-400
+                        text-white text-base font-semibold px-3 py-2 pl-4 rounded-xl
+                        outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
+                        placeholder="Enter full name"
+                      />
+                    </div>
 
-        {/* Cancel */}
-        <button
-          onClick={() => setEditField(null)}
-          aria-label="Cancel"
-          className="flex items-center justify-center w-8 h-8 rounded-[9px]
-                     bg-red-500/10 hover:bg-red-500/20 border border-red-500/20
-                     text-red-400 hover:text-red-300 transition-all"
-        >
-          <X size={15} strokeWidth={2.5} />
-        </button>
-      </motion.div>
-    ) : (
-      <motion.div
-        key="display"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.12 }}
-        className="group/name flex items-center gap-2.5"
-      >
-        <h1 className="text-2xl font-bold tracking-tight !text-white">
-          {employee.name}
-        </h1>
+                    <button
+                      onClick={() => updateField("name")}
+                      aria-label="Save name"
+                      className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-[9px]
+                                 bg-emerald-500/12 active:bg-emerald-500/22 border border-emerald-500/25
+                                 text-emerald-400 transition-all"
+                    >
+                      <Check size={16} strokeWidth={2.5} />
+                    </button>
 
-        {/* Pencil — visible on hover */}
-        <button
-          onClick={() => {
-            setEditField("name");
-            setEditValue(employee.name);
-          }}
-          aria-label="Edit name"
-          className="opacity-0 group-hover/name:opacity-100 flex items-center justify-center
-                     w-7 h-7 rounded-lg bg-violet-500/15 hover:bg-violet-500/28
-                     border border-violet-500/20 text-violet-400 hover:text-violet-200
-                     transition-all duration-150"
-        >
-          <Pencil size={13} />
-        </button>
-      </motion.div>
-    )}
-  </AnimatePresence>
+                    <button
+                      onClick={() => setEditField(null)}
+                      aria-label="Cancel"
+                      className="flex-shrink-0 flex items-center justify-center w-9 h-9 rounded-[9px]
+                                 bg-red-500/10 active:bg-red-500/20 border border-red-500/20
+                                 text-red-400 transition-all"
+                    >
+                      <X size={16} strokeWidth={2.5} />
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="display"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.12 }}
+                    className="flex items-center gap-2"
+                  >
+                    <h1 className="text-xl sm:text-2xl font-bold tracking-tight !text-white truncate">
+                      {employee.name}
+                    </h1>
+                    <button
+                      onClick={() => {
+                        setEditField("name");
+                        setEditValue(employee.name);
+                      }}
+                      aria-label="Edit name"
+                      className="flex-shrink-0 flex items-center justify-center
+                                 w-7 h-7 rounded-lg bg-violet-500/15 active:bg-violet-500/28
+                                 border border-violet-500/20 text-violet-400
+                                 transition-all duration-150"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
-  <p className="text-[11px] text-slate-600/60 mt-2 italic">
-    {editField === "name" ? "Enter to save · Esc to cancel" : "Hover to edit"}
-  </p>
-</div>
-            <motion.div {...fadeIn(0.2)} className="flex flex-wrap gap-2 mt-3">
-              <span className="px-3 py-1 rounded-full bg-violet-500/20 text-violet-300 text-xs">
+            <motion.div {...fadeIn(0.2)} className="flex flex-wrap gap-1.5 mt-2">
+              <span className="px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-xs">
                 {employee.role}
               </span>
-              <span className="px-3 py-1 rounded-full bg-white/10 text-slate-300 text-xs">
+              <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-slate-300 text-xs">
                 EMP ID: {employee.empId}
               </span>
               <span
-                className={`px-3 py-1 rounded-full text-xs ${
+                className={`px-2.5 py-0.5 rounded-full text-xs ${
                   employee.status === "Active"
                     ? "bg-emerald-500/15 text-emerald-400"
                     : "bg-slate-500/15 text-slate-400"
@@ -377,14 +375,14 @@ const EmployeeProfile = () => {
       </div>
 
       {/* ── DETAILS ── */}
-      <div className="max-w-3xl mx-auto p-5 space-y-4">
+      <div className="max-w-3xl mx-auto px-3 sm:px-5 pb-8 pt-2 space-y-4">
 
         {/* Contact */}
         <motion.div
           {...fadeIn(0.3)}
           className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden"
         >
-          <SectionHeader label="Contact" hint="Click the pencil icon to edit" />
+          <SectionHeader label="Contact" hint="Tap ✏️ to edit" />
 
           <EditableRow
             icon={<Mail size={15} />}
@@ -466,7 +464,7 @@ const EmployeeProfile = () => {
 
 /* ─── Section Header ──────────────────────────────────────────── */
 const SectionHeader = ({ label, hint }) => (
-  <div className="px-5 py-3 border-b border-white/10 flex items-center justify-between">
+  <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
     <p className="text-xs uppercase tracking-widest text-slate-500 font-semibold">
       {label}
     </p>
@@ -478,12 +476,14 @@ const SectionHeader = ({ label, hint }) => (
 
 /* ─── Read-only Detail Row ────────────────────────────────────── */
 const DetailRow = ({ icon, label, value }) => (
-  <div className="flex justify-between items-center px-5 py-4 border-b border-white/5 last:border-none">
-    <div className="flex items-center gap-3 text-slate-500">
+  <div className="flex justify-between items-center px-4 py-3.5 border-b border-white/5 last:border-none gap-3">
+    <div className="flex items-center gap-2 text-slate-500 flex-shrink-0">
       {icon}
       <span className="text-slate-400 text-sm">{label}</span>
     </div>
-    <span className="text-white font-medium text-sm ml-2">{value || "N/A"}</span>
+    <span className="text-white font-medium text-sm text-right break-all ml-2">
+      {value || "N/A"}
+    </span>
   </div>
 );
 

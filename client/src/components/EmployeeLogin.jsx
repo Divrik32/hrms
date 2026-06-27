@@ -2,7 +2,7 @@ import { useState } from "react";
 import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Lock, LogIn, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
+import { Mail, Lock, LogIn, Eye, EyeOff, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import toast from "react-hot-toast";
 
 
@@ -63,6 +63,23 @@ const EmployeeLogin = () => {
       <div className="absolute bottom-[-60px] right-[-60px] w-[280px] h-[280px] bg-violet-500 opacity-15 rounded-full blur-[100px] pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-900 opacity-10 rounded-full blur-[140px] pointer-events-none" />
 
+      {/* ── Back Button (top-left) ── */}
+      <motion.button
+        onClick={() => navigate("/")}
+        initial={{ opacity: 0, x: -12 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.1, duration: 0.35 }}
+        className="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-3 py-2 rounded-xl
+                   bg-white/[0.06] hover:bg-white/[0.10] active:bg-white/[0.14]
+                   border border-white/10 hover:border-white/20
+                   text-slate-400 hover:text-white
+                   text-sm font-medium transition-all duration-200
+                   backdrop-blur-sm shadow-sm"
+      >
+        <ArrowLeft size={15} strokeWidth={2} />
+        <span className="hidden sm:inline">Back</span>
+      </motion.button>
+
       {/* Card */}
       <motion.div
         initial={{ opacity: 0, y: 40, scale: 0.97 }}
@@ -76,7 +93,7 @@ const EmployeeLogin = () => {
           {/* Top accent line */}
           <div className="h-[3px] bg-gradient-to-r from-indigo-500 via-violet-500 to-indigo-500" />
 
-          <div className="p-8">
+          <div className="p-6 sm:p-8">
 
             {/* Header */}
             <motion.div
@@ -131,7 +148,7 @@ const EmployeeLogin = () => {
                     onFocus={() => setFocusedField("email")}
                     onBlur={() => setFocusedField(null)}
                     required
-                    className="flex-1 bg-transparent text-white placeholder-slate-600 text-sm outline-none"
+                    className="flex-1 min-w-0 bg-transparent text-white placeholder-slate-600 text-sm outline-none"
                   />
                 </div>
               </motion.div>
@@ -141,7 +158,7 @@ const EmployeeLogin = () => {
                 variants={inputVariants}
                 animate={focusedField === "password" ? "focused" : "unfocused"}
               >
-                {/* Label row: Password label + Forgot Password link */}
+                {/* Label row */}
                 <div className="flex items-center justify-between mb-1.5 ml-1 mr-1">
                   <label className="block text-xs font-medium text-slate-400 tracking-wide uppercase">
                     Password
@@ -170,6 +187,7 @@ const EmployeeLogin = () => {
                       focusedField === "password" ? "text-indigo-400" : "text-slate-500"
                     }`}
                   />
+                  {/* min-w-0 ensures input shrinks properly on small screens */}
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
@@ -179,13 +197,19 @@ const EmployeeLogin = () => {
                     onFocus={() => setFocusedField("password")}
                     onBlur={() => setFocusedField(null)}
                     required
-                    className="flex-1 bg-transparent text-white placeholder-slate-600 text-sm outline-none"
+                    className="flex-1 min-w-0 bg-transparent text-white placeholder-slate-600 text-sm outline-none"
                   />
+                  {/* Eye icon — fixed size so it never gets pushed out */}
                   <button
                     type="button"
+                    onMouseDown={(e) => e.preventDefault()} // prevent input blur on click
                     onClick={() => setShowPassword((v) => !v)}
-                    className="text-slate-500 hover:text-slate-300 transition-colors duration-150 flex-shrink-0"
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg
+                               text-slate-500 hover:text-slate-300 active:text-white
+                               hover:bg-white/[0.06] active:bg-white/[0.10]
+                               transition-all duration-150"
                     tabIndex={-1}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     <AnimatePresence mode="wait">
                       <motion.span
@@ -255,7 +279,7 @@ const EmployeeLogin = () => {
               <div className="flex-1 h-px bg-white/[0.06]" />
             </motion.div>
 
-            {/* Can't remember password? full link row */}
+            {/* Reset password row */}
             <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
