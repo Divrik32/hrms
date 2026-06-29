@@ -363,7 +363,7 @@ const AttendanceTracker = () => {
   const TABS = [
     { key: "day",      icon: Calendar,   label: "By Day"       },
     { key: "month",    icon: BarChart3,  label: "By Month"     },
-    { key: "allmonth", icon: Users,      label: "All Month"    },
+    { key: "allmonth", icon: Users,      label: "All By Month"    },
     { key: "week",     icon: TrendingUp, label: "Weekly"       },
   ];
 
