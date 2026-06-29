@@ -14,22 +14,22 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle2,
-  Monitor,
   TrendingUp,
   Users,
   ChevronLeft,
   ChevronRight,
   GripVertical,
+  Activity,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-/* ─── tiny helpers ─────────────────────────────────── */
+/* ─── animation presets ─────────────────────────────── */
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
   show: (i = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.06, duration: 0.35, ease: "easeOut" },
+    transition: { delay: i * 0.05, duration: 0.32, ease: "easeOut" },
   }),
 };
 
@@ -42,22 +42,64 @@ const MONTHS = [
   { v: "11", l: "November" }, { v: "12", l: "December" },
 ];
 
+const DAYS_LABEL = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 const NAME_COL_MIN = 90;
 const NAME_COL_MAX = 280;
-const NAME_COL_DEFAULT = 160; // narrower default for mobile
+const NAME_COL_DEFAULT = 160;
 
-/* ─── sub-components ───────────────────────────────── */
+/* ─── shared input classes ──────────────────────────── */
+const inputCls =
+  "w-full bg-[#111827] border border-[#1f2f47] rounded-xl px-4 py-3 text-sm text-white " +
+  "placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 " +
+  "focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200";
+
+const selectCls =
+  "w-full appearance-none bg-[#111827] border border-[#1f2f47] rounded-xl pl-10 pr-8 py-3 " +
+  "text-sm text-white focus:outline-none focus:border-indigo-500 " +
+  "focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200";
+
+/* ─── sub-components ────────────────────────────────── */
+
 function StatPill({ icon: Icon, label, value, color }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-800/60 border border-slate-700/50">
+    <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#111827] border border-[#1f2f47]">
       <span className={`p-2 rounded-xl ${color}`}>
-        <Icon size={16} className="text-white" />
+        <Icon size={15} className="text-white" />
       </span>
       <div>
-        <p className="text-xs text-slate-400 leading-none mb-0.5">{label}</p>
-        <p className="text-sm font-semibold text-white">{value}</p>
+        <p className="text-[11px] text-slate-400 leading-none mb-0.5">{label}</p>
+        <p className="text-sm font-bold text-white">{value}</p>
       </div>
     </div>
+  );
+}
+
+function EmptyState({ message }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="flex flex-col items-center justify-center py-16 text-slate-500 gap-3"
+    >
+      <div className="w-14 h-14 rounded-full bg-slate-800/60 flex items-center justify-center">
+        <AlertCircle size={24} className="opacity-40" />
+      </div>
+      <p className="text-sm text-center max-w-xs">{message}</p>
+    </motion.div>
+  );
+}
+
+function ShiftBadge({ shift }) {
+  const map = {
+    day:       "bg-amber-500/15 text-amber-300 border border-amber-500/25",
+    afternoon: "bg-orange-500/15 text-orange-300 border border-orange-500/25",
+    night:     "bg-indigo-500/15 text-indigo-300 border border-indigo-500/25",
+  };
+  return (
+    <span className={`inline-block px-2 py-0.5 rounded-full text-[12px] font-semibold capitalize ${map[shift] || map.night}`}>
+      {shift || "—"}
+    </span>
   );
 }
 
@@ -68,60 +110,74 @@ function TableRow({ children, index }) {
       variants={fadeUp}
       initial="hidden"
       animate="show"
-      className="border-b border-slate-800/70 hover:bg-slate-800/40 transition-colors group"
+      className="border-b border-[#1a2535] hover:bg-white/[0.02] transition-colors"
     >
       {children}
     </motion.tr>
   );
 }
 
-function EmptyState({ message }) {
+function SectionHeader({ icon: Icon, title }) {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="flex flex-col items-center justify-center py-16 text-slate-500"
-    >
-      <AlertCircle size={36} className="mb-3 opacity-40" />
-      <p className="text-sm">{message}</p>
-    </motion.div>
-  );
-}
-
-/* ─── shift badge ───────────────────────────────────── */
-function ShiftBadge({ shift }) {
-  const map = {
-    day:       "bg-amber-500/15 text-amber-400 border border-amber-500/20",
-    afternoon: "bg-orange-500/15 text-orange-400 border border-orange-500/20",
-    night:     "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20",
-  };
-  return (
-    <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-semibold ${map[shift] || map.night}`}>
-      {shift}
-    </span>
-  );
-}
-
-/* ─── attendance rate mini bar ──────────────────────── */
-function RateBar({ present, total }) {
-  const pct = total ? Math.round((present / total) * 100) : 0;
-  const color = pct >= 80 ? "bg-emerald-500" : pct >= 50 ? "bg-amber-500" : "bg-rose-500";
-  const textColor = pct >= 80 ? "text-emerald-400" : pct >= 50 ? "text-amber-400" : "text-rose-400";
-  return (
-    <div className="flex flex-col items-center gap-1 px-2 py-1 min-w-[60px]">
-      <span className={`text-sm font-bold ${textColor}`}>{present}</span>
-      <span className="text-[10px] text-slate-500">{pct}%</span>
-      <div className="w-10 h-1 rounded-full bg-slate-700 overflow-hidden">
-        <div
-          className={`h-full rounded-full ${color} transition-all duration-500`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+    <div className="flex items-center gap-2.5 mb-6">
+      <span className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+        <Icon size={17} className="text-indigo-400" />
+      </span>
+      <h2 className="text-base font-bold text-white tracking-tight">{title}</h2>
     </div>
   );
 }
 
-/* ─── Resizable Name Column Hook ────────────────────── */
+function SelectWrapper({ icon: Icon, children }) {
+  return (
+    <div className="relative">
+      <Icon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
+      <ChevronDown size={12} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
+      {children}
+    </div>
+  );
+}
+
+function SearchBtn({ onClick, disabled, loading }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || loading}
+      className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500
+        disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold
+        transition-all duration-200 active:scale-95 shadow-lg shadow-indigo-900/30"
+    >
+      {loading ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
+      {loading ? "Fetching…" : "Search"}
+    </button>
+  );
+}
+
+/* ─── Attendance Cell (reused in weekly + all-month) ── */
+function AttCell({ entry, compact = false }) {
+  if (!entry?.checkInTime) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[56px]">
+        <span className="w-5 h-5 rounded-full bg-[#111827] border border-[#1f2f47] flex items-center justify-center text-slate-600 text-[10px]">
+          —
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className={`rounded-xl bg-[#111827] border border-[#1a2d3d] px-2 py-2 flex flex-col gap-1 ${compact ? "min-w-[80px]" : "min-w-[96px]"}`}>
+      <span className="flex items-center gap-1 text-emerald-400 text-[14px] font-semibold tabular-nums">
+        <LogIn size={9} /> {entry.checkInTime}
+      </span>
+      <span className="flex items-center gap-1 text-rose-400 text-[14px] font-semibold tabular-nums">
+        <LogOut size={9} /> {entry.checkOutTime || "—"}
+      </span>
+      <ShiftBadge shift={entry.shift} />
+    </div>
+  );
+}
+
+/* ─── Resizable Column Hook ─────────────────────────── */
 function useResizableColumn(defaultWidth = NAME_COL_DEFAULT) {
   const [colWidth, setColWidth] = useState(defaultWidth);
   const dragging = useRef(false);
@@ -150,21 +206,17 @@ function useResizableColumn(defaultWidth = NAME_COL_DEFAULT) {
       const newW = Math.min(NAME_COL_MAX, Math.max(NAME_COL_MIN, startW.current + delta));
       setColWidth(newW);
     };
-
     const onMouseMove = (e) => onMove(e.clientX);
     const onTouchMove = (e) => onMove(e.touches[0].clientX);
-
     const stop = () => {
       dragging.current = false;
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
     };
-
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("mouseup", stop);
     window.addEventListener("touchmove", onTouchMove, { passive: true });
     window.addEventListener("touchend", stop);
-
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", stop);
@@ -176,9 +228,10 @@ function useResizableColumn(defaultWidth = NAME_COL_DEFAULT) {
   return { colWidth, onMouseDown, onTouchStart };
 }
 
-/* ─── main component ───────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   MAIN COMPONENT
+═══════════════════════════════════════════════════════ */
 const AttendanceTracker = () => {
-  const navigate = useNavigate();
   const { companyId } = useParams();
   const [tab, setTab] = useState("day");
 
@@ -193,27 +246,33 @@ const AttendanceTracker = () => {
   const [companyMonthlyData, setCompanyMonthlyData] = useState([]);
   const [totalDays, setTotalDays] = useState(0);
   const [availableWeeks, setAvailableWeeks] = useState([]);
-const [selectedWeek, setSelectedWeek] = useState("");
-const [weeklyAttendance, setWeeklyAttendance] = useState({
-  days: [],
-  tableData: [],
-});
+  const [selectedWeek, setSelectedWeek] = useState("");
+  const [weeklyAttendance, setWeeklyAttendance] = useState({ days: [], tableData: [] });
   const [loading, setLoading] = useState(false);
-
-  /* all-month extras */
   const [empSearch, setEmpSearch] = useState("");
   const tableScrollRef = useRef(null);
 
-  /* resizable name column */
   const { colWidth, onMouseDown, onTouchStart } = useResizableColumn(NAME_COL_DEFAULT);
 
   useEffect(() => { getEmployees(); }, []);
+
+  useEffect(() => {
+    const loadWeeks = async () => {
+      if (!month || !year) return;
+      try {
+        const res = await api.post("superadmin/month-weeks", { month, year }, { withCredentials: true });
+        setAvailableWeeks(res.data.weeks || []);
+        setSelectedWeek("");
+      } catch (e) { console.log(e); }
+    };
+    loadWeeks();
+  }, [month, year]);
 
   const getEmployees = async () => {
     try {
       const res = await api.get(`/employees/company/${companyId}`);
       setEmployees(res.data.employees || []);
-    } catch (error) { console.log(error); }
+    } catch (e) { console.log(e); }
   };
 
   const getAttendanceByDate = async () => {
@@ -221,21 +280,17 @@ const [weeklyAttendance, setWeeklyAttendance] = useState({
     try {
       const res = await api.post("/superadmin/date", { date }, { withCredentials: true });
       setDayAttendance(res.data.attendance);
-    } catch (error) { console.log(error); }
+    } catch (e) { console.log(e); }
     finally { setLoading(false); }
   };
 
   const getMonthlyAttendance = async () => {
     setLoading(true);
     try {
-      const res = await api.post(
-        "/superadmin/monthly",
-        { employeeId, month, year },
-        { withCredentials: true }
-      );
+      const res = await api.post("/superadmin/monthly", { employeeId, month, year }, { withCredentials: true });
       setSelectedEmployee(res.data.employee);
       setMonthlyAttendance(res.data.attendance);
-    } catch (error) { console.log(error); }
+    } catch (e) { console.log(e); }
     finally { setLoading(false); }
   };
 
@@ -243,127 +298,87 @@ const [weeklyAttendance, setWeeklyAttendance] = useState({
     setLoading(true);
     setEmpSearch("");
     try {
-      const res = await api.post(
-        "/superadmin/all-monthly",
-        { companyId, month, year },
-        { withCredentials: true }
-      );
+      const res = await api.post("/superadmin/all-monthly", { companyId, month, year }, { withCredentials: true });
       setCompanyMonthlyData(res.data.tableData);
       setTotalDays(res.data.totalDays);
-    } catch (error) {
-      console.log(error);
-      toast.error(error.response?.data?.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to load data");
+    } finally { setLoading(false); }
   };
 
   const getWeeklyAttendance = async () => {
-  setLoading(true);
-
-  try {
-    const res = await api.post(
-      "/superadmin/weekly-attendance",
-      {
-        companyId,
-        month,
-        year,
-        weekNo: Number(selectedWeek),
-      },
-      {
-        withCredentials: true,
-      }
-    );
-
-    setWeeklyAttendance({
-      days: res.data.days || [],
-      tableData: res.data.tableData || [],
-    });
-  } catch (error) {
-    console.log(error);
-    toast.error(
-      error.response?.data?.message ||
-      "Failed to load weekly attendance"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
-
-useEffect(() => {
-  const loadWeeks = async () => {
-    if (!month || !year) return;
-
+    setLoading(true);
     try {
-      const res = await api.post(
-        "superadmin/month-weeks",
-        {
-          month,
-          year,
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      setAvailableWeeks(res.data.weeks || []);
-    } catch (error) {
-      console.log(error);
-    }
+      const res = await api.post("/superadmin/weekly-attendance", {
+        companyId, month, year, weekNo: Number(selectedWeek),
+      }, { withCredentials: true });
+      setWeeklyAttendance({ days: res.data.days || [], tableData: res.data.tableData || [] });
+    } catch (e) {
+      toast.error(e.response?.data?.message || "Failed to load weekly attendance");
+    } finally { setLoading(false); }
   };
-
-  loadWeeks();
-}, [month, year]);
 
   const presentDays = monthlyAttendance.filter(r => r.checkInTime).length;
 
-  /* filtered rows for all-month */
   const filteredMonthlyData = empSearch
-    ? companyMonthlyData.filter(
-        e =>
-          e.employeeName?.toLowerCase().includes(empSearch.toLowerCase()) ||
-          (e.empId || "").toLowerCase().includes(empSearch.toLowerCase())
+    ? companyMonthlyData.filter(e =>
+        e.employeeName?.toLowerCase().includes(empSearch.toLowerCase()) ||
+        (e.empId || "").toLowerCase().includes(empSearch.toLowerCase())
       )
     : companyMonthlyData;
 
-  /* all-month summary stats */
   const allMonthStats = (() => {
-    const rows = filteredMonthlyData;
     let totalPresent = 0;
-    rows.forEach(emp => {
+    filteredMonthlyData.forEach(emp => {
       for (let d = 1; d <= totalDays; d++) {
-        if (emp[d] && emp[d].checkInTime) totalPresent++;
+        if (emp[d]?.checkInTime) totalPresent++;
       }
     });
-    const possible = rows.length * totalDays;
+    const possible = filteredMonthlyData.length * totalDays;
     return {
-      employees: rows.length,
+      employees: filteredMonthlyData.length,
       totalPresent,
       rate: possible ? Math.round((totalPresent / possible) * 100) : 0,
     };
   })();
 
-  /* scroll helpers */
   const scrollTable = (dir) => {
-    if (tableScrollRef.current) {
-      tableScrollRef.current.scrollBy({ left: dir * 200, behavior: "smooth" });
-    }
+    tableScrollRef.current?.scrollBy({ left: dir * 200, behavior: "smooth" });
   };
 
-  /* ── sticky header bg color (matches the dark theme) ── */
-  const stickyBg = "#0d1526";
+  const stickyBg = "#080f1c";
+
+  /* weekly summary stats */
+  const weeklyStats = (() => {
+    const td = weeklyAttendance.tableData;
+    if (!td.length) return null;
+    let total = 0;
+    td.forEach(emp => {
+      weeklyAttendance.days.forEach(day => { if (emp[day]?.checkInTime) total++; });
+    });
+    const possible = td.length * weeklyAttendance.days.length;
+    return { present: total, rate: possible ? Math.round((total / possible) * 100) : 0 };
+  })();
+
+  const TABS = [
+    { key: "day",      icon: Calendar,   label: "By Day"       },
+    { key: "month",    icon: BarChart3,  label: "By Month"     },
+    { key: "allmonth", icon: Users,      label: "All Month"    },
+    { key: "week",     icon: TrendingUp, label: "Weekly"       },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#080c14] text-white p-4 sm:p-8">
-      {/* background glow */}
+    <div className="min-h-screen bg-[#060b14] text-white">
+      {/* ambient glows */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-indigo-900/20 blur-[120px]" />
-        <div className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full bg-violet-900/15 blur-[120px]" />
+        <div className="absolute -top-60 -left-60 w-[600px] h-[600px] rounded-full bg-indigo-900/20 blur-[140px]" />
+        <div className="absolute -bottom-60 -right-60 w-[600px] h-[600px] rounded-full bg-violet-900/15 blur-[140px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-blue-900/10 blur-[100px]" />
       </div>
 
-      <div className="relative max-w-5xl mx-auto">
+      <div className="relative max-w-5xl mx-auto px-4 py-6 sm:px-8 sm:py-10">
 
-        {/* ── header ── */}
+        {/* ── HEADER ── */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -371,136 +386,136 @@ useEffect(() => {
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-1">
-            <span className="p-2 rounded-xl bg-indigo-600/20 border border-indigo-500/30">
-              <BarChart3 size={20} className="text-indigo-400" />
-            </span>
-            <h1 className="text-2xl font-bold tracking-tight">Attendance Tracker</h1>
+            <div className="p-2.5 rounded-2xl bg-indigo-600/20 border border-indigo-500/30">
+              <Activity size={20} className="text-indigo-400" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                Attendance Tracker
+              </h1>
+              <p className="text-slate-500 text-xs sm:text-sm">
+                View and analyse employee attendance records
+              </p>
+            </div>
           </div>
-          <p className="text-slate-500 text-sm ml-12">View and analyse employee attendance records</p>
         </motion.div>
 
-        {/* ── tabs ── */}
+        {/* ── TABS ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className="flex gap-2 mb-6 p-1.5 bg-slate-900/70 border border-slate-800 rounded-2xl w-fit"
+          className="mb-6"
         >
-          {[
-            { key: "day",      icon: Calendar,  label: "By Day"        },
-            { key: "month",    icon: BarChart3,  label: "By Month"      },
-            { key: "allmonth", icon: Users,      label: "All By Month"  },
-            { key: "week",     icon: TrendingUp, label: "Weekly"        },
-          ].map(({ key, icon: Icon, label }) => (
-            <button
-              key={key}
-              onClick={() => setTab(key)}
-              className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200
-                ${tab === key ? "text-white" : "text-slate-400 hover:text-slate-200"}`}
-            >
-              {tab === key && (
-                <motion.span
-                  layoutId="tab-bg"
-                  className="absolute inset-0 bg-indigo-600 rounded-xl"
-                  transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                />
-              )}
-              <Icon size={15} className="relative z-10" />
-              <span className="relative z-10">{label}</span>
-            </button>
-          ))}
+          {/* Mobile: 2×2 grid */}
+          <div className="grid grid-cols-2 gap-2 sm:hidden">
+            {TABS.map(({ key, icon: Icon, label }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`relative flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200
+                  ${tab === key
+                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40"
+                    : "bg-[#111827] border border-[#1f2f47] text-slate-400 hover:text-slate-200 hover:border-indigo-500/40"
+                  }`}
+              >
+                <Icon size={15} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Desktop: horizontal pill */}
+          <div className="hidden sm:flex gap-1.5 p-1.5 bg-[#0d1624] border border-[#1f2f47] rounded-2xl w-fit">
+            {TABS.map(({ key, icon: Icon, label }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200
+                  ${tab === key ? "text-white" : "text-slate-400 hover:text-slate-200"}`}
+              >
+                {tab === key && (
+                  <motion.span
+                    layoutId="tab-bg"
+                    className="absolute inset-0 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-900/50"
+                    transition={{ type: "spring", stiffness: 400, damping: 32 }}
+                  />
+                )}
+                <Icon size={15} className="relative z-10" />
+                <span className="relative z-10">{label}</span>
+              </button>
+            ))}
+          </div>
         </motion.div>
 
-        {/* ── panels ── */}
+        {/* ── PANELS ── */}
         <AnimatePresence mode="wait">
 
-          {/* DAY TAB */}
+          {/* ══ DAY TAB ══ */}
           {tab === "day" && (
             <motion.div
               key="day"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.28 }}
-              className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6"
+              transition={{ duration: 0.25 }}
+              className="bg-[#0d1624]/80 border border-[#1f2f47] rounded-3xl p-5 sm:p-7 backdrop-blur-sm"
             >
-              <h2 className="text-lg font-semibold mb-5 flex items-center gap-2">
-                <Calendar size={18} className="text-indigo-400" /> Daily Attendance
-              </h2>
+              <SectionHeader icon={Calendar} title="Daily Attendance" />
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
-                  <Calendar size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                   <input
                     type="date"
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full bg-slate-800/80 border border-slate-700 rounded-xl pl-9 pr-4 py-3 text-white text-sm
-                      focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/40 transition"
+                    className={inputCls + " pl-9"}
                   />
                 </div>
-                <button
-                  onClick={getAttendanceByDate}
-                  disabled={!date || loading}
-                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50
-                    disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all active:scale-95"
-                >
-                  {loading ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
-                  {loading ? "Fetching…" : "Search"}
-                </button>
+                <SearchBtn onClick={getAttendanceByDate} disabled={!date} loading={loading} />
               </div>
 
               <AnimatePresence>
                 {!loading && dayAttendance.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-7"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <CheckCircle2 size={15} className="text-emerald-400" />
-                      <span className="text-sm text-slate-400">
-                        <span className="text-white font-semibold">{dayAttendance.length}</span> records found
+                      <CheckCircle2 size={14} className="text-emerald-400" />
+                      <span className="text-xs text-slate-400">
+                        <span className="text-white font-bold">{dayAttendance.length}</span> records found
                       </span>
                     </div>
-                    <div className="overflow-x-auto rounded-2xl border border-slate-800">
-                      <table className="w-full text-sm">
+                    <div className="overflow-x-auto rounded-2xl border border-[#1f2f47]">
+                      <table className="w-full text-sm min-w-[500px]">
                         <thead>
-                          <tr className="bg-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
-                            <th className="px-4 py-3 text-left font-medium">#</th>
-                            <th className="px-4 py-3 text-left font-medium">Employee</th>
-                            <th className="px-4 py-3 text-left font-medium">ID</th>
-                            <th className="px-4 py-3 text-left font-medium">
-                              <span className="flex items-center gap-1"><LogIn size={12}/>Check In</span>
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium">
-                              <span className="flex items-center gap-1"><LogOut size={12}/>Check Out</span>
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium">Shift</th>
+                          <tr className="bg-[#111827] text-slate-400 text-xs uppercase tracking-wider">
+                            {["#", "Employee", "ID", "Check In", "Check Out", "Shift"].map(h => (
+                              <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
                           {dayAttendance.map((item, i) => (
                             <TableRow key={item._id} index={i}>
-                              <td className="px-4 py-3.5 text-slate-500 text-xs">{i + 1}</td>
+                              <td className="px-4 py-3.5 text-slate-600 text-xs">{i + 1}</td>
                               <td className="px-4 py-3.5 font-medium text-white">
                                 <div className="flex items-center gap-2">
                                   <span className="w-7 h-7 rounded-full bg-indigo-600/20 border border-indigo-500/30
-                                    flex items-center justify-center text-indigo-300 text-xs font-bold">
+                                    flex items-center justify-center text-indigo-300 text-xs font-bold shrink-0">
                                     {item.employeeId?.name?.[0] || "?"}
                                   </span>
-                                  {item.employeeId?.name}
+                                  <span className="truncate">{item.employeeId?.name}</span>
                                 </div>
                               </td>
                               <td className="px-4 py-3.5 text-slate-400 font-mono text-xs">{item.employeeId?.empId}</td>
                               <td className="px-4 py-3.5">
-                                <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
-                                  <Clock size={12}/>{item.checkInTime || "—"}
+                                <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
+                                  <Clock size={11} />{item.checkInTime || "—"}
                                 </span>
                               </td>
                               <td className="px-4 py-3.5">
-                                <span className="flex items-center gap-1.5 text-rose-400 text-xs font-medium">
-                                  <Clock size={12}/>{item.checkOutTime || "—"}
+                                <span className="flex items-center gap-1.5 text-rose-400 text-xs font-semibold">
+                                  <Clock size={11} />{item.checkOutTime || "—"}
                                 </span>
                               </td>
                               <td className="px-4 py-3.5">
@@ -514,82 +529,54 @@ useEffect(() => {
                   </motion.div>
                 )}
                 {!loading && date && dayAttendance.length === 0 && (
-                  <EmptyState message="No attendance records found for this date." />
+                  <EmptyState message="No records found for this date." />
                 )}
               </AnimatePresence>
             </motion.div>
           )}
 
-          {/* MONTH TAB */}
+          {/* ══ MONTH TAB ══ */}
           {tab === "month" && (
             <motion.div
               key="month"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.28 }}
-              className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6"
+              transition={{ duration: 0.25 }}
+              className="bg-[#0d1624]/80 border border-[#1f2f47] rounded-3xl p-5 sm:p-7 backdrop-blur-sm"
             >
-              <h2 className="text-lg font-semibold mb-5 flex items-center gap-2">
-                <BarChart3 size={18} className="text-indigo-400" /> Monthly Attendance
-              </h2>
+              <SectionHeader icon={BarChart3} title="Monthly Attendance" />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                <div className="relative sm:col-span-1">
-                  <User size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
-                  <ChevronDown size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
-                  <select
-                    value={employeeId}
-                    onChange={(e) => setEmployeeId(e.target.value)}
-                    className="w-full appearance-none bg-slate-800/80 border border-slate-700 rounded-xl
-                      pl-9 pr-8 py-3 text-sm text-white focus:outline-none focus:border-indigo-500
-                      focus:ring-1 focus:ring-indigo-500/40 transition"
-                  >
+                <SelectWrapper icon={User}>
+                  <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className={selectCls}>
                     <option value="">Select Employee</option>
-                    {employees.map((emp) => (
-                      <option key={emp._id} value={emp._id}>
-                        {emp.name} ({emp.empId})
-                      </option>
+                    {employees.map(emp => (
+                      <option key={emp._id} value={emp._id}>{emp.name} ({emp.empId})</option>
                     ))}
                   </select>
-                </div>
+                </SelectWrapper>
 
-                <div className="relative">
-                  <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
-                  <ChevronDown size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
-                  <select
-                    value={month}
-                    onChange={(e) => setMonth(e.target.value)}
-                    className="w-full appearance-none bg-slate-800/80 border border-slate-700 rounded-xl
-                      pl-9 pr-8 py-3 text-sm text-white focus:outline-none focus:border-indigo-500
-                      focus:ring-1 focus:ring-indigo-500/40 transition"
-                  >
+                <SelectWrapper icon={Calendar}>
+                  <select value={month} onChange={(e) => setMonth(e.target.value)} className={selectCls}>
                     <option value="">Select Month</option>
-                    {MONTHS.map(({ v, l }) => (
-                      <option key={v} value={v}>{l}</option>
-                    ))}
+                    {MONTHS.map(({ v, l }) => <option key={v} value={v}>{l}</option>)}
                   </select>
-                </div>
+                </SelectWrapper>
 
                 <div className="relative">
                   <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-                  <input
-                    type="number"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    className="w-full bg-slate-800/80 border border-slate-700 rounded-xl
-                      pl-9 pr-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500
-                      focus:ring-1 focus:ring-indigo-500/40 transition"
-                    placeholder="Year"
-                  />
+                  <input type="number" value={year} onChange={(e) => setYear(e.target.value)}
+                    className={inputCls + " pl-9"} placeholder="Year" />
                 </div>
               </div>
 
               <button
                 onClick={getMonthlyAttendance}
                 disabled={!employeeId || !month || loading}
-                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50
-                  disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all active:scale-95"
+                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40
+                  disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all active:scale-95
+                  shadow-lg shadow-indigo-900/30"
               >
                 {loading ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
                 {loading ? "Fetching…" : "View Report"}
@@ -597,74 +584,59 @@ useEffect(() => {
 
               <AnimatePresence>
                 {!loading && monthlyAttendance.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-7"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
                     <div className="flex flex-wrap items-center gap-3 mb-5">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-10 h-10 rounded-full bg-indigo-600/25 border border-indigo-500/40
-                          flex items-center justify-center text-indigo-300 font-bold text-base shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-indigo-600/20 border border-indigo-500/40
+                          flex items-center justify-center text-indigo-300 font-bold shrink-0">
                           {selectedEmployee?.name?.[0] || "?"}
                         </div>
                         <div>
-                          <p className="font-semibold text-white leading-tight">{selectedEmployee?.name}</p>
+                          <p className="font-bold text-white">{selectedEmployee?.name}</p>
                           <p className="text-xs text-slate-400 font-mono">{selectedEmployee?.empId}</p>
                         </div>
                       </div>
                       <div className="flex gap-2 flex-wrap">
                         <StatPill icon={CheckCircle2} label="Present" value={`${presentDays} days`} color="bg-emerald-600/80" />
-                        <StatPill icon={Calendar} label="Total" value={`${monthlyAttendance.length} records`} color="bg-indigo-600/80" />
+                        <StatPill icon={Calendar} label="Total records" value={monthlyAttendance.length} color="bg-indigo-600/80" />
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto rounded-2xl border border-slate-800">
-                      <table className="w-full text-sm">
+                    <div className="overflow-x-auto rounded-2xl border border-[#1f2f47]">
+                      <table className="w-full text-sm min-w-[480px]">
                         <thead>
-                          <tr className="bg-slate-800/60 text-slate-400 text-xs uppercase tracking-wider">
-                            <th className="px-4 py-3 text-left font-medium">#</th>
-                            <th className="px-4 py-3 text-left font-medium">Date</th>
-                            <th className="px-4 py-3 text-left font-medium">
-                              <span className="flex items-center gap-1"><LogIn size={12}/>Check In</span>
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium">
-                              <span className="flex items-center gap-1"><LogOut size={12}/>Check Out</span>
-                            </th>
-                            <th className="px-4 py-3 text-left font-medium">Shift</th>
-                            <th className="px-4 py-3 text-left font-medium">Status</th>
+                          <tr className="bg-[#111827] text-slate-400 text-xs uppercase tracking-wider">
+                            {["#", "Date", "Check In", "Check Out", "Shift", "Status"].map(h => (
+                              <th key={h} className="px-4 py-3 text-left font-medium">{h}</th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
                           {monthlyAttendance.map((item, i) => (
                             <TableRow key={item._id} index={i}>
-                              <td className="px-4 py-3.5 text-slate-500 text-xs">{i + 1}</td>
+                              <td className="px-4 py-3.5 text-slate-600 text-xs">{i + 1}</td>
                               <td className="px-4 py-3.5 text-slate-300 font-medium">{item.date}</td>
                               <td className="px-4 py-3.5">
-                                <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-medium">
-                                  <Clock size={12}/>{item.checkInTime || "—"}
+                                <span className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
+                                  <Clock size={11} />{item.checkInTime || "—"}
                                 </span>
                               </td>
                               <td className="px-4 py-3.5">
-                                <span className="flex items-center gap-1.5 text-rose-400 text-xs font-medium">
-                                  <Clock size={12}/>{item.checkOutTime || "—"}
+                                <span className="flex items-center gap-1.5 text-rose-400 text-xs font-semibold">
+                                  <Clock size={11} />{item.checkOutTime || "—"}
                                 </span>
                               </td>
-                              <td className="px-4 py-3.5">
-                                <ShiftBadge shift={item.shift} />
-                              </td>
+                              <td className="px-4 py-3.5"><ShiftBadge shift={item.shift} /></td>
                               <td className="px-4 py-3.5">
                                 {item.checkInTime ? (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
                                     bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-medium">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                                    Present
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />Present
                                   </span>
                                 ) : (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full
                                     bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs font-medium">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-                                    Absent
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />Absent
                                   </span>
                                 )}
                               </td>
@@ -676,218 +648,131 @@ useEffect(() => {
                   </motion.div>
                 )}
                 {!loading && employeeId && month && monthlyAttendance.length === 0 && (
-                  <EmptyState message="No attendance records found for this period." />
+                  <EmptyState message="No records found for this period." />
                 )}
               </AnimatePresence>
             </motion.div>
           )}
 
-          {/* ALL MONTH TAB */}
+          {/* ══ ALL MONTH TAB ══ */}
           {tab === "allmonth" && (
             <motion.div
               key="allmonth"
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.28 }}
-              className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6"
+              transition={{ duration: 0.25 }}
+              className="bg-[#0d1624]/80 border border-[#1f2f47] rounded-3xl p-5 sm:p-7 backdrop-blur-sm"
             >
-              {/* heading */}
-              <h2 className="text-lg font-semibold mb-5 flex items-center gap-2">
-                <Users size={18} className="text-indigo-400" />
-                Company Monthly Attendance
-              </h2>
+              <SectionHeader icon={Users} title="Company Monthly Attendance" />
 
-              {/* filters */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                <div className="relative">
-                  <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
-                  <ChevronDown size={13} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
-                  <select
-                    value={month}
-                    onChange={(e) => setMonth(e.target.value)}
-                    className="w-full appearance-none bg-slate-800/80 border border-slate-700 rounded-xl
-                      pl-9 pr-8 py-3 text-sm text-white focus:outline-none focus:border-indigo-500
-                      focus:ring-1 focus:ring-indigo-500/40 transition"
-                  >
+                <SelectWrapper icon={Calendar}>
+                  <select value={month} onChange={(e) => setMonth(e.target.value)} className={selectCls}>
                     <option value="">Select Month</option>
-                    {MONTHS.map(({ v, l }) => (
-                      <option key={v} value={v}>{l}</option>
-                    ))}
+                    {MONTHS.map(({ v, l }) => <option key={v} value={v}>{l}</option>)}
                   </select>
-                </div>
+                </SelectWrapper>
 
                 <div className="relative">
                   <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-                  <input
-                    type="number"
-                    value={year}
-                    onChange={(e) => setYear(e.target.value)}
-                    className="w-full bg-slate-800/80 border border-slate-700 rounded-xl
-                      pl-9 pr-4 py-3 text-sm text-white focus:outline-none focus:border-indigo-500
-                      focus:ring-1 focus:ring-indigo-500/40 transition"
-                    placeholder="Year"
-                  />
+                  <input type="number" value={year} onChange={(e) => setYear(e.target.value)}
+                    className={inputCls + " pl-9"} placeholder="Year" />
                 </div>
               </div>
 
               <button
                 onClick={getAllMonthlyAttendance}
                 disabled={!month || loading}
-                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50
-                  disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all active:scale-95 mb-6"
+                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40
+                  disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold transition-all active:scale-95
+                  shadow-lg shadow-indigo-900/30 mb-6"
               >
                 {loading ? <Loader2 size={15} className="animate-spin" /> : <Search size={15} />}
                 {loading ? "Fetching…" : "Load Attendance"}
               </button>
 
-              {/* results */}
               <AnimatePresence>
                 {!loading && companyMonthlyData.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    {/* summary stats */}
-                    <div className="flex flex-wrap gap-3 mb-5">
-                      <StatPill icon={Users}      label="Employees"      value={allMonthStats.employees} color="bg-indigo-600/80" />
-                      <StatPill icon={CheckCircle2} label="Total present" value={allMonthStats.totalPresent} color="bg-emerald-600/80" />
-                      <StatPill icon={TrendingUp}  label="Attendance rate" value={`${allMonthStats.rate}%`} color="bg-violet-600/80" />
-                      <StatPill icon={Calendar}    label="Working days"   value={totalDays} color="bg-slate-600/80" />
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+                    {/* stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-5">
+                      <StatPill icon={Users}        label="Employees"       value={allMonthStats.employees}      color="bg-indigo-600/80" />
+                      <StatPill icon={CheckCircle2} label="Total present"   value={allMonthStats.totalPresent}   color="bg-emerald-600/80" />
+                      <StatPill icon={TrendingUp}   label="Attendance rate" value={`${allMonthStats.rate}%`}    color="bg-violet-600/80" />
+                      <StatPill icon={Calendar}     label="Working days"    value={totalDays}                    color="bg-slate-600/80" />
                     </div>
 
-                    {/* search + legend row */}
-                    <div className="flex flex-col sm:flex-row gap-3 mb-4 items-start sm:items-center">
-                      {/* search */}
-                      <div className="relative flex-1 w-full sm:w-auto">
+                    {/* search + scroll */}
+                    <div className="flex flex-col sm:flex-row gap-3 mb-3 items-start sm:items-center">
+                      <div className="relative flex-1 w-full">
                         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                         <input
                           type="text"
                           value={empSearch}
                           onChange={(e) => setEmpSearch(e.target.value)}
                           placeholder="Search employee…"
-                          className="w-full bg-slate-800/80 border border-slate-700 rounded-xl
-                            pl-9 pr-4 py-2.5 text-sm text-white placeholder:text-slate-500
-                            focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/40 transition"
+                          className={inputCls + " pl-9"}
                         />
                       </div>
-
-                      {/* legend pills */}
-                      <div className="flex flex-wrap gap-2 text-[11px] font-medium">
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-                          <span className="text-slate-400">Check-in</span>
-                        </span>
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-slate-700">
-                          <span className="w-2 h-2 rounded-full bg-rose-400" />
-                          <span className="text-slate-400">Check-out</span>
-                        </span>
-                        <span className="px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/20 text-amber-400">Day</span>
-                        <span className="px-2.5 py-1 rounded-full bg-orange-500/15 border border-orange-500/20 text-orange-400">Afternoon</span>
-                        <span className="px-2.5 py-1 rounded-full bg-indigo-500/15 border border-indigo-500/20 text-indigo-400">Night</span>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 shrink-0">
+                        <button onClick={() => scrollTable(-1)}
+                          className="flex items-center gap-1 px-3 py-2 rounded-xl bg-[#111827] border border-[#1f2f47] hover:border-indigo-500/50 transition">
+                          <ChevronLeft size={12} /> Left
+                        </button>
+                        <button onClick={() => scrollTable(1)}
+                          className="flex items-center gap-1 px-3 py-2 rounded-xl bg-[#111827] border border-[#1f2f47] hover:border-indigo-500/50 transition">
+                          Right <ChevronRight size={12} />
+                        </button>
                       </div>
                     </div>
 
-                    {/* resize hint + scroll nav */}
-                    <div className="flex justify-between items-center mb-2 text-xs text-slate-500 gap-2 flex-wrap">
-                      {/* resize hint */}
-                      <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 select-none">
-                        <GripVertical size={12} className="text-indigo-400" />
-                        Drag to resize the Name column
-                      </span>
-
-                      {/* scroll nav */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => scrollTable(-1)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition"
-                        >
-                          <ChevronLeft size={13} /> Left
-                        </button>
-                        <button
-                          onClick={() => scrollTable(1)}
-                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition"
-                        >
-                          Right <ChevronRight size={13} />
-                        </button>
-                      </div>
+                    {/* resize hint */}
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-2">
+                      <GripVertical size={11} className="text-indigo-400" />
+                      Drag handle to resize Name column
                     </div>
 
                     {/* table */}
-                    <div className="rounded-2xl border border-slate-800 overflow-hidden">
-                      <div
-                        ref={tableScrollRef}
-                        className="overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900"
-                        style={{ WebkitOverflowScrolling: "touch" }}
-                      >
+                    <div className="rounded-2xl border border-[#1f2f47] overflow-hidden">
+                      <div ref={tableScrollRef} className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
                         <table className="border-collapse" style={{ minWidth: "max-content", width: "100%" }}>
                           <thead>
-                            <tr className="bg-slate-800/80 border-b border-slate-700">
-                              {/* sticky employee header with drag handle */}
+                            <tr className="bg-[#111827] border-b border-[#1f2f47]">
                               <th
-                                className="text-left text-xs font-semibold uppercase tracking-wider text-slate-400 border-r border-slate-700/80"
-                                style={{
-                                  position: "sticky",
-                                  left: 0,
-                                  background: "#1a2235",
-                                  zIndex: 10,
-                                  width: colWidth,
-                                  minWidth: colWidth,
-                                  maxWidth: colWidth,
-                                }}
+                                className="text-left text-xs font-semibold uppercase tracking-wider text-slate-400 border-r border-[#1f2f47]"
+                                style={{ position: "sticky", left: 0, background: "#0e1929", zIndex: 10, width: colWidth, minWidth: colWidth, maxWidth: colWidth }}
                               >
                                 <div className="flex items-center justify-between px-4 py-3 gap-1">
                                   <span>Employee</span>
-                                  {/* drag handle */}
                                   <span
                                     onMouseDown={onMouseDown}
                                     onTouchStart={onTouchStart}
-                                    title="Drag to resize"
-                                    className="flex items-center justify-center w-5 h-6 rounded cursor-col-resize
-                                      text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10
-                                      active:text-indigo-300 transition shrink-0 touch-none"
+                                    className="flex items-center justify-center w-5 h-6 rounded cursor-col-resize text-slate-500
+                                      hover:text-indigo-400 hover:bg-indigo-500/10 active:text-indigo-300 transition shrink-0 touch-none"
                                     style={{ touchAction: "none" }}
+                                    title="Drag to resize"
                                   >
-                                    <GripVertical size={13} />
+                                    <GripVertical size={12} />
                                   </span>
                                 </div>
                               </th>
-
                               {Array.from({ length: totalDays }, (_, i) => (
-                                <th
-                                  key={i + 1}
-                                  className="px-1.5 py-3 text-center text-xs font-semibold text-slate-400"
-                                  style={{ minWidth: 110 }}
-                                >
-                                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-700/50 text-slate-300 font-bold text-xs">
+                                <th key={i + 1} className="px-1.5 py-3 text-center text-xs font-semibold text-slate-400" style={{ minWidth: 110 }}>
+                                  <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#1a2535] text-slate-300 font-bold text-xs">
                                     {i + 1}
                                   </span>
                                 </th>
                               ))}
                             </tr>
                           </thead>
-
                           <tbody>
                             {filteredMonthlyData.length === 0 ? (
-                              <tr>
-                                <td colSpan={totalDays + 1}>
-                                  <EmptyState message="No employee matches your search." />
-                                </td>
-                              </tr>
+                              <tr><td colSpan={totalDays + 1}><EmptyState message="No employees match your search." /></td></tr>
                             ) : (
                               filteredMonthlyData.map((employee, rowIdx) => {
-                                let presentCount = 0;
-                                for (let d = 1; d <= totalDays; d++) {
-                                  if (employee[d] && employee[d].checkInTime) presentCount++;
-                                }
                                 const initials = (employee.employeeName || "?")
-                                  .split(" ")
-                                  .map((w) => w[0])
-                                  .join("")
-                                  .slice(0, 2)
-                                  .toUpperCase();
-
+                                  .split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
                                 return (
                                   <motion.tr
                                     key={employee.employeeId}
@@ -895,21 +780,11 @@ useEffect(() => {
                                     variants={fadeUp}
                                     initial="hidden"
                                     animate="show"
-                                    className="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors group"
+                                    className="border-b border-[#1a2535] hover:bg-white/[0.015] transition-colors"
                                   >
-                                    {/* sticky employee name cell */}
                                     <td
-                                      className="py-3 border-r border-slate-700/50"
-                                      style={{
-                                        position: "sticky",
-                                        left: 0,
-                                        zIndex: 5,
-                                        backgroundColor: stickyBg,
-                                        width: colWidth,
-                                        minWidth: colWidth,
-                                        maxWidth: colWidth,
-                                        overflow: "hidden",
-                                      }}
+                                      className="py-3 border-r border-[#1f2f47]"
+                                      style={{ position: "sticky", left: 0, zIndex: 5, backgroundColor: stickyBg, width: colWidth, minWidth: colWidth, maxWidth: colWidth, overflow: "hidden" }}
                                     >
                                       <div className="flex items-center gap-2 px-3">
                                         <div className="w-8 h-8 rounded-full bg-indigo-600/20 border border-indigo-500/30
@@ -917,56 +792,18 @@ useEffect(() => {
                                           {initials}
                                         </div>
                                         <div className="min-w-0">
-                                          <p className="text-sm font-medium text-white truncate leading-tight">
-                                            {employee.employeeName}
-                                          </p>
+                                          <p className="text-sm font-medium text-white truncate">{employee.employeeName}</p>
                                           {employee.empId && (
-                                            <p className="text-[10px] text-slate-500 font-mono leading-tight truncate">
-                                              {employee.empId}
-                                            </p>
+                                            <p className="text-[10px] text-slate-500 font-mono truncate">{employee.empId}</p>
                                           )}
                                         </div>
                                       </div>
                                     </td>
-
-                                    {/* day cells */}
-                                    {Array.from({ length: totalDays }, (_, i) => {
-                                      const day = employee[i + 1];
-                                      return (
-                                        <td key={i + 1} className="px-1.5 py-2 align-middle" style={{ minWidth: 110 }}>
-                                          {day && day.checkInTime ? (
-                                            <div className="rounded-xl bg-slate-800/70 border border-slate-700/60 px-2 py-2 flex flex-col gap-1.5">
-                                              {/* check-in */}
-                                              <div className="flex items-center gap-1.5">
-                                                <span className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
-                                                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 7V1M1 4l3-3 3 3" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                                                </span>
-                                                <span className="text-xs font-semibold text-emerald-400 leading-none tabular-nums">
-                                                  {day.checkInTime}
-                                                </span>
-                                              </div>
-                                              {/* check-out */}
-                                              <div className="flex items-center gap-1.5">
-                                                <span className="w-4 h-4 rounded-full bg-rose-500/20 flex items-center justify-center shrink-0">
-                                                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M4 1v6M1 4l3 3 3-3" stroke="#f87171" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                                                </span>
-                                                <span className="text-xs font-semibold text-rose-400 leading-none tabular-nums">
-                                                  {day.checkOutTime || "—"}
-                                                </span>
-                                              </div>
-                                              {/* shift */}
-                                              <div className="pt-0.5">
-                                                <ShiftBadge shift={day.shift} />
-                                              </div>
-                                            </div>
-                                          ) : (
-                                            <div className="flex items-center justify-center h-[72px]">
-                                              <span className="w-6 h-6 rounded-full bg-slate-800/60 border border-slate-700/40 flex items-center justify-center text-slate-600 text-xs font-bold select-none">—</span>
-                                            </div>
-                                          )}
-                                        </td>
-                                      );
-                                    })}
+                                    {Array.from({ length: totalDays }, (_, i) => (
+                                      <td key={i + 1} className="px-1.5 py-2 align-middle" style={{ minWidth: 110 }}>
+                                        <AttCell entry={employee[i + 1]} />
+                                      </td>
+                                    ))}
                                   </motion.tr>
                                 );
                               })
@@ -983,7 +820,6 @@ useEffect(() => {
                     )}
                   </motion.div>
                 )}
-
                 {!loading && month && companyMonthlyData.length === 0 && (
                   <EmptyState message="No attendance data found for this month." />
                 )}
@@ -991,181 +827,209 @@ useEffect(() => {
             </motion.div>
           )}
 
+          {/* ══ WEEKLY TAB ══ — fully rebuilt, mobile-first */}
           {tab === "week" && (
-  <motion.div
-    key="week"
-    initial={{ opacity: 0, y: 14 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -10 }}
-    transition={{ duration: 0.28 }}
-    className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6"
-  >
-    <h2 className="text-lg font-semibold mb-5 flex items-center gap-2">
-      <TrendingUp size={18} className="text-indigo-400" />
-      Weekly Attendance
-    </h2>
+            <motion.div
+              key="week"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              className="bg-[#0d1624]/80 border border-[#1f2f47] rounded-3xl p-5 sm:p-7 backdrop-blur-sm"
+            >
+              <SectionHeader icon={TrendingUp} title="Weekly Attendance" />
 
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+              {/* filters: stacked on mobile, row on desktop */}
+              <div className="flex flex-col gap-3 mb-4">
+                {/* Row 1: month + year side by side */}
+                <div className="grid grid-cols-2 gap-3">
+                  <SelectWrapper icon={Calendar}>
+                    <select value={month} onChange={(e) => setMonth(e.target.value)} className={selectCls}>
+                      <option value="">Month</option>
+                      {MONTHS.map(({ v, l }) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </SelectWrapper>
 
-      <select
-        value={month}
-        onChange={(e) => setMonth(e.target.value)}
-        className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
-      >
-        <option value="">Select Month</option>
+                  <div className="relative">
+                    <Calendar size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                    <input
+                      type="number"
+                      value={year}
+                      onChange={(e) => setYear(e.target.value)}
+                      className={inputCls + " pl-9"}
+                      placeholder="Year"
+                    />
+                  </div>
+                </div>
 
-        {MONTHS.map((m) => (
-          <option
-            key={m.v}
-            value={m.v}
-          >
-            {m.l}
-          </option>
-        ))}
-      </select>
+                {/* Row 2: week picker (full width) */}
+                <SelectWrapper icon={Calendar}>
+                  <select
+                    value={selectedWeek}
+                    onChange={(e) => setSelectedWeek(e.target.value)}
+                    className={selectCls}
+                    disabled={!availableWeeks.length}
+                  >
+                    <option value="">{availableWeeks.length ? "Select Week" : "Choose month first"}</option>
+                    {availableWeeks.map(w => (
+                      <option key={w.weekNo} value={w.weekNo}>
+                        Week {w.weekNo} — {w.startDay} to {w.endDay}
+                      </option>
+                    ))}
+                  </select>
+                </SelectWrapper>
 
-      <input
-        type="number"
-        value={year}
-        onChange={(e) =>
-          setYear(e.target.value)
-        }
-        className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
-      />
-
-      <select
-        value={selectedWeek}
-        onChange={(e) =>
-          setSelectedWeek(e.target.value)
-        }
-        className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
-      >
-        <option value="">
-          Select Week
-        </option>
-{availableWeeks.map((week) => (
-  <option
-    key={week.weekNo}
-    value={week.weekNo}
-  >
-    Week {week.weekNo}
-    ({week.startDay} - {week.endDay})
-  </option>
-))}
-      </select>
-    </div>
-
-    <button
-      onClick={getWeeklyAttendance}
-      disabled={
-        !month ||
-        !year ||
-        !selectedWeek
-      }
-      className="px-6 py-3 bg-indigo-600 rounded-xl"
-    >
-      Load Weekly Attendance
-    </button>
-
-    {weeklyAttendance?.tableData?.length > 0 && (
-      <div className="mt-6 overflow-x-auto border border-slate-800 rounded-xl">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-slate-800">
-
-              <th className="p-3 text-left">
-                Employee
-              </th>
-
-              <th className="p-3">
-                Sun
-              </th>
-
-              <th className="p-3">
-                Mon
-              </th>
-
-              <th className="p-3">
-                Tue
-              </th>
-
-              <th className="p-3">
-                Wed
-              </th>
-
-              <th className="p-3">
-                Thu
-              </th>
-
-              <th className="p-3">
-                Fri
-              </th>
-
-              <th className="p-3">
-                Sat
-              </th>
-
-            </tr>
-          </thead>
-
-          <tbody>
-
-            {weeklyAttendance.tableData.map(
-              (employee) => (
-                <tr
-                  key={employee.employeeId}
-                  className="border-t border-slate-800"
+                {/* Row 3: button (full width on mobile) */}
+                <button
+                  onClick={getWeeklyAttendance}
+                  disabled={!month || !year || !selectedWeek || loading}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500
+                    disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-sm font-semibold
+                    transition-all duration-200 active:scale-95 shadow-lg shadow-indigo-900/30"
                 >
-<td className="p-3">
-  <div>
-    <div>{employee.employeeName}</div>
-    <div className="text-xs text-slate-500">
-      {employee.empId}
-    </div>
-  </div>
-</td>
+                  {loading ? <Loader2 size={15} className="animate-spin" /> : <TrendingUp size={15} />}
+                  {loading ? "Fetching…" : "Load Weekly Attendance"}
+                </button>
+              </div>
 
-                  {weeklyAttendance.days.map(
-                    (day, index) => (
-                      <td
-                        key={index}
-                        className="text-center p-3"
-                      >
-                       <td
-  key={index}
-  className="p-3 text-center"
->
-  {employee[day] ? (
-    <div className="flex flex-col text-xs">
-      <span className="text-emerald-400">
-        {employee[day].checkInTime}
-      </span>
+              <AnimatePresence>
+                {!loading && weeklyAttendance.tableData.length > 0 && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
 
-      <span className="text-rose-400">
-        {employee[day].checkOutTime}
-      </span>
+                    {/* weekly summary pills */}
+                    {weeklyStats && (
+                      <div className="flex flex-wrap gap-2 mb-5">
+                        <StatPill icon={Users}        label="Employees"  value={weeklyAttendance.tableData.length} color="bg-indigo-600/80" />
+                        <StatPill icon={CheckCircle2} label="Present"    value={weeklyStats.present}               color="bg-emerald-600/80" />
+                        <StatPill icon={TrendingUp}   label="Rate"       value={`${weeklyStats.rate}%`}            color="bg-violet-600/80" />
+                        <StatPill icon={Calendar}     label="Days"       value={weeklyAttendance.days.length}       color="bg-slate-600/80" />
+                      </div>
+                    )}
 
-      <span className="text-slate-400">
-        {employee[day].shift}
-      </span>
-    </div>
-  ) : (
-    "—"
-  )}
-</td>
-                      </td>
-                    )
-                  )}
-                </tr>
-              )
-            )}
+                    {/* legend */}
+                    <div className="flex flex-wrap gap-2 text-[11px] font-medium mb-4">
+                      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#111827] border border-[#1f2f47]">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                        <span className="text-slate-400">Check-in</span>
+                      </span>
+                      <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#111827] border border-[#1f2f47]">
+                        <span className="w-2 h-2 rounded-full bg-rose-400" />
+                        <span className="text-slate-400">Check-out</span>
+                      </span>
+                    </div>
 
-          </tbody>
-        </table>
-      </div>
-    )}
-  </motion.div>
-)}
+                    {/* table — horizontally scrollable */}
+                    <div className="rounded-2xl border border-[#1f2f47] overflow-hidden">
+                      <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+                        <table className="border-collapse" style={{ minWidth: "max-content", width: "100%" }}>
+                          <thead>
+                            <tr className="bg-[#111827] border-b border-[#1f2f47]">
+                              {/* Sticky Employee column header */}
+                              <th
+                                className="text-left text-xs font-semibold uppercase tracking-wider text-slate-400 border-r border-[#1f2f47] px-4 py-3"
+                                style={{ position: "sticky", left: 0, background: "#0e1929", zIndex: 10, minWidth: 140 }}
+                              >
+                                Employee
+                              </th>
+
+                              {/* Day headers */}
+                              {weeklyAttendance.days.map((day, i) => {
+                                const d = new Date(day);
+                                const dayName = DAYS_LABEL[d.getDay()];
+                                const dayNum = d.getDate();
+                                return (
+                                  <th key={i} className="px-2 py-3 text-center min-w-[100px]">
+                                    <div className="flex flex-col items-center gap-0.5">
+                                      <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">{dayName}</span>
+                                      <span className="w-7 h-7 rounded-full bg-[#1a2535] flex items-center justify-center text-slate-300 font-bold text-xs">
+                                        {dayNum}
+                                      </span>
+                                    </div>
+                                  </th>
+                                );
+                              })}
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                            {weeklyAttendance.tableData.map((employee, rowIdx) => {
+                              const initials = (employee.employeeName || "?")
+                                .split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+
+                              // count present days
+                              let presentCount = 0;
+                              weeklyAttendance.days.forEach(d => { if (employee[d]?.checkInTime) presentCount++; });
+
+                              return (
+                                <motion.tr
+                                  key={employee.employeeId}
+                                  custom={rowIdx}
+                                  variants={fadeUp}
+                                  initial="hidden"
+                                  animate="show"
+                                  className="border-b border-[#1a2535] hover:bg-white/[0.015] transition-colors"
+                                >
+                                  {/* Sticky employee cell */}
+                                  <td
+                                    className="py-3 border-r border-[#1f2f47]"
+                                    style={{ position: "sticky", left: 0, zIndex: 5, backgroundColor: stickyBg, minWidth: 140 }}
+                                  >
+                                    <div className="flex items-center gap-2.5 px-3">
+                                      <div className="w-9 h-9 rounded-full bg-indigo-600/20 border border-indigo-500/30
+                                        flex items-center justify-center text-indigo-300 text-xs font-bold shrink-0">
+                                        {initials}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-white truncate leading-tight">
+                                          {employee.employeeName}
+                                        </p>
+                                        <p className="text-[10px] text-slate-500 font-mono truncate">{employee.empId}</p>
+                                        {/* mini present bar */}
+                                        <div className="flex items-center gap-1.5 mt-1">
+                                          <div className="flex-1 h-1 bg-[#1a2535] rounded-full overflow-hidden" style={{ maxWidth: 52 }}>
+                                            <div
+                                              className={`h-full rounded-full transition-all ${
+                                                presentCount / weeklyAttendance.days.length >= 0.8
+                                                  ? "bg-emerald-500"
+                                                  : presentCount / weeklyAttendance.days.length >= 0.5
+                                                  ? "bg-amber-500"
+                                                  : "bg-rose-500"
+                                              }`}
+                                              style={{ width: `${(presentCount / weeklyAttendance.days.length) * 100}%` }}
+                                            />
+                                          </div>
+                                          <span className="text-[9px] text-slate-500 tabular-nums">{presentCount}/{weeklyAttendance.days.length}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  {/* Day cells */}
+                                  {weeklyAttendance.days.map((day, i) => (
+                                    <td key={i} className="px-1.5 py-2 align-middle min-w-[100px]">
+                                      <AttCell entry={employee[day]} compact />
+                                    </td>
+                                  ))}
+                                </motion.tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-slate-600 mt-3 text-center">
+                      {weeklyAttendance.tableData.length} employees · {weeklyAttendance.days.length} days shown
+                    </p>
+                  </motion.div>
+                )}
+
+                {!loading && selectedWeek && weeklyAttendance.tableData.length === 0 && (
+                  <EmptyState message="No attendance data found for this week." />
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
 
         </AnimatePresence>
       </div>
