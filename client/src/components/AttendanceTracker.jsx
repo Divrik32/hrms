@@ -192,6 +192,12 @@ const AttendanceTracker = () => {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [companyMonthlyData, setCompanyMonthlyData] = useState([]);
   const [totalDays, setTotalDays] = useState(0);
+  const [availableWeeks, setAvailableWeeks] = useState([]);
+const [selectedWeek, setSelectedWeek] = useState("");
+const [weeklyAttendance, setWeeklyAttendance] = useState({
+  days: [],
+  tableData: [],
+});
   const [loading, setLoading] = useState(false);
 
   /* all-month extras */
@@ -251,6 +257,63 @@ const AttendanceTracker = () => {
       setLoading(false);
     }
   };
+
+  const getWeeklyAttendance = async () => {
+  setLoading(true);
+
+  try {
+    const res = await api.post(
+      "/superadmin/weekly-attendance",
+      {
+        companyId,
+        month,
+        year,
+        weekNo: Number(selectedWeek),
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    setWeeklyAttendance({
+      days: res.data.days || [],
+      tableData: res.data.tableData || [],
+    });
+  } catch (error) {
+    console.log(error);
+    toast.error(
+      error.response?.data?.message ||
+      "Failed to load weekly attendance"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  const loadWeeks = async () => {
+    if (!month || !year) return;
+
+    try {
+      const res = await api.post(
+        "superadmin/month-weeks",
+        {
+          month,
+          year,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      setAvailableWeeks(res.data.weeks || []);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  loadWeeks();
+}, [month, year]);
 
   const presentDays = monthlyAttendance.filter(r => r.checkInTime).length;
 
@@ -327,6 +390,7 @@ const AttendanceTracker = () => {
             { key: "day",      icon: Calendar,  label: "By Day"        },
             { key: "month",    icon: BarChart3,  label: "By Month"      },
             { key: "allmonth", icon: Users,      label: "All By Month"  },
+            { key: "week",     icon: TrendingUp, label: "Weekly"        },
           ].map(({ key, icon: Icon, label }) => (
             <button
               key={key}
@@ -926,6 +990,182 @@ const AttendanceTracker = () => {
               </AnimatePresence>
             </motion.div>
           )}
+
+          {tab === "week" && (
+  <motion.div
+    key="week"
+    initial={{ opacity: 0, y: 14 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    transition={{ duration: 0.28 }}
+    className="bg-slate-900/60 border border-slate-800 rounded-3xl p-6"
+  >
+    <h2 className="text-lg font-semibold mb-5 flex items-center gap-2">
+      <TrendingUp size={18} className="text-indigo-400" />
+      Weekly Attendance
+    </h2>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+
+      <select
+        value={month}
+        onChange={(e) => setMonth(e.target.value)}
+        className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+      >
+        <option value="">Select Month</option>
+
+        {MONTHS.map((m) => (
+          <option
+            key={m.v}
+            value={m.v}
+          >
+            {m.l}
+          </option>
+        ))}
+      </select>
+
+      <input
+        type="number"
+        value={year}
+        onChange={(e) =>
+          setYear(e.target.value)
+        }
+        className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+      />
+
+      <select
+        value={selectedWeek}
+        onChange={(e) =>
+          setSelectedWeek(e.target.value)
+        }
+        className="bg-slate-800 border border-slate-700 rounded-xl px-4 py-3"
+      >
+        <option value="">
+          Select Week
+        </option>
+{availableWeeks.map((week) => (
+  <option
+    key={week.weekNo}
+    value={week.weekNo}
+  >
+    Week {week.weekNo}
+    ({week.startDay} - {week.endDay})
+  </option>
+))}
+      </select>
+    </div>
+
+    <button
+      onClick={getWeeklyAttendance}
+      disabled={
+        !month ||
+        !year ||
+        !selectedWeek
+      }
+      className="px-6 py-3 bg-indigo-600 rounded-xl"
+    >
+      Load Weekly Attendance
+    </button>
+
+    {weeklyAttendance?.tableData?.length > 0 && (
+      <div className="mt-6 overflow-x-auto border border-slate-800 rounded-xl">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-slate-800">
+
+              <th className="p-3 text-left">
+                Employee
+              </th>
+
+              <th className="p-3">
+                Sun
+              </th>
+
+              <th className="p-3">
+                Mon
+              </th>
+
+              <th className="p-3">
+                Tue
+              </th>
+
+              <th className="p-3">
+                Wed
+              </th>
+
+              <th className="p-3">
+                Thu
+              </th>
+
+              <th className="p-3">
+                Fri
+              </th>
+
+              <th className="p-3">
+                Sat
+              </th>
+
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {weeklyAttendance.tableData.map(
+              (employee) => (
+                <tr
+                  key={employee.employeeId}
+                  className="border-t border-slate-800"
+                >
+<td className="p-3">
+  <div>
+    <div>{employee.employeeName}</div>
+    <div className="text-xs text-slate-500">
+      {employee.empId}
+    </div>
+  </div>
+</td>
+
+                  {weeklyAttendance.days.map(
+                    (day, index) => (
+                      <td
+                        key={index}
+                        className="text-center p-3"
+                      >
+                       <td
+  key={index}
+  className="p-3 text-center"
+>
+  {employee[day] ? (
+    <div className="flex flex-col text-xs">
+      <span className="text-emerald-400">
+        {employee[day].checkInTime}
+      </span>
+
+      <span className="text-rose-400">
+        {employee[day].checkOutTime}
+      </span>
+
+      <span className="text-slate-400">
+        {employee[day].shift}
+      </span>
+    </div>
+  ) : (
+    "—"
+  )}
+</td>
+                      </td>
+                    )
+                  )}
+                </tr>
+              )
+            )}
+
+          </tbody>
+        </table>
+      </div>
+    )}
+  </motion.div>
+)}
 
         </AnimatePresence>
       </div>

@@ -7,6 +7,8 @@ import {
   getAllMonthlyAttendance,
   getAttendanceByDate,
   getEmployeeMonthlyAttendance,
+  getMonthWeeks,
+  getWeeklyAttendance,
   loginSuperAdmin,
   logoutSuperAdmin,
   resendSuperAdminOtp,
@@ -53,5 +55,17 @@ router.post("/verify-otp", verifySuperAdminOtp);
 router.post("/reset-password", resetSuperAdminPassword);
 
 router.post("/resend-otp", resendSuperAdminOtp);
+
+router.post(
+  "/month-weeks",
+  protectSuperAdmin,
+  getMonthWeeks
+);
+
+router.post(
+  "/weekly-attendance",
+  protectSuperAdmin,
+  getWeeklyAttendance
+);
 
 export default router;

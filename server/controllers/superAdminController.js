@@ -649,3 +649,238 @@ export const resetSuperAdminPassword =
       });
     }
   };
+
+export const getMonthWeeks = async (req, res) => {
+  try {
+    const { month, year } = req.body;
+
+    const totalDays = new Date(
+      Number(year),
+      Number(month),
+      0
+    ).getDate();
+
+    const weeks = [];
+
+    let currentWeek = [];
+    let weekNo = 1;
+
+    for (let day = 1; day <= totalDays; day++) {
+      const date = new Date(
+        Number(year),
+        Number(month) - 1,
+        day
+      );
+
+      currentWeek.push(day);
+
+      if (
+        date.getDay() === 6 ||
+        day === totalDays
+      ) {
+        weeks.push({
+          weekNo,
+          days: [...currentWeek],
+          startDay: currentWeek[0],
+          endDay:
+            currentWeek[
+              currentWeek.length - 1
+            ],
+        });
+
+        weekNo++;
+        currentWeek = [];
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      weeks,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getWeeklyAttendance = async (req, res) => {
+  try {
+    const {
+      companyId,
+      month,
+      year,
+      weekNo,
+    } = req.body;
+
+    if (
+      !companyId ||
+      !month ||
+      !year ||
+      !weekNo
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields",
+      });
+    }
+
+    // Company এর সব employee
+    const employees = await Employee.find({
+      companyId,
+    }).select(
+      "name empId departmentId"
+    );
+
+    const totalDays = new Date(
+      Number(year),
+      Number(month),
+      0
+    ).getDate();
+
+    const weeks = [];
+    let currentWeek = [];
+
+    for (
+      let day = 1;
+      day <= totalDays;
+      day++
+    ) {
+      const date = new Date(
+        Number(year),
+        Number(month) - 1,
+        day
+      );
+
+      currentWeek.push(day);
+
+      if (
+        date.getDay() === 6 ||
+        day === totalDays
+      ) {
+        weeks.push([...currentWeek]);
+        currentWeek = [];
+      }
+    }
+
+    const selectedWeek =
+      weeks[Number(weekNo) - 1];
+
+    if (!selectedWeek) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Invalid week selected",
+      });
+    }
+
+    const startDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      selectedWeek[0]
+    );
+
+    startDate.setHours(
+      0,
+      0,
+      0,
+      0
+    );
+
+    const endDate = new Date(
+      Number(year),
+      Number(month) - 1,
+      selectedWeek[
+        selectedWeek.length - 1
+      ]
+    );
+
+    endDate.setHours(
+      23,
+      59,
+      59,
+      999
+    );
+
+    const attendance =
+      await Attendance.find({
+        employeeId: {
+          $in: employees.map(
+            (e) => e._id
+          ),
+        },
+        date: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      });
+
+    const attendanceMap = {};
+
+    attendance.forEach((att) => {
+      const empId =
+        att.employeeId.toString();
+
+      const day = new Date(
+        att.date
+      ).getDate();
+
+      if (!attendanceMap[empId]) {
+        attendanceMap[empId] = {};
+      }
+
+      attendanceMap[empId][day] = {
+        shift: att.shift,
+        checkInTime:
+          att.checkInTime,
+        checkOutTime:
+          att.checkOutTime,
+        status: att.status,
+        timing: att.timing,
+      };
+    });
+
+    const tableData =
+      employees.map((emp) => {
+        const row = {
+          employeeId: emp._id,
+          empId: emp.empId,
+          employeeName: emp.name,
+          departmentId:
+            emp.departmentId,
+        };
+
+        selectedWeek.forEach(
+          (day) => {
+            row[day] =
+              attendanceMap[
+                emp._id.toString()
+              ]?.[day] || null;
+          }
+        );
+
+        return row;
+      });
+
+    return res.status(200).json({
+      success: true,
+      companyId,
+      weekNo,
+      days: selectedWeek,
+      totalEmployees:
+        employees.length,
+      tableData,
+    });
+  } catch (error) {
+    console.error(
+      "Weekly Attendance Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
