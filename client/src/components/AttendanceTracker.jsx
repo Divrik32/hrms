@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import api from "../services/axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,6 +19,7 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
+  GripVertical,
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -40,6 +41,10 @@ const MONTHS = [
   { v: "09", l: "September"}, { v: "10", l: "October" },
   { v: "11", l: "November" }, { v: "12", l: "December" },
 ];
+
+const NAME_COL_MIN = 90;
+const NAME_COL_MAX = 280;
+const NAME_COL_DEFAULT = 160; // narrower default for mobile
 
 /* ─── sub-components ───────────────────────────────── */
 function StatPill({ icon: Icon, label, value, color }) {
@@ -116,6 +121,61 @@ function RateBar({ present, total }) {
   );
 }
 
+/* ─── Resizable Name Column Hook ────────────────────── */
+function useResizableColumn(defaultWidth = NAME_COL_DEFAULT) {
+  const [colWidth, setColWidth] = useState(defaultWidth);
+  const dragging = useRef(false);
+  const startX = useRef(0);
+  const startW = useRef(defaultWidth);
+
+  const onMouseDown = useCallback((e) => {
+    e.preventDefault();
+    dragging.current = true;
+    startX.current = e.clientX;
+    startW.current = colWidth;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, [colWidth]);
+
+  const onTouchStart = useCallback((e) => {
+    dragging.current = true;
+    startX.current = e.touches[0].clientX;
+    startW.current = colWidth;
+  }, [colWidth]);
+
+  useEffect(() => {
+    const onMove = (clientX) => {
+      if (!dragging.current) return;
+      const delta = clientX - startX.current;
+      const newW = Math.min(NAME_COL_MAX, Math.max(NAME_COL_MIN, startW.current + delta));
+      setColWidth(newW);
+    };
+
+    const onMouseMove = (e) => onMove(e.clientX);
+    const onTouchMove = (e) => onMove(e.touches[0].clientX);
+
+    const stop = () => {
+      dragging.current = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", stop);
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", stop);
+
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", stop);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", stop);
+    };
+  }, []);
+
+  return { colWidth, onMouseDown, onTouchStart };
+}
+
 /* ─── main component ───────────────────────────────── */
 const AttendanceTracker = () => {
   const navigate = useNavigate();
@@ -137,6 +197,9 @@ const AttendanceTracker = () => {
   /* all-month extras */
   const [empSearch, setEmpSearch] = useState("");
   const tableScrollRef = useRef(null);
+
+  /* resizable name column */
+  const { colWidth, onMouseDown, onTouchStart } = useResizableColumn(NAME_COL_DEFAULT);
 
   useEffect(() => { getEmployees(); }, []);
 
@@ -223,6 +286,9 @@ const AttendanceTracker = () => {
       tableScrollRef.current.scrollBy({ left: dir * 200, behavior: "smooth" });
     }
   };
+
+  /* ── sticky header bg color (matches the dark theme) ── */
+  const stickyBg = "#0d1526";
 
   return (
     <div className="min-h-screen bg-[#080c14] text-white p-4 sm:p-8">
@@ -659,21 +725,29 @@ const AttendanceTracker = () => {
                       </div>
                     </div>
 
-                    {/* scroll nav for mobile */}
-                    <div className="flex sm:hidden justify-between items-center mb-2 text-xs text-slate-500">
-                      <button
-                        onClick={() => scrollTable(-1)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition"
-                      >
-                        <ChevronLeft size={13} /> Scroll left
-                      </button>
-                      <span className="text-slate-600">swipe or tap</span>
-                      <button
-                        onClick={() => scrollTable(1)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition"
-                      >
-                        Scroll right <ChevronRight size={13} />
-                      </button>
+                    {/* resize hint + scroll nav */}
+                    <div className="flex justify-between items-center mb-2 text-xs text-slate-500 gap-2 flex-wrap">
+                      {/* resize hint */}
+                      <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 select-none">
+                        <GripVertical size={12} className="text-indigo-400" />
+                        Drag to resize the Name column
+                      </span>
+
+                      {/* scroll nav */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => scrollTable(-1)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition"
+                        >
+                          <ChevronLeft size={13} /> Left
+                        </button>
+                        <button
+                          onClick={() => scrollTable(1)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:border-indigo-500/50 transition"
+                        >
+                          Right <ChevronRight size={13} />
+                        </button>
+                      </div>
                     </div>
 
                     {/* table */}
@@ -686,19 +760,36 @@ const AttendanceTracker = () => {
                         <table className="border-collapse" style={{ minWidth: "max-content", width: "100%" }}>
                           <thead>
                             <tr className="bg-slate-800/80 border-b border-slate-700">
-                              {/* sticky employee header */}
+                              {/* sticky employee header with drag handle */}
                               <th
-                                className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-400 border-r border-slate-700/80"
+                                className="text-left text-xs font-semibold uppercase tracking-wider text-slate-400 border-r border-slate-700/80"
                                 style={{
                                   position: "sticky",
                                   left: 0,
                                   background: "#1a2235",
                                   zIndex: 10,
-                                  minWidth: 180,
+                                  width: colWidth,
+                                  minWidth: colWidth,
+                                  maxWidth: colWidth,
                                 }}
                               >
-                                Employee
+                                <div className="flex items-center justify-between px-4 py-3 gap-1">
+                                  <span>Employee</span>
+                                  {/* drag handle */}
+                                  <span
+                                    onMouseDown={onMouseDown}
+                                    onTouchStart={onTouchStart}
+                                    title="Drag to resize"
+                                    className="flex items-center justify-center w-5 h-6 rounded cursor-col-resize
+                                      text-slate-500 hover:text-indigo-400 hover:bg-indigo-500/10
+                                      active:text-indigo-300 transition shrink-0 touch-none"
+                                    style={{ touchAction: "none" }}
+                                  >
+                                    <GripVertical size={13} />
+                                  </span>
+                                </div>
                               </th>
+
                               {Array.from({ length: totalDays }, (_, i) => (
                                 <th
                                   key={i + 1}
@@ -710,7 +801,6 @@ const AttendanceTracker = () => {
                                   </span>
                                 </th>
                               ))}
-
                             </tr>
                           </thead>
 
@@ -745,17 +835,19 @@ const AttendanceTracker = () => {
                                   >
                                     {/* sticky employee name cell */}
                                     <td
-                                      className="px-3 py-3 border-r border-slate-700/50"
+                                      className="py-3 border-r border-slate-700/50"
                                       style={{
                                         position: "sticky",
                                         left: 0,
-                                        background: "inherit",
                                         zIndex: 5,
-                                        minWidth: 180,
-                                        backgroundColor: "#0d1526",
+                                        backgroundColor: stickyBg,
+                                        width: colWidth,
+                                        minWidth: colWidth,
+                                        maxWidth: colWidth,
+                                        overflow: "hidden",
                                       }}
                                     >
-                                      <div className="flex items-center gap-2.5">
+                                      <div className="flex items-center gap-2 px-3">
                                         <div className="w-8 h-8 rounded-full bg-indigo-600/20 border border-indigo-500/30
                                           flex items-center justify-center text-indigo-300 text-xs font-bold shrink-0">
                                           {initials}
@@ -765,7 +857,7 @@ const AttendanceTracker = () => {
                                             {employee.employeeName}
                                           </p>
                                           {employee.empId && (
-                                            <p className="text-[10px] text-slate-500 font-mono leading-tight">
+                                            <p className="text-[10px] text-slate-500 font-mono leading-tight truncate">
                                               {employee.empId}
                                             </p>
                                           )}
@@ -811,8 +903,6 @@ const AttendanceTracker = () => {
                                         </td>
                                       );
                                     })}
-
-
                                   </motion.tr>
                                 );
                               })
