@@ -851,27 +851,44 @@ export const getWeeklyAttendance = async (req, res) => {
             emp.departmentId,
         };
 
-        selectedWeek.forEach(
-          (day) => {
-            row[day] =
-              attendanceMap[
-                emp._id.toString()
-              ]?.[day] || null;
-          }
-        );
+selectedWeek.forEach((day) => {
+  const dateKey = new Date(
+    Number(year),
+    Number(month) - 1,
+    day
+  )
+    .toISOString()
+    .split("T")[0];
+
+  row[dateKey] =
+    attendanceMap[
+      emp._id.toString()
+    ]?.[day] || null;
+});
 
         return row;
       });
 
-    return res.status(200).json({
-      success: true,
-      companyId,
-      weekNo,
-      days: selectedWeek,
-      totalEmployees:
-        employees.length,
-      tableData,
-    });
+const weekDates = selectedWeek.map(
+  (day) =>
+    new Date(
+      Number(year),
+      Number(month) - 1,
+      day
+    )
+      .toISOString()
+      .split("T")[0]
+);
+
+return res.status(200).json({
+  success: true,
+  companyId,
+  weekNo,
+  days: weekDates,
+  totalEmployees:
+    employees.length,
+  tableData,
+});
   } catch (error) {
     console.error(
       "Weekly Attendance Error:",

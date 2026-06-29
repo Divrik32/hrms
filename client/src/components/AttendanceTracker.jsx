@@ -934,6 +934,7 @@ const AttendanceTracker = () => {
 
                               {/* Day headers */}
                               {weeklyAttendance.days.map((day, i) => {
+                                console.log(weeklyAttendance.days);
                                 const d = new Date(day);
                                 const dayName = DAYS_LABEL[d.getDay()];
                                 const dayNum = d.getDate();
