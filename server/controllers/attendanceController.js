@@ -372,3 +372,4 @@ export const nightCheckOut = async (req, res) => {
     });
   }
 };
+

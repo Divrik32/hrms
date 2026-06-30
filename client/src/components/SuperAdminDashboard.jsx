@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, LayoutGrid, LogOut, ShieldCheck, Mail, Tag, ChevronRight, CalendarClock, ClipboardCheck } from "lucide-react";
+import { Building2, LayoutGrid, LogOut, ShieldCheck, Mail, Tag, ChevronRight, CalendarClock, ClipboardCheck, CalendarDays } from "lucide-react";
 
 const StatCard = ({ icon: Icon, label, value, color }) => (
   <motion.div
@@ -200,6 +200,13 @@ const SuperAdminDashboard = () => {
                 </div>
               )}
             </div>
+            <ActionButton
+              icon={CalendarDays}
+              label="Create Holiday"
+              description="Create upcoming holidays for employees"
+              onClick={() => navigate("/admin/create-holiday")}
+              color="bg-purple-600/80"
+            />
             <ActionButton
               icon={Tag}
               label="Create Employee Salary"

@@ -390,7 +390,7 @@ const AttendanceTracker = () => {
               <Activity size={20} className="text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight !bg-gradient-to-r !from-[#02b95d] !via-[#ffff00] !to-[#03d55e] bg-clip-text !text-transparent">
                 Attendance Tracker
               </h1>
               <p className="text-slate-500 text-xs sm:text-sm">

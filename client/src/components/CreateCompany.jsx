@@ -173,7 +173,7 @@ export default function CreateCompany() {
             <span className="text-violet-300 text-xs font-medium tracking-wider uppercase">Company Registration</span>
           </motion.div>
 
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold tracking-tight !bg-gradient-to-r !from-[#01c875] !via-[#03e712] !to-[#04e13f] bg-clip-text !text-transparent">
             Create New Company
           </h1>
           <p className="text-gray-500 mt-2 text-sm">Fill in the details below to register your organization.</p>

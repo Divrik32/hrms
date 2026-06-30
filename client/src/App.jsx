@@ -29,6 +29,7 @@ import ResetSuperAdmin from "./components/ResetSuperAdmin";
 import AdminEmployeeProfile from "./components/AdminEmployeeProfile";
 import AdminEmployeeLeaves from "./components/AdminEmployeeLeaves";
 import AdminRejectedLeaves from "./components/AdminRejectedLeaves";
+import CreateHoliday from "./components/CreateHoliday";
 
 const router = createBrowserRouter([
   // landing page
@@ -88,11 +89,15 @@ const router = createBrowserRouter([
       {
         path: "edit-employee-salary",
         element: <EditEmployeeSalary />
-      }
+      },
       // {
       //   path: "create-payroll",
       //   element: <CreatePayroll />
       // }
+      {
+        path: "create-holiday",
+        element: <CreateHoliday />,
+      }
     ],
   },
 

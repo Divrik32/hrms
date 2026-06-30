@@ -13,7 +13,7 @@ createRoot(document.getElementById('root')).render(
       gutter={10}
       toastOptions={{
         duration: 3500,
-
+        
         style: {
           background: "rgba(15, 23, 42, 0.85)",
           backdropFilter: "blur(16px)",
@@ -24,8 +24,7 @@ createRoot(document.getElementById('root')).render(
           padding: "12px 16px",
           fontSize: "13.5px",
           fontWeight: "500",
-          boxShadow:
-            "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04)",
           maxWidth: "360px",
           lineHeight: "1.5",
         },

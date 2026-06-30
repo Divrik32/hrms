@@ -7,6 +7,7 @@ import sendEmail from "../utils/sendEmail.js";
 import Company from "../models/companyModel.js";
 import LeaveRequest from "../models/LeaveRequest.js";
 import RejectedLeave from "../models/RejectedLeave.js";
+import Holiday from "../models/Holiday.js";
 
 // Create Super Admin
 export const createSuperAdmin = async (req, res) => {
@@ -1086,6 +1087,65 @@ export const getRejectedLeavesByEmployee = async (
       totalRejectedLeaves:
         rejectedLeaves.length,
       rejectedLeaves,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const createHoliday = async (req, res) => {
+  try {
+    const { holidayName, holidayDate, description } = req.body;
+
+    if (!holidayName || !holidayDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Holiday name and date are required",
+      });
+    }
+
+    const selectedDate = new Date(holidayDate);
+
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      return res.status(400).json({
+        success: false,
+        message: "Past date cannot be marked as holiday",
+      });
+    }
+
+    const existingHoliday = await Holiday.findOne({
+      holidayDate: selectedDate,
+    });
+
+    if (existingHoliday) {
+      return res.status(400).json({
+        success: false,
+        message: "Holiday already exists on this date",
+      });
+    }
+
+    const holiday = await Holiday.create({
+      holidayName,
+      holidayDate: selectedDate,
+      description,
+      createdBy: req.user?._id,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Holiday created successfully",
+      holiday,
     });
   } catch (error) {
     console.log(error);
