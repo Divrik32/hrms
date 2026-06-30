@@ -11,6 +11,8 @@ import employeeRoutes from "./routes/employeeRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import leaveRoutes from "./routes/leaveRequests.js";
 import payrollRoutes from "./routes/payrollRoutes.js";
+import path from "path";
+import { fileURLToPath } from "url";
 dotenv.config();
 dns.setServers(["1.1.1.1","8.8.8.8"])
 
@@ -27,7 +29,11 @@ app.use(cookieParser());
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static("uploads"));
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Routes
 app.use("/api/companies", companyRoutes);

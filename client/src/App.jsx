@@ -26,6 +26,9 @@ import EditEmployeeSalary from "./components/EditEmployeeSalary";
 import LandingPage from "./components/LandingPage";
 import ForgotSuperAdmin from "./components/ForgotSuperAdmin";
 import ResetSuperAdmin from "./components/ResetSuperAdmin";
+import AdminEmployeeProfile from "./components/AdminEmployeeProfile";
+import AdminEmployeeLeaves from "./components/AdminEmployeeLeaves";
+import AdminRejectedLeaves from "./components/AdminRejectedLeaves";
 
 const router = createBrowserRouter([
   // landing page
@@ -152,6 +155,18 @@ const router = createBrowserRouter([
         path: "profile-section",
         element: <ProfileSection />,
       },
+      {
+        path: "dashboard/:empId",
+        element: <AdminEmployeeProfile />,
+      },
+      {
+        path: "leaves/:empId",
+        element: <AdminEmployeeLeaves />,
+      },
+      {
+        path: "rejected-leaves/:empId",
+        element: <AdminRejectedLeaves />,
+      }
     ],
   },
 ]);

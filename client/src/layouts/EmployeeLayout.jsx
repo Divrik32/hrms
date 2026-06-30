@@ -14,17 +14,16 @@ const EmployeeLayout = () => {
         "employee"
       )
     );
-      const [sidebarOpen, setSidebarOpen] =
-    useState(false);
+const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  if (!employee) {
-    return (
-      <Navigate
-        to="/employee-login"
-        replace
-      />
-    );
-  }
+if (!employee) {
+  return (
+    <Navigate
+      to="/employee-login"
+      replace
+    />
+  );
+}
 
   return (
     <div

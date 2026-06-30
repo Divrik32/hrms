@@ -34,30 +34,14 @@ router.get("/profile/me", protectEmployee, getEmployeeById);
 
 // Company wise employees
 router.get("/company/:companyId", getEmployeesByCompany);
-
 router.get("/department/:departmentId", getEmployeesByDepartment);
 
 router.post("/login", loginEmployee);
 router.post("/logout", logoutEmployee);
 
-router.post(
-  "/forgot-password",
-  forgotPassword
-);
-
-router.post(
-  "/verify-otp",
-  verifyOtp
-);
-
-router.post(
-  "/reset-password",
-  resetPassword
-);
-
-router.post(
-  "/resend-otp",
-  resendOtp
-);
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-otp", verifyOtp);
+router.post("/reset-password", resetPassword);
+router.post("/resend-otp", resendOtp);
 
 export default router;

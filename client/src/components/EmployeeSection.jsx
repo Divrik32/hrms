@@ -1,6 +1,7 @@
-import { useOutletContext } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 const EmployeeSection = () => {
+  const navigate = useNavigate();
 
   const {
     departments,
@@ -15,7 +16,7 @@ const EmployeeSection = () => {
     >
       <h1
         className="
-        text-white
+        !text-white
         text-4xl
         font-bold
         mb-10
@@ -36,7 +37,7 @@ const EmployeeSection = () => {
           >
             <h2
               className="
-              text-indigo-400
+              !text-indigo-400
               text-2xl
               font-bold
               border-b
@@ -66,9 +67,8 @@ const EmployeeSection = () => {
                   employee
                 ) => (
                   <div
-                    key={
-                      employee._id
-                    }
+                    key={employee._id}
+                    onClick={() => navigate(employee._id)}
                     className="
                     bg-slate-900
                     border

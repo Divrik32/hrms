@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import sendEmail from "../utils/sendEmail.js";
 import path from "path";
 import fs from "fs";
+import RejectedLeave from "../models/RejectedLeave.js";
 
 // Create Employee
 export const createEmployee = async (
@@ -501,9 +502,7 @@ export const getEmployeesByDepartment = async (
   res
 ) => {
   try {
-    const {
-      departmentId,
-    } = req.params;
+    const { departmentId, } = req.params;
 
     const department =
       await Department.findById(

@@ -5,7 +5,8 @@ import Attendance from "../models/attendanceModel.js";
 import Employee from "../models/employeeModel.js";
 import sendEmail from "../utils/sendEmail.js";
 import Company from "../models/companyModel.js";
-
+import LeaveRequest from "../models/LeaveRequest.js";
+import RejectedLeave from "../models/RejectedLeave.js";
 
 // Create Super Admin
 export const createSuperAdmin = async (req, res) => {
@@ -851,20 +852,17 @@ export const getWeeklyAttendance = async (req, res) => {
             emp.departmentId,
         };
 
-selectedWeek.forEach((day) => {
-  const dateKey = new Date(
-    Number(year),
-    Number(month) - 1,
-    day
-  )
-    .toISOString()
-    .split("T")[0];
-
-  row[dateKey] =
-    attendanceMap[
-      emp._id.toString()
-    ]?.[day] || null;
-});
+      selectedWeek.forEach((day) => {
+        const dateKey = new Date(
+          Number(year),
+          Number(month) - 1,
+          day
+        ).toISOString().split("T")[0];
+      
+        row[dateKey] = attendanceMap[
+            emp._id.toString()
+          ]?.[day] || null;
+      });
 
         return row;
       });
@@ -894,6 +892,203 @@ return res.status(200).json({
       "Weekly Attendance Error:",
       error
     );
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getEmployeeByIdForAdmin = async (
+  req,
+  res
+) => {
+  try {
+    const { employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID is required",
+      });
+    }
+
+    const employee =
+      await Employee.findById(
+        employeeId
+      )
+    .populate("companyId")
+    .populate("departmentId")
+    .select("-password");
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      employee,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getEmployeeLeaveSummary = async (
+  req,
+  res
+) => {
+  try {
+    const { employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID is required",
+      });
+    }
+
+    const approvedLeaves = await LeaveRequest.find({employeeId, status: "Approved",
+      }).sort({
+        createdAt: -1,
+      });
+
+    const approvedLeaveCount = approvedLeaves.length;
+
+    let remainingCasualLeave = 6;
+    let remainingSickLeave = 6;
+
+    if (approvedLeaveCount > 0) {
+      remainingCasualLeave = approvedLeaves[0].remainingCasualLeave;
+      remainingSickLeave = approvedLeaves[0].remainingSickLeave;
+    }
+
+    return res.status(200).json({
+      success: true,
+      approvedLeaveCount,
+      remainingCasualLeave,
+      remainingSickLeave,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getRejectedLeaveCount = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID is required",
+      });
+    }
+
+    const rejectedLeaveCount =
+      await RejectedLeave.countDocuments({
+        employeeId,
+      });
+
+    return res.status(200).json({
+      success: true,
+      employeeId,
+      rejectedLeaveCount,
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getApprovedLeavesByEmployee = async (
+  req,
+  res
+) => {
+  try {
+    const { employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID is required",
+      });
+    }
+
+    const approvedLeaves =
+      await LeaveRequest.find({
+        employeeId,
+        status: "Approved",
+      })
+        .sort({
+          createdAt: -1,
+        });
+
+    return res.status(200).json({
+      success: true,
+      totalLeaves:
+        approvedLeaves.length,
+      leaves:
+        approvedLeaves,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getRejectedLeavesByEmployee = async (
+  req,
+  res
+) => {
+  try {
+    const { employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID is required",
+      });
+    }
+
+    const rejectedLeaves =
+      await RejectedLeave.find({
+        employeeId,
+      })
+        .sort({
+          rejectedAt: -1,
+        });
+
+    return res.status(200).json({
+      success: true,
+      totalRejectedLeaves:
+        rejectedLeaves.length,
+      rejectedLeaves,
+    });
+  } catch (error) {
+    console.log(error);
 
     return res.status(500).json({
       success: false,
