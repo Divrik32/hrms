@@ -137,7 +137,7 @@ const isWeekendOrHoliday = (date) => {
               <CalendarPlus className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-white">Apply Leave Request</h1>
+              <h1 className="text-lg font-semibold !bg-gradient-to-r !from-[#0868de] !via-[#04417b] !to-[#007bff] bg-clip-text !text-transparent tracking-tight">Apply Leave Request</h1>
               <p className="text-sm text-slate-400 mt-0.5">Fill in the details to submit your leave</p>
             </div>
           </div>
