@@ -8,7 +8,8 @@ import {
   approveLeave,
   rejectLeave,
   withdrawLeaveRequest,
-  getMyRejectedLeaves
+  getMyRejectedLeaves,
+  getAllHolidays
 } from "../controllers/leaveRequestController.js";
 
 import { protectEmployee } from "../middleware/protectEmployee.js";
@@ -36,5 +37,7 @@ router.put("/reject/:leaveId", protectSuperAdmin, rejectLeave);
 
 router.delete("/withdraw/:leaveId", protectEmployee, withdrawLeaveRequest);
 router.get("/my-rejected-leaves", protectEmployee, getMyRejectedLeaves);
+router.get("/holidays", protectEmployee, getAllHolidays);
+
 
 export default router;

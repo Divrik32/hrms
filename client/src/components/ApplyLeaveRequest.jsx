@@ -15,6 +15,7 @@ import {
   FileText,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useEffect } from "react";
 
 
 const LEAVE_TYPES = [
@@ -35,11 +36,6 @@ const LEAVE_TYPES = [
   },
 ];
 
-const isWeekend = (date) => {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-};
-
 const ApplyLeaveRequest = () => {
   const [leaveType, setLeaveType] = useState("");
   const [fromDate, setFromDate] = useState("");
@@ -47,6 +43,37 @@ const ApplyLeaveRequest = () => {
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
   const [compOffWorkDate, setCompOffWorkDate] = useState(null);
+  const [holidays, setHolidays] = useState([]);
+
+  useEffect(() => {
+    fetchHolidays();
+  }, []);
+
+const fetchHolidays = async () => {
+  try {
+    const res = await api.get(
+      "/leaves/holidays",
+      {
+        withCredentials: true,
+      }
+    );
+    setHolidays(res.data.holidays);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const isWeekendOrHoliday = (date) => {
+  const day = date.getDay();
+    if (day === 0 || day === 6) {
+      return true;
+    }
+    const formattedDate = date.toISOString().split("T")[0];
+    return holidays.some(
+      (holiday) =>
+        holiday.holidayDate.split("T")[0] === formattedDate
+    );
+  };
 
   const leaveDays =
     fromDate && toDate
@@ -166,13 +193,13 @@ const ApplyLeaveRequest = () => {
                 >
                   <div className="bg-slate-800/60 border border-slate-700 rounded-xl p-4 space-y-3">
                     <label className="text-xs font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5" /> Date you worked (weekend only)
+                      <Calendar className="w-3.5 h-3.5" /> Select Compensatory Work Date
                     </label>
                     <DatePicker
                       selected={compOffWorkDate}
                       onChange={(date) => setCompOffWorkDate(date)}
-                      filterDate={isWeekend}
-                      placeholderText="Select Saturday or Sunday"
+                      filterDate={isWeekendOrHoliday}
+                      placeholderText="Select compensatory work date"
                       dateFormat="dd/MM/yyyy"
                       required
                       className="w-full bg-slate-900 text-white text-sm px-3 py-2.5 rounded-lg border border-slate-700 focus:outline-none focus:border-indigo-500 placeholder-slate-500"
