@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, ArrowLeft, ChevronDown, Building2, LayoutDashboard, UserSquare2, CalendarClock, Check } from "lucide-react";
+import { Users, ArrowLeft, ChevronDown, Building2, LayoutDashboard, UserSquare2, CalendarClock, Check, UserX } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { BACKEND_URL } from "../services/axios";
@@ -20,6 +20,11 @@ const NAV_LINKS = (id) => [
     to: `/${id}/company/attendance-tracker`,
     label: "Track Attendance",
     icon: CalendarClock,
+  },
+    {
+    to: `/${id}/company/mark-absent`,
+    label: "Mark Absent",
+    icon: UserX,
   },
 ];
 

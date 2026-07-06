@@ -8,6 +8,7 @@ import Company from "../models/companyModel.js";
 import LeaveRequest from "../models/LeaveRequest.js";
 import RejectedLeave from "../models/RejectedLeave.js";
 import Holiday from "../models/Holiday.js";
+import EmployeeLeaveBalance from "../models/EmployeeLeaveBalance.js";
 
 // Create Super Admin
 export const createSuperAdmin = async (req, res) => {
@@ -98,7 +99,7 @@ export const loginSuperAdmin = async (
       },
       "secretkey",
       {
-        expiresIn: "1d",
+        expiresIn: "7d",
       }
     );
 
@@ -106,8 +107,7 @@ export const loginSuperAdmin = async (
       httpOnly: true,
       secure: false,
       sameSite: "lax",
-      maxAge:
-        24 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return res.status(200).json({
@@ -1020,10 +1020,74 @@ export const getRejectedLeaveCount = async (req, res) => {
   }
 };
 
-export const getApprovedLeavesByEmployee = async (
-  req,
-  res
-) => {
+const formatLeave = (leave) => {
+  const normalLeaveDates = leave.leaveDetails?.leaveDates || [];
+  const extraLeaveDates = leave.extraLeaveDetails?.extraLeaveDates || [];
+
+  // FIX 1: merge instead of either/or, so no dates get dropped
+  const allDates = [...normalLeaveDates, ...extraLeaveDates];
+
+  const sortedDates = [...allDates].sort(
+    (a, b) => new Date(a.date) - new Date(b.date)
+  );
+
+  const fromDate = sortedDates[0]?.date || "";
+  const toDate = sortedDates[sortedDates.length - 1]?.date || "";
+
+  const normalLeaveDays = normalLeaveDates.reduce(
+    (sum, item) => sum + item.duration,
+    0
+  );
+  const extraLeaveDays = extraLeaveDates.reduce(
+    (sum, item) => sum + item.duration,
+    0
+  );
+  const leaveDays = normalLeaveDays + extraLeaveDays;
+
+  // FIX 2: build the type list from BOTH normal and extra allocations
+  const types = [];
+
+  if (leave.leaveDetails?.leaveType?.casualLeave > 0) {
+    types.push("Casual Leave");
+  }
+  if (leave.leaveDetails?.leaveType?.sickLeave > 0) {
+    types.push("Sick Leave");
+  }
+  if (leave.leaveDetails?.leaveType?.paidLeave > 0) {
+    types.push("Paid Leave");
+  }
+  if (leave.leaveDetails?.leaveType?.compOff > 0) {
+    types.push("Comp Off");
+  }
+
+  if (leave.extraLeaveDetails?.extraLeaveType?.casualLeave > 0) {
+    types.push("Extra Casual Leave");
+  }
+  if (leave.extraLeaveDetails?.extraLeaveType?.sickLeave > 0) {
+    types.push("Extra Sick Leave");
+  }
+
+  // fallback: extra dates exist but neither casual/sick flag was set > 0
+  if (types.length === 0 && extraLeaveDates.length > 0) {
+    types.push("Extra Leave");
+  }
+
+  const leaveType = types.join(", ");
+
+  return {
+    _id: leave._id,
+    leaveType,
+    fromDate,
+    toDate,
+    leaveDays,
+    normalLeaveDays,
+    extraLeaveDays,
+    reason: leave.reason,
+    adminRemark: leave.adminRemark,
+  };
+};
+
+export const getApprovedLeavesByEmployee = async (req, res) => {
   try {
     const { employeeId } = req.body;
 
@@ -1034,21 +1098,23 @@ export const getApprovedLeavesByEmployee = async (
       });
     }
 
-    const approvedLeaves =
-      await LeaveRequest.find({
-        employeeId,
-        status: "Approved",
-      })
-        .sort({
-          createdAt: -1,
-        });
+    const approvedLeaves = await LeaveRequest.find({
+      employeeId,
+      status: "Approved",
+    }).sort({ updatedAt: -1 });
+
+    const formattedLeaves = approvedLeaves.map((leave) => ({
+      ...formatLeave(leave),
+      approvedAt: leave.updatedAt,
+      remainingCasualLeave: leave.remainingCasualLeave,
+      remainingSickLeave: leave.remainingSickLeave,
+      remainingPaidLeave: leave.remainingPaidLeave,
+    }));
 
     return res.status(200).json({
       success: true,
-      totalLeaves:
-        approvedLeaves.length,
-      leaves:
-        approvedLeaves,
+      totalLeaves: formattedLeaves.length,
+      leaves: formattedLeaves,
     });
   } catch (error) {
     console.log(error);
@@ -1060,10 +1126,7 @@ export const getApprovedLeavesByEmployee = async (
   }
 };
 
-export const getRejectedLeavesByEmployee = async (
-  req,
-  res
-) => {
+export const getRejectedLeavesByEmployee = async (req, res) => {
   try {
     const { employeeId } = req.body;
 
@@ -1074,19 +1137,20 @@ export const getRejectedLeavesByEmployee = async (
       });
     }
 
-    const rejectedLeaves =
-      await RejectedLeave.find({
-        employeeId,
-      })
-        .sort({
-          rejectedAt: -1,
-        });
+    const rejectedLeaves = await LeaveRequest.find({
+      employeeId,
+      status: "Rejected",
+    }).sort({ updatedAt: -1 });
+
+    const formattedLeaves = rejectedLeaves.map((leave) => ({
+      ...formatLeave(leave),
+      rejectedAt: leave.updatedAt,
+    }));
 
     return res.status(200).json({
       success: true,
-      totalRejectedLeaves:
-        rejectedLeaves.length,
-      rejectedLeaves,
+      totalRejectedLeaves: formattedLeaves.length,
+      rejectedLeaves: formattedLeaves,
     });
   } catch (error) {
     console.log(error);
@@ -1156,3 +1220,69 @@ export const createHoliday = async (req, res) => {
     });
   }
 };
+
+export const getEmployeeLeaveCountsAndBalance =
+  async (req, res) => {
+    try {
+      const { employeeId } = req.body;
+
+      if (!employeeId) {
+        return res.status(400).json({
+          success: false,
+          message: "Employee ID is required",
+        });
+      }
+
+      const month =
+        new Date().getMonth() + 1;
+
+      const year =
+        new Date().getFullYear();
+
+      const approvedLeaveCount =
+        await LeaveRequest.countDocuments({
+          employeeId,
+          status: "Approved",
+        });
+
+      const rejectedLeaveCount =
+        await LeaveRequest.countDocuments({
+          employeeId,
+          status: "Rejected",
+        });
+
+      const leaveBalance =
+        await EmployeeLeaveBalance.findOne({
+          employeeId,
+          month,
+          year,
+        });
+
+      return res.status(200).json({
+        success: true,
+
+        approvedLeaveCount,
+        rejectedLeaveCount,
+
+        remainingCasualLeave:
+          leaveBalance
+            ?.remainingCasualLeave ?? 0,
+
+        remainingSickLeave:
+          leaveBalance
+            ?.remainingSickLeave ?? 0,
+
+        remainingPaidLeave:
+          leaveBalance
+            ?.remainingPaidLeave ?? 0,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  };
+  

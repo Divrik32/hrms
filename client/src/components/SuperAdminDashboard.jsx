@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, LayoutGrid, LogOut, ShieldCheck, Mail, Tag, ChevronRight, CalendarClock, ClipboardCheck, CalendarDays } from "lucide-react";
+import { Building2, LayoutGrid, LogOut, ShieldCheck, Mail, Tag, ChevronRight, CalendarClock, ClipboardCheck, CalendarDays, Handshake, Sparkles, PartyPopper, Zap, Wand2 } from "lucide-react";
 
 const StatCard = ({ icon: Icon, label, value, color }) => (
   <motion.div
@@ -131,10 +131,46 @@ const SuperAdminDashboard = () => {
             transition={{ duration: 0.4 }}
             className="mb-8"
           >
-            <h1 className="text-3xl font-bold text-white">
-              Welcome back, <span className="text-indigo-400">{user.name}</span> 👋
-            </h1>
-            <p className="text-slate-400 text-sm mt-1">Manage your platform from here.</p>
+<div className="space-y-3">
+  <style>{`
+    @keyframes shimmerName {
+      0% { background-position: 0% center; }
+      100% { background-position: 200% center; }
+    }
+  `}</style>
+
+<div className="space-y-3">
+  <h1
+    style={{
+      fontFamily: "'Playfair Display', serif",
+      fontSize: "clamp(1.35rem, 4vw, 2rem)",
+      fontWeight: 800,
+      letterSpacing: "0.04em",
+      textTransform: "uppercase",
+      lineHeight: 1.3,
+      background:
+        "linear-gradient(110deg, #990099 0%, #d900d9 20%, #6c006c 40%, #c500c5 60%, #700070 80%, #990099 100%)",
+      WebkitBackgroundClip: "text",
+      WebkitTextFillColor: "transparent",
+      backgroundClip: "text",
+      filter:
+        "brightness(1.4) saturate(1.3) drop-shadow(0 0 10px rgba(230,0,230,0.8)) drop-shadow(0 0 28px rgba(230,0,230,0.5)) drop-shadow(0 0 45px rgba(153,0,153,0.35))",
+      backgroundSize: "200% auto",
+      animation: "shimmerName 3s linear infinite",
+    }}
+  >
+    Welcome back, {user.name}
+  </h1>
+
+  <div className="flex items-center gap-3 pt-1">
+    <div className="h-px w-10 bg-gradient-to-r from-indigo-400 to-transparent shrink-0" />
+    <p className="text-sm text-white/40 tracking-wide">
+      Manage your platform from here.
+    </p>
+  </div>
+</div>
+
+</div>
           </motion.div>
         )}
 

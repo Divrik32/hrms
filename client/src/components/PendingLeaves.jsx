@@ -140,7 +140,7 @@ const res = await api.put(
                     p-5
                   "
                 >
-                  <div className="space-y-3">
+                  <div className="space-y-3 overflow-y-auto max-h-[500px]">
 
                     <div className="flex items-center gap-2 text-white font-semibold">
                       <User size={18} />
@@ -172,58 +172,128 @@ const res = await api.put(
 
                     <hr className="border-slate-800" />
 
-                    <p className="text-slate-300">
-                      <span className="font-semibold">
-                        Leave Type:
-                      </span>
-                      {" "}
-                      {
-                        leave.leaveType
-                      }
-                    </p>
+<div className="space-y-2">
 
-                    <p className="text-slate-300">
-                      <span className="font-semibold">
-                        From:
-                      </span>
-                      {" "}
-                      {
-                        leave.fromDate
-                      }
-                    </p>
+  <p className="text-slate-300 font-semibold">
+    Leave Summary
+  </p>
 
-                    <p className="text-slate-300">
-                      <span className="font-semibold">
-                        To:
-                      </span>
-                      {" "}
-                      {
-                        leave.toDate
-                      }
-                    </p>
+  <ul className="text-slate-400 text-sm">
 
-                    <p className="text-slate-300">
-                      <span className="font-semibold">
-                        Days:
-                      </span>
-                      {" "}
-                      {
-                        leave.leaveDays
-                      }
-                    </p>
+    {leave.leaveDetails?.leaveType.casualLeave > 0 && (
+      <li>
+        Casual Leave : {leave.leaveDetails.leaveType.casualLeave}
+      </li>
+    )}
 
-                    <p className="text-slate-300">
-                      <span className="font-semibold">
-                        Reason:
-                      </span>
-                    </p>
+    {leave.leaveDetails?.leaveType.sickLeave > 0 && (
+      <li>
+        Sick Leave : {leave.leaveDetails.leaveType.sickLeave}
+      </li>
+    )}
 
-                    <p className="text-slate-400 text-sm">
-                      {leave.reason}
-                    </p>
+    {leave.leaveDetails?.leaveType.paidLeave > 0 && (
+      <li>
+        Paid Leave : {leave.leaveDetails.leaveType.paidLeave}
+      </li>
+    )}
+
+    {leave.leaveDetails?.leaveType.compOff > 0 && (
+      <li>
+        Comp Off : {leave.leaveDetails.leaveType.compOff}
+      </li>
+    )}
+
+  </ul>
+
+</div>
+
+<hr className="border-slate-800" />
+
+<p className="text-slate-300 font-semibold">
+  Leave Dates
+</p>
+
+<div className="space-y-2">
+
+  {leave.leaveDetails?.leaveDates?.map((item, index) => (
+    <div
+      key={index}
+      className="rounded-lg bg-slate-800 p-3 text-sm text-slate-300"
+    >
+      <p>Date : {item.date}</p>
+      <p>Duration : {item.duration}</p>
+      <p>Type : {item.leaveType}</p>
+    </div>
+  ))}
+
+</div>
+
+{leave.leaveDetails?.compOffWorkDate && (
+  <>
+    <hr className="border-slate-800" />
+
+    <p className="text-slate-300">
+      <span className="font-semibold">
+        Comp Off Work Date :
+      </span>{" "}
+      {leave.leaveDetails.compOffWorkDate}
+    </p>
+  </>
+)}
+
+
+{leave.extraLeaveDetails?.extraLeaveDates?.length > 0 && (
+  <>
+    <hr className="border-slate-800" />
+
+    <p className="text-slate-300 font-semibold">
+      Extra Leave
+    </p>
+
+{leave.extraLeaveDetails.extraLeaveDates.map(
+  (item, index) => (
+    <div
+      key={index}
+      className="rounded-lg bg-slate-800 p-3 mt-2 text-sm text-slate-300"
+    >
+      <p>Date : {item.date}</p>
+      <p>Duration : {item.duration}</p>
+
+      <p>
+        Type :
+        {" "}
+        {[
+          leave.extraLeaveDetails?.extraLeaveType
+            ?.casualLeave > 0 &&
+            `Casual (${leave.extraLeaveDetails.extraLeaveType.casualLeave})`,
+
+          leave.extraLeaveDetails?.extraLeaveType
+            ?.sickLeave > 0 &&
+            `Sick (${leave.extraLeaveDetails.extraLeaveType.sickLeave})`,
+        ]
+          .filter(Boolean)
+          .join(", ")}
+      </p>
+    </div>
+  )
+)}
+  </>
+)}
+
+<hr className="border-slate-800" />
+
+<p className="text-slate-300">
+  <span className="font-semibold">
+    Reason
+  </span>
+</p>
+
+<p className="text-slate-400 text-sm whitespace-pre-wrap">
+  {leave.reason}
+</p>
 
                     <div className="flex gap-3 mt-5">
-
                       <button
 onClick={() => {
   setSelectedLeaveId(leave._id);

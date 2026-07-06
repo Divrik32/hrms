@@ -30,6 +30,11 @@ import AdminEmployeeProfile from "./components/AdminEmployeeProfile";
 import AdminEmployeeLeaves from "./components/AdminEmployeeLeaves";
 import AdminRejectedLeaves from "./components/AdminRejectedLeaves";
 import CreateHoliday from "./components/CreateHoliday";
+import ApprovedLeaves from "./components/ApprovedLeaves";
+import RejectedLeaves from "./components/RejectedLeaves";
+import EmployeeProtectedRoute from "./protected/EmployeeProtectedRoute";
+import MarkAbsent from "./components/MarkAbsent";
+
 
 const router = createBrowserRouter([
   // landing page
@@ -118,7 +123,7 @@ const router = createBrowserRouter([
 // employee protected routes
   {
     path: "/employee",
-    element: <EmployeeLayout />,
+    element: <EmployeeProtectedRoute><EmployeeLayout /></EmployeeProtectedRoute>,
     children: [
       {
         path: "dashboard",
@@ -136,10 +141,10 @@ const router = createBrowserRouter([
         path: "my-leaves",
         element: <MyLeaves/>,
       },
-      {
-        path: "my-rejected-leaves",
-        element: <MyRejectedLeaves/>,
-      },
+      // {
+      //   path: "my-rejected-leaves",
+      //   element: <MyRejectedLeaves/>,
+      // },
     ],
   },
 
@@ -166,12 +171,16 @@ const router = createBrowserRouter([
       },
       {
         path: "leaves/:empId",
-        element: <AdminEmployeeLeaves />,
+        element: <ApprovedLeaves />,
       },
       {
         path: "rejected-leaves/:empId",
-        element: <AdminRejectedLeaves />,
-      }
+        element: <RejectedLeaves/>,
+      },
+      {
+        path: "mark-absent",
+        element: <MarkAbsent />,
+      },
     ],
   },
 ]);

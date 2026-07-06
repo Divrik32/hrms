@@ -9,6 +9,7 @@ import {
   getApprovedLeavesByEmployee,
   getAttendanceByDate,
   getEmployeeByIdForAdmin,
+  getEmployeeLeaveCountsAndBalance,
   getEmployeeLeaveSummary,
   getEmployeeMonthlyAttendance,
   getMonthWeeks,
@@ -58,7 +59,8 @@ router.post("/get-by-id", protectSuperAdmin, getEmployeeByIdForAdmin);
 router.post("/employee-leave-summary", protectSuperAdmin, getEmployeeLeaveSummary);
 router.post("/rejected-leave-count", protectSuperAdmin, getRejectedLeaveCount);
 router.post("/approved-leaves", protectSuperAdmin, getApprovedLeavesByEmployee);
-router.post("/employee-rejected-leaves", protectSuperAdmin, getRejectedLeavesByEmployee);
+router.post("/rejected-leaves", protectSuperAdmin, getRejectedLeavesByEmployee);
 router.post("/create-holiday", protectSuperAdmin, createHoliday);
+router.post("/employee-leave-stats", protectSuperAdmin, getEmployeeLeaveCountsAndBalance);
 
 export default router;

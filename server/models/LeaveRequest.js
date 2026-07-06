@@ -20,51 +20,110 @@ const leaveRequestSchema = new mongoose.Schema(
       required: true,
     },
 
-    leaveType: {
-      type: String,
-      required: true,
-      enum: [
-        "Casual Leave",
-        "Sick Leave",
-        "Compensatory Off",
+    leaveDetails: {
+      leaveType: {
+        casualLeave: {
+          type: Number,
+          default: 0,
+        },
+
+        sickLeave: {
+          type: Number,
+          default: 0,
+        },
+
+        paidLeave: {
+          type: Number,
+          default: 0,
+        },
+
+        compOff: {
+          type: Number,
+          default: 0,
+        },
+      },
+
+      leaveDates: [
+        {
+          date: {
+            type: String,
+            required: true,
+          },
+
+          duration: {
+            type: Number,
+            enum: [0.5, 1],
+            required: true,
+          },
+
+          leaveType: {
+            type: String,
+            enum: [
+              "Casual Leave",
+              "Sick Leave",
+              "Paid Leave",
+              "Compensatory Off",
+            ],
+            required: true,
+          },
+        },
+      ],
+
+      compOffWorkDate: {
+        type: String,
+        default: "",
+      },
+    },
+
+    remainingCasualLeave: {
+      type: Number,
+      default: 0,
+    },
+
+    remainingSickLeave: {
+      type: Number,
+      default: 0,
+    },
+
+    remainingPaidLeave: {
+      type: Number,
+      default: 0,
+    },
+
+    extraLeaveDetails: {
+      extraLeaveType: {
+        casualLeave: {
+          type: Number,
+          default: 0,
+        },
+
+        sickLeave: {
+          type: Number,
+          default: 0,
+        },
+      },
+
+      extraLeaveDates: [
+        {
+          date: {
+            type: String,
+            required: true,
+          },
+
+          duration: {
+            type: Number,
+            enum: [0.5, 1],
+            required: true,
+          },
+        },
       ],
     },
 
-    compOffWorkDate: {
-      type: String,
-      default: "",
-    },
-
-    fromDate: {
-      type: String,
-      required: true,
-    },
-
-    toDate: {
-      type: String,
-      required: true,
-    },
-
-    leaveDays: {
-      type: Number,
-      required: true,
-    },
-    
-    remainingCasualLeave: {
-      type: Number,
-      default: 6,
-    },
-    
-    remainingSickLeave: {
-      type: Number,
-      default: 6,
-    },
-
-    reason: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+reason: {
+    type: String,
+    required: [true, "Please enter a reason for your leave request."],
+    trim: true,
+},
 
     status: {
       type: String,

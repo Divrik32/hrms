@@ -32,7 +32,6 @@ const AdminEmployeeProfile = () => {
   const navigate = useNavigate();
   const [employee, setEmployee] = useState(null);
   const [leaveSummary, setLeaveSummary] = useState(null);
-  const [rejectedCount, setRejectedCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,10 +58,9 @@ const AdminEmployeeProfile = () => {
 
       setEmployee(employeeData);
 
-      // leave summary
-      const leaveSummaryRes =
+      const leaveStatsRes =
         await api.post(
-          "/superadmin/employee-leave-summary",
+          "/superadmin/employee-leave-stats",
           {
             employeeId: empId,
           },
@@ -72,24 +70,7 @@ const AdminEmployeeProfile = () => {
         );
 
       setLeaveSummary(
-        leaveSummaryRes.data
-      );
-
-      // rejected leave count
-      const rejectedRes =
-        await api.post(
-          "/superadmin/rejected-leave-count",
-          {
-            employeeId: empId,
-          },
-          {
-            withCredentials: true,
-          }
-        );
-
-      setRejectedCount(
-        rejectedRes.data
-          .rejectedLeaveCount
+        leaveStatsRes.data
       );
     } catch (error) {
       console.log(error);
@@ -157,7 +138,7 @@ const stats = [
   {
     icon: XCircle,
     label: "Rejected Leaves",
-    value: rejectedCount,
+    value: leaveSummary?.rejectedLeaveCount || 0,
     color: "text-red-400",
     glow: "from-red-500/10",
     onClick: () =>
@@ -169,8 +150,7 @@ const stats = [
   {
     icon: Sun,
     label: "Remaining Casual Leave",
-    value:
-      leaveSummary?.remainingCasualLeave || 0,
+    value:leaveSummary?.remainingCasualLeave || 0,
     color: "text-sky-400",
     glow: "from-sky-500/10",
   },
@@ -183,6 +163,14 @@ const stats = [
     color: "text-amber-400",
     glow: "from-amber-500/10",
   },
+  {
+  icon: CalendarDays,
+  label: "Remaining Paid Leave",
+  value:
+    leaveSummary?.remainingPaidLeave || 0,
+  color: "text-violet-400",
+  glow: "from-violet-500/10",
+},
 ];
 
   return (
@@ -298,7 +286,7 @@ const stats = [
         </div>
 
         {/* Leave Statistics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6">
 {stats.map(
   ({
     icon: Icon,

@@ -37,11 +37,11 @@ const navItems = [
     icon: CalendarCheck,
     path: "/employee/my-leaves",
   },
-  {
-    label: "Rejected Leaves",
-    icon: CalendarX,
-    path: "/employee/my-rejected-leaves",
-  },
+  // {
+  //   label: "Rejected Leaves",
+  //   icon: CalendarX,
+  //   path: "/employee/my-rejected-leaves",
+  // },
 ];
 
 const EmployeeSidebar = ({ sidebarOpen, setSidebarOpen }) => {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   XCircle,
   Calendar,
@@ -25,6 +25,8 @@ const AdminRejectedLeaves = () => {
 
   const fetchRejectedLeaves = async () => {
     try {
+      setLoading(true);
+
       const res = await api.post(
         "/superadmin/employee-rejected-leaves",
         {
@@ -35,9 +37,16 @@ const AdminRejectedLeaves = () => {
         }
       );
 
-      setLeaves(res.data.rejectedLeaves);
+      console.log(res.data);
+
+      setLeaves(
+        res.data?.rejectedLeaves || []
+      );
     } catch (error) {
-      console.log(error);
+      console.log(
+        error.response?.data || error
+      );
+      setLeaves([]);
     } finally {
       setLoading(false);
     }
@@ -45,139 +54,140 @@ const AdminRejectedLeaves = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-950">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-red-400" />
-          <span className="text-sm font-medium text-slate-400">
+          <Loader2 className="w-8 h-8 animate-spin text-red-400" />
+          <p className="text-slate-400">
             Loading rejected leaves...
-          </span>
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-8 sm:px-6 lg:px-10 lg:py-12">
-      <div className="mx-auto max-w-5xl">
-        {/* Header */}
+    <div className="min-h-screen bg-slate-950 px-4 py-8">
+      <div className="max-w-6xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: -16 }}
+          initial={{ opacity: 0, y: -15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-8 flex flex-col gap-2 sm:mb-10"
+          className="mb-8"
         >
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-500/10 ring-1 ring-red-500/20">
-              <XCircle className="h-6 w-6 text-red-400" />
-            </div>
+            <XCircle className="w-8 h-8 text-red-400" />
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
+              <h1 className="text-3xl font-bold text-white">
                 Rejected Leaves
               </h1>
-              <p className="text-sm text-slate-500">
-                Overview of all declined leave requests
+              <p className="text-slate-500 text-sm">
+                Employee rejected leave history
               </p>
             </div>
           </div>
         </motion.div>
 
-        {/* Empty state */}
         {leaves.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900/60 px-6 py-16 text-center backdrop-blur-sm"
-          >
-            <Inbox className="mb-4 h-10 w-10 text-slate-600" />
-            <p className="text-slate-400">No rejected leaves found</p>
-          </motion.div>
+          <div className="rounded-2xl bg-slate-900 border border-slate-800 p-12 flex flex-col items-center gap-4">
+            <Inbox className="w-10 h-10 text-slate-600" />
+            <p className="text-slate-400">
+              No rejected leaves found
+            </p>
+          </div>
         ) : (
-          <div className="grid gap-5 sm:grid-cols-2">
-            <AnimatePresence>
-              {leaves.map((leave, index) => (
-                <motion.div
-                  key={leave._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: index * 0.05 }}
-                  whileHover={{ y: -4 }}
-                  className="group relative overflow-hidden rounded-2xl border border-red-900/40 bg-slate-900/70 p-5 shadow-lg shadow-black/20 backdrop-blur-sm transition-colors hover:border-red-700/60 sm:p-6"
-                >
-                  {/* Glow accent */}
-                  <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-red-500/10 blur-3xl transition-opacity group-hover:opacity-80" />
+          <div className="grid md:grid-cols-2 gap-6">
+            {leaves.map((leave, index) => (
+              <motion.div
+                key={leave._id}
+                initial={{
+                  opacity: 0,
+                  y: 20,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                transition={{
+                  delay: index * 0.08,
+                }}
+                className="bg-slate-900 border border-red-900/40 rounded-2xl p-6"
+              >
+                <div className="flex justify-between items-center mb-5">
+                  <h2 className="text-red-400 font-bold text-lg">
+                    {leave.leaveType ||
+                      "Unknown Leave"}
+                  </h2>
 
-                  <div className="relative flex flex-wrap items-start justify-between gap-3">
-                    <h2 className="text-lg font-bold !text-red-400 sm:text-xl">
-                      {leave.leaveType}
-                    </h2>
+                  <span className="px-3 py-1 rounded-full text-xs bg-red-500/20 text-red-400">
+                    Rejected
+                  </span>
+                </div>
 
-                    <span className="flex items-center gap-1.5 rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold text-red-400 ring-1 ring-inset ring-red-500/30">
-                      <XCircle className="h-3.5 w-3.5" />
-                      Rejected
+                <div className="space-y-3 text-sm text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-slate-500" />
+                    From:
+                    <span>
+                      {leave.fromDate ||
+                        "—"}
                     </span>
                   </div>
 
-                  <div className="relative mt-4 grid gap-3 text-sm text-slate-300 sm:grid-cols-2">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
-                      <span>
-                        <span className="text-slate-500">From:</span>{" "}
-                        {leave.fromDate}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 shrink-0 text-slate-500" />
-                      <span>
-                        <span className="text-slate-500">To:</span>{" "}
-                        {leave.toDate}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4 shrink-0 text-slate-500" />
-                      <span>
-                        <span className="text-slate-500">Days:</span>{" "}
-                        {leave.leaveDays}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 shrink-0 text-slate-500" />
-                      <span>
-                        <span className="text-slate-500">
-                          Rejected At:
-                        </span>{" "}
-                        {new Date(leave.rejectedAt).toLocaleDateString(
-                          "en-IN"
-                        )}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-slate-500" />
+                    To:
+                    <span>
+                      {leave.toDate || "—"}
+                    </span>
                   </div>
 
-                  <div className="relative mt-5 rounded-xl border border-slate-800 bg-slate-950/50 p-4">
-                    <p className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-white">
-                      <FileText className="h-4 w-4 text-slate-400" />
-                      Reason
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4 text-slate-500" />
+                    Days:
+                    <span>
+                      {leave.leaveDays || 0}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-slate-500" />
+                    Rejected At:
+                    <span>
+                      {leave.rejectedAt
+                        ? new Date(
+                            leave.rejectedAt
+                          ).toLocaleDateString(
+                            "en-IN"
+                          )
+                        : "—"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-5 bg-slate-950 border border-slate-800 rounded-xl p-4">
+                  <p className="flex items-center gap-2 text-white font-semibold mb-2">
+                    <FileText className="w-4 h-4 text-slate-500" />
+                    Reason
+                  </p>
+
+                  <p className="text-slate-400 text-sm">
+                    {leave.reason}
+                  </p>
+                </div>
+
+                {leave.adminRemark && (
+                  <div className="mt-4 bg-red-500/5 border border-red-900/40 rounded-xl p-4">
+                    <p className="flex items-center gap-2 text-red-400 font-semibold mb-2">
+                      <MessageSquareWarning className="w-4 h-4" />
+                      Admin Remark
                     </p>
-                    <p className="text-sm text-slate-400">{leave.reason}</p>
-                  </div>
 
-                  {leave.adminRemark && (
-                    <div className="relative mt-4 rounded-xl border border-red-900/40 bg-red-500/5 p-4">
-                      <p className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-red-400">
-                        <MessageSquareWarning className="h-4 w-4" />
-                        Admin Remark
-                      </p>
-                      <p className="text-sm text-slate-300">
-                        {leave.adminRemark}
-                      </p>
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                    <p className="text-slate-300 text-sm">
+                      {leave.adminRemark}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            ))}
           </div>
         )}
       </div>

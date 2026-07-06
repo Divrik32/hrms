@@ -11,8 +11,11 @@ import employeeRoutes from "./routes/employeeRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import leaveRoutes from "./routes/leaveRequests.js";
 import payrollRoutes from "./routes/payrollRoutes.js";
+import absentRoutes from "./routes/absentRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createCurrentLeaveBalance } from "./controllers/leaveRequestController.js";
+import { startMonthlyLeaveCreditJob } from "./jobs/monthlyLeaveCredit.js";
 dotenv.config();
 dns.setServers(["1.1.1.1","8.8.8.8"])
 
@@ -43,6 +46,8 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/payroll", payrollRoutes);
+app.use("/api/absent", absentRoutes);
+
 // Test Route
 app.get("/", (req, res) => {
   res.send("Server Running...");
@@ -51,15 +56,24 @@ app.get("/", (req, res) => {
 // MongoDB Connection
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log("MongoDB Connected");
-
-    app.listen(process.env.PORT || 5000, () => {
-      console.log(
-        `Server running on port ${process.env.PORT || 5000}`
-      );
-    });
+    await createCurrentLeaveBalance();
+    startMonthlyLeaveCreditJob();
+    app.listen(
+      process.env.PORT || 5000,
+      () => {
+        console.log(
+          `Server running on port ${
+            process.env.PORT || 5000
+          }`
+        );
+      }
+    );
   })
   .catch((error) => {
-    console.log("MongoDB Connection Error:", error);
+    console.log(
+      "MongoDB Connection Error:",
+      error
+    );
   });

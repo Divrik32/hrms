@@ -89,7 +89,7 @@ const ProfileSection = () => {
           <div className="flex-1 min-w-0">
             <motion.h1
               {...fadeIn(0.06)}
-              className="text-2xl sm:text-3xl font-extrabold text-white leading-tight truncate"
+              className="text-2xl sm:text-3xl font-extrabold !bg-gradient-to-r !from-[#2563EB] !via-[#3B82F6] !to-[#60A5FA] bg-clip-text !text-transparent leading-tight truncate"
             >
               {company.companyName}
             </motion.h1>

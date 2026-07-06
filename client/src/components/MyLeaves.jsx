@@ -1,312 +1,309 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../services/axios";
-import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   CalendarDays,
-  Clock3,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
+  Clock,
   Trash2,
-  ChevronDown,
-  ChevronUp,
-  Briefcase,
+  CheckCircle2,
+  XCircle,
+  Hourglass,
+  Sun,
+  Moon,
+  Palmtree,
   Stethoscope,
-  Calendar,
+  Wallet,
+  MessageSquareText,
+  Inbox,
+  Loader2,
+  ListChecks,
 } from "lucide-react";
-import toast from "react-hot-toast";
 
-
-const statusConfig = {
-  Approved: {
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/25",
-    dot: "bg-emerald-400",
-  },
-  Rejected: {
-    color: "text-red-400",
-    bg: "bg-red-500/10",
-    border: "border-red-500/25",
-    dot: "bg-red-400",
-  },
-  Pending: {
-    color: "text-amber-400",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/25",
-    dot: "bg-amber-400",
-  },
+const statusStyle = {
+  Pending: "bg-amber-400/10 text-amber-300 ring-1 ring-inset ring-amber-400/30",
+  Approved: "bg-emerald-400/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/30",
+  Rejected: "bg-rose-400/10 text-rose-300 ring-1 ring-inset ring-rose-400/30",
 };
 
-const leaveTypeIcon = (type) => {
-  if (type === "Sick Leave") return <Stethoscope size={13} />;
-  if (type === "Compensatory Off") return <Briefcase size={13} />;
-  return <Calendar size={13} />;
+const statusIcon = {
+  Pending: Hourglass,
+  Approved: CheckCircle2,
+  Rejected: XCircle,
 };
 
-const accentGradient = (status) => {
-  if (status === "Approved") return "linear-gradient(90deg,#10b981,#34d399)";
-  if (status === "Rejected") return "linear-gradient(90deg,#ef4444,#f87171)";
-  return "linear-gradient(90deg,#f59e0b,#fbbf24)";
-};
-
-const LeaveCard = ({ leave, onWithdraw, index }) => {
-  const [expanded, setExpanded] = useState(false);
-  const status = statusConfig[leave.status] || statusConfig.Pending;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.065, type: "spring", stiffness: 260, damping: 24 }}
-      className="rounded-2xl overflow-hidden flex flex-col"
-      style={{
-        background: "linear-gradient(145deg,#1e293b 0%,#162032 100%)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        boxShadow: "0 4px 24px rgba(0,0,0,0.25)",
-      }}
-    >
-      {/* Accent bar */}
-      <div className="h-1 w-full" style={{ background: accentGradient(leave.status) }} />
-
-      <div className="p-5 flex flex-col flex-1">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-2 mb-4">
-          <span
-            className="flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg text-slate-300"
-            style={{ background: "rgba(255,255,255,0.07)" }}
-          >
-            {leaveTypeIcon(leave.leaveType)}
-            {leave.leaveType}
-          </span>
-          <span
-            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border ${status.color} ${status.bg} ${status.border}`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
-            {leave.status}
-          </span>
-        </div>
-
-        {/* Date Range */}
-        <div
-          className="flex items-center gap-2 p-3 rounded-xl mb-4"
-          style={{ background: "rgba(255,255,255,0.04)" }}
-        >
-          <div className="flex-1">
-            <p className="text-xs text-slate-500 mb-0.5">From</p>
-            <p className="text-white text-sm font-semibold">{leave.fromDate}</p>
-          </div>
-          <div className="w-6 h-px" style={{ background: "rgba(255,255,255,0.12)" }} />
-          <div className="flex-1 text-right">
-            <p className="text-xs text-slate-500 mb-0.5">To</p>
-            <p className="text-white text-sm font-semibold">{leave.toDate}</p>
-          </div>
-          <div
-            className="ml-1 px-2.5 py-1.5 rounded-lg text-center min-w-[44px]"
-            style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.25)" }}
-          >
-            <p className="text-indigo-300 font-bold text-sm leading-none">{leave.leaveDays}</p>
-            <p className="text-indigo-400 mt-0.5" style={{ fontSize: "10px" }}>days</p>
-          </div>
-        </div>
-
-        {/* Leave Balance */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          {[
-            { label: "Casual Leave", value: leave.remainingCasualLeave },
-            { label: "Sick Leave", value: leave.remainingSickLeave },
-          ].map(({ label, value }) => (
-            <div key={label} className="p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.04)" }}>
-              <p className="text-slate-500 mb-1" style={{ fontSize: "11px" }}>{label}</p>
-              <p className="text-white font-bold text-xl leading-none">{value}</p>
-              <p className="text-slate-600 mt-0.5" style={{ fontSize: "10px" }}>remaining</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Expandable */}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between text-xs text-slate-500 hover:text-slate-300 transition-colors py-1 mb-1"
-        >
-          <span>View details</span>
-          {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
-
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="pt-2 space-y-3">
-                {leave.leaveType === "Compensatory Off" && leave.compOffWorkDate && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-500">Worked On</span>
-                    <span className="text-slate-300">{leave.compOffWorkDate}</span>
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs text-slate-500 mb-1">Reason</p>
-                  <p className="text-slate-300 text-sm leading-relaxed">{leave.reason}</p>
-                </div>
-                {leave.adminRemark && (
-                  <div
-                    className="p-3 rounded-xl"
-                    style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}
-                  >
-                    <p className="text-xs text-indigo-400 mb-1 font-medium">Admin Remark</p>
-                    <p className="text-slate-300 text-sm">{leave.adminRemark}</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Footer */}
-        <div
-          className="flex items-center justify-between mt-auto pt-4"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-        >
-          <div className="flex items-center gap-1.5 text-slate-500 text-xs">
-            <Clock3 size={12} />
-            Applied {new Date(leave.createdAt).toLocaleDateString()}
-          </div>
-          {leave.status === "Pending" && (
-            <motion.button
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={() => onWithdraw(leave._id)}
-              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg text-red-400 transition-colors"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)" }}
-            >
-              <Trash2 size={12} />
-              Withdraw
-            </motion.button>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  );
+const statusBar = {
+  Pending: "from-amber-400 to-amber-500",
+  Approved: "from-emerald-400 to-emerald-500",
+  Rejected: "from-rose-400 to-rose-500",
 };
 
 const MyLeaves = () => {
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [withdrawingId, setWithdrawingId] = useState(null);
 
-  useEffect(() => { fetchMyLeaves(); }, []);
+  useEffect(() => {
+    fetchLeaves();
+  }, []);
 
-  const fetchMyLeaves = async () => {
+  const fetchLeaves = async () => {
     try {
-      const res = await api.get("/leaves/my-leaves", {
-        withCredentials: true,
-      });
-      setLeaves(res.data.leaves);
+      const res = await api.get("/leaves/my-leaves");
+      const data = res.data?.leaves || res.data?.data?.leaves || res.data;
+      console.log(res);
+
+      setLeaves(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.log(error);
+      console.log("API ERROR:", error?.response?.data || error);
+      toast.error(error?.response?.data?.message || "Failed to load leaves");
     } finally {
       setLoading(false);
     }
   };
 
   const withdrawLeave = async (leaveId) => {
+    setWithdrawingId(leaveId);
     try {
-      const res = await api.delete(
-        `/leaves/withdraw/${leaveId}`,
-        { withCredentials: true }
-      );
+      const res = await api.delete(`/leaves/withdraw/${leaveId}`);
+
       toast.success(res.data.message);
-      fetchMyLeaves();
+      fetchLeaves();
     } catch (error) {
-      toast.error(error.response?.data?.message);
+      toast.error(error.response?.data?.message || "Withdraw failed");
+    } finally {
+      setWithdrawingId(null);
     }
   };
 
-  const stats = [
-    { label: "Total", value: leaves.length, color: "text-slate-200", bg: "rgba(255,255,255,0.05)" },
-    { label: "Approved", value: leaves.filter(l => l.status === "Approved").length, color: "text-emerald-400", bg: "rgba(16,185,129,0.08)" },
-    { label: "Pending", value: leaves.filter(l => l.status === "Pending").length, color: "text-amber-400", bg: "rgba(245,158,11,0.08)" },
-    { label: "Rejected", value: leaves.filter(l => l.status === "Rejected").length, color: "text-red-400", bg: "rgba(239,68,68,0.08)" },
-  ];
+  const summary = useMemo(() => {
+    const base = { total: leaves.length, Pending: 0, Approved: 0, Rejected: 0 };
+    leaves.forEach((l) => {
+      if (base[l.status] !== undefined) base[l.status] += 1;
+    });
+    return base;
+  }, [leaves]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center gap-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent"
-        />
-        <p className="text-slate-400 text-sm">Loading your leaves...</p>
+      <div className="min-h-screen flex flex-col justify-center items-center gap-3 bg-[#0b0a1a]">
+        <Loader2 className="animate-spin text-indigo-400" size={32} />
+        <p className="text-slate-400 text-sm font-medium">Loading your leaves…</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="relative min-h-screen bg-[#0b0a1a] overflow-hidden">
+      {/* ambient glow */}
+      <div className="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-indigo-600/25 blur-[110px]" />
+      <div className="pointer-events-none absolute top-1/3 -right-32 h-96 w-96 rounded-full bg-violet-600/20 blur-[120px]" />
+      <div className="pointer-events-none absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-fuchsia-600/10 blur-[100px]" />
 
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-8"
+        >
           <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)" }}
-            >
-              <CalendarDays size={20} className="text-indigo-400" />
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-900/50">
+              <CalendarDays className="text-white" size={24} />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">My Leave History</h1>
-              <p className="text-slate-500 text-sm">Track and manage your leave requests</p>
+              <h1 className="text-2xl sm:text-3xl font-bold !bg-gradient-to-r !from-[#fb00c5] !via-[#ac0246] !to-[#f70368] bg-clip-text !text-transparent tracking-tight">
+                My Leaves
+              </h1>
+              <p className="text-sm text-slate-400">Track and manage your leave requests</p>
             </div>
           </div>
-        </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8"
-        >
-          {stats.map(({ label, value, color, bg }) => (
-            <div
-              key={label}
-              className="p-4 rounded-2xl"
-              style={{ background: bg, border: "1px solid rgba(255,255,255,0.06)" }}
-            >
-              <p className="text-slate-500 text-xs mb-1">{label}</p>
-              <p className={`text-2xl font-bold ${color}`}>{value}</p>
+          {/* Quick stats */}
+          {leaves.length > 0 && (
+            <div className="grid grid-cols-4 sm:flex sm:items-center gap-2 sm:gap-3">
+              <StatPill label="Total" value={summary.total} className="bg-white/10 text-white ring-1 ring-white/10" />
+              <StatPill label="Pending" value={summary.Pending} className="bg-amber-400/10 text-amber-300 ring-1 ring-amber-400/20" />
+              <StatPill label="Approved" value={summary.Approved} className="bg-emerald-400/10 text-emerald-300 ring-1 ring-emerald-400/20" />
+              <StatPill label="Rejected" value={summary.Rejected} className="bg-rose-400/10 text-rose-300 ring-1 ring-rose-400/20" />
             </div>
-          ))}
+          )}
         </motion.div>
 
-        {/* Cards or Empty */}
         {leaves.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="rounded-2xl p-16 text-center"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white/[0.03] backdrop-blur-xl rounded-2xl p-12 ring-1 ring-white/10 text-center flex flex-col items-center gap-3"
           >
-            <CalendarDays size={40} className="text-slate-700 mx-auto mb-4" />
-            <p className="text-slate-400 font-medium">No leave records found</p>
-            <p className="text-slate-600 text-sm mt-1">Your leave requests will appear here</p>
+            <div className="p-3 rounded-full bg-white/5 ring-1 ring-white/10">
+              <Inbox className="text-slate-400" size={28} />
+            </div>
+            <p className="font-semibold text-slate-200">No leave records found</p>
+            <p className="text-sm text-slate-500">Leaves you apply for will show up here.</p>
           </motion.div>
         ) : (
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {leaves.map((leave, i) => (
-              <LeaveCard key={leave._id} leave={leave} onWithdraw={withdrawLeave} index={i} />
-            ))}
+          <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            <AnimatePresence mode="popLayout">
+              {leaves.map((leave, index) => {
+                const StatusIcon = statusIcon[leave.status] || Hourglass;
+                const dates = leave.leaveDates?.length
+                  ? leave.leaveDates
+                  : leave.extraLeaveDetails?.extraLeaveDates || [];
+                const fallbackType = [
+                  leave.extraLeaveDetails?.extraLeaveType?.casualLeave > 0 &&
+                    `Casual (${leave.extraLeaveDetails.extraLeaveType.casualLeave})`,
+                  leave.extraLeaveDetails?.extraLeaveType?.sickLeave > 0 &&
+                    `Sick (${leave.extraLeaveDetails.extraLeaveType.sickLeave})`,
+                ]
+                  .filter(Boolean)
+                  .join(", ");
+
+                return (
+                  <motion.div
+                    key={leave._id}
+                    layout
+                    initial={{ opacity: 0, y: 24 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                    transition={{ delay: index * 0.05, duration: 0.35 }}
+                    whileHover={{ y: -4 }}
+                    className="group relative bg-white/[0.04] backdrop-blur-xl rounded-2xl ring-1 ring-white/10 hover:ring-white/20 shadow-lg shadow-black/30 hover:shadow-indigo-900/30 overflow-hidden transition-all duration-300"
+                  >
+                    {/* status accent bar */}
+                    <div className={`h-1.5 w-full bg-gradient-to-r ${statusBar[leave.status] || "from-slate-500 to-slate-600"}`} />
+
+                    <div className="p-5">
+                      <div className="flex justify-between items-center mb-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusStyle[leave.status] || "bg-white/5 text-slate-300"}`}
+                        >
+                          <StatusIcon size={13} />
+                          {leave.status}
+                        </span>
+
+                        {leave.status === "Pending" && (
+  <motion.button
+    whileHover={{ scale: 1.03 }}
+    whileTap={{ scale: 0.97 }}
+    onClick={() =>
+      withdrawLeave(leave._id)
+    }
+    disabled={
+      withdrawingId === leave._id
+    }
+    className="px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20 text-xs font-semibold transition-all disabled:opacity-50 flex items-center gap-2"
+  >
+    {withdrawingId === leave._id ? (
+      <>
+        <Loader2
+          size={14}
+          className="animate-spin"
+        />
+        Withdrawing...
+      </>
+    ) : (
+      <>
+        <Trash2 size={14} />
+        Withdraw Request
+      </>
+    )}
+  </motion.button>
+)}
+                      </div>
+
+                      <div className="space-y-1.5 mb-4">
+                        <p className="flex items-center gap-1.5 font-semibold text-slate-100">
+                          <ListChecks size={15} className="text-indigo-400" />
+                          Total Days: <span className="text-indigo-300">{leave.totalDays}</span>
+                        </p>
+                        <p className="text-sm text-slate-400 leading-relaxed">{leave.reason}</p>
+                      </div>
+
+                      {/* Leave dates timeline */}
+                      <div className="mb-4">
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                          Leave Dates
+                        </h3>
+                        <div className="space-y-2 relative">
+                          {dates.map((item, idx) => {
+                            const isFullDay = item.duration === 1;
+                            const DurationIcon = isFullDay ? Sun : Moon;
+                            return (
+                              <div
+                                key={idx}
+                                className="flex items-center gap-3 border border-white/10 bg-white/[0.03] rounded-xl px-3 py-2 text-sm"
+                              >
+                                <div className="p-1.5 rounded-lg bg-white/5 ring-1 ring-white/10 shrink-0">
+                                  <DurationIcon size={14} className={isFullDay ? "text-amber-400" : "text-indigo-300"} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-slate-200">{item.date}</div>
+                                  <div className="text-xs text-slate-500">
+                                    {isFullDay ? "Full Day" : "Half Day"}
+                                  </div>
+                                </div>
+                                <div className="text-xs font-medium text-indigo-300 text-right shrink-0">
+                                  {item.leaveType || fallbackType}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Remaining balance */}
+                      <div className="border-t border-white/10 pt-4 mb-1">
+                        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2.5">
+                          Remaining Balance
+                        </h3>
+                        <div className="grid grid-cols-3 gap-2">
+                          <BalanceItem icon={Palmtree} label="Casual" value={leave.remainingCasualLeave} color="text-emerald-400" />
+                          <BalanceItem icon={Stethoscope} label="Sick" value={leave.remainingSickLeave} color="text-sky-400" />
+                          <BalanceItem icon={Wallet} label="Paid" value={leave.remainingPaidLeave} color="text-violet-400" />
+                        </div>
+                      </div>
+
+                      {leave.adminRemark && (
+                        <div className="mt-4 bg-white/[0.03] ring-1 ring-white/10 p-3 rounded-xl">
+                          <p className="text-xs font-semibold mb-1 flex items-center gap-1.5 text-slate-400">
+                            <MessageSquareText size={13} />
+                            Admin Remark
+                          </p>
+                          <p className="text-sm text-slate-300">{leave.adminRemark}</p>
+                        </div>
+                      )}
+
+                      <div className="mt-4 text-xs text-slate-500 flex items-center gap-1.5">
+                        <Clock size={13} />
+                        Applied on {new Date(leave.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           </div>
         )}
       </div>
     </div>
   );
 };
+
+const StatPill = ({ label, value, className }) => (
+  <div className={`flex flex-col items-center justify-center rounded-xl px-3 py-2 sm:flex-row sm:gap-1.5 sm:px-3.5 sm:py-1.5 ${className}`}>
+    <span className="text-base sm:text-sm font-bold leading-none">{value}</span>
+    <span className="text-[10px] sm:text-xs font-medium opacity-80">{label}</span>
+  </div>
+);
+
+const BalanceItem = ({ icon: Icon, label, value, color }) => (
+  <div className="flex flex-col items-center gap-1 rounded-xl bg-white/[0.03] ring-1 ring-white/10 py-2.5">
+    <Icon size={16} className={color} />
+    <span className="text-sm font-bold text-slate-100">{value}</span>
+    <span className="text-[10px] text-slate-500 font-medium">{label}</span>
+  </div>
+);
 
 export default MyLeaves;
