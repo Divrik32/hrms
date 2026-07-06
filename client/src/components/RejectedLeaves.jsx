@@ -194,7 +194,7 @@ export default function RejectedLeaves() {
                   Leave Records
                 </span>
               </div>
-<h1 className="mt-1 pb-1.5 text-3xl sm:text-4xl md:text-5xl font-black leading-[1.15] tracking-tight !bg-gradient-to-r !from-[#ff0000] !via-[#9f0025] !to-[#ff008c] bg-clip-text !text-transparent">
+<h1 className="mt-1 pb-1.5 text-3xl sm:text-4xl md:text-5xl font-black leading-[1.15] tracking-tight !bg-gradient-to-r !from-[#ff0055] !via-[#ff0000] !to-[#ff0099] bg-clip-text !text-transparent">
                 Rejected Leaves
               </h1>
               <p className="mt-1.5 text-sm text-slate-400">
