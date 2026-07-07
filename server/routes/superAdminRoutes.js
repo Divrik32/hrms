@@ -15,11 +15,13 @@ import {
   getMonthWeeks,
   getRejectedLeaveCount,
   getRejectedLeavesByEmployee,
+  getSuperAdminProfile,
   getWeeklyAttendance,
   loginSuperAdmin,
   logoutSuperAdmin,
   resendSuperAdminOtp,
   resetSuperAdminPassword,
+  updateSuperAdminProfile,
   verifySuperAdminOtp,
 } from "../controllers/superAdminController.js";
 
@@ -62,5 +64,7 @@ router.post("/approved-leaves", protectSuperAdmin, getApprovedLeavesByEmployee);
 router.post("/rejected-leaves", protectSuperAdmin, getRejectedLeavesByEmployee);
 router.post("/create-holiday", protectSuperAdmin, createHoliday);
 router.post("/employee-leave-stats", protectSuperAdmin, getEmployeeLeaveCountsAndBalance);
+router.get("/profile", protectSuperAdmin, getSuperAdminProfile);
+router.put("/profile", protectSuperAdmin, upload.single("profilePic"), updateSuperAdminProfile);
 
 export default router;

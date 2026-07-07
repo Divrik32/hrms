@@ -6,6 +6,7 @@ import { BACKEND_URL } from "../services/axios";
 const SuperAdminNavbar = ({
   user,
   handleLogout,
+  onProfileClick,
 }) => {
   return (
     <header className="border-b border-slate-700/50 bg-slate-900/70 backdrop-blur-sm sticky top-0 z-10">
@@ -43,15 +44,20 @@ const SuperAdminNavbar = ({
               </p>
             </div>
 
-            <img
-              src={
-                user.profilePic
-                  ? `${BACKEND_URL}/uploads/${user.profilePic}`
-                  : "https://placehold.co/40x40"
-              }
-              alt="profile"
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-slate-700 hover:border-indigo-500 transition-colors flex-shrink-0"
-            />
+<button
+  onClick={onProfileClick}
+  className="rounded-full focus:outline-none"
+>
+  <img
+    src={
+      user.profilePic
+        ? `${BACKEND_URL}/uploads/${user.profilePic}`
+        : "https://placehold.co/40x40"
+    }
+    alt="profile"
+    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border-2 border-slate-700 hover:border-indigo-500 transition-colors"
+  />
+</button>
 
             <div className="w-px h-5 bg-slate-700 hidden sm:block" />
 

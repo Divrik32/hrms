@@ -13,6 +13,7 @@ export const protectSuperAdmin = (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, "secretkey");
+    console.log(decoded);
 
     if (decoded.role !== "superadmin") {
       return res.status(403).json({

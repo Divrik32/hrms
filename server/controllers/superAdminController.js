@@ -59,6 +59,117 @@ export const createSuperAdmin = async (req, res) => {
   }
 };
 
+export const getSuperAdminProfile = async (req, res) => {
+  try {
+    const superAdmin = await SuperAdmin.findById(
+      req.admin._id
+    ).select("-password -resetOtp -resetOtpExpire");
+
+    if (!superAdmin) {
+      return res.status(404).json({
+        success: false,
+        message: "Super Admin not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      superAdmin,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const updateSuperAdminProfile = async (
+  req,
+  res
+) => {
+  try {
+    const superAdmin =
+      await SuperAdmin.findById(req.admin._id);
+
+    if (!superAdmin) {
+      return res.status(404).json({
+        success: false,
+        message: "Super Admin not found",
+      });
+    }
+
+    const { name, email } = req.body;
+
+    // -----------------------
+    // Name
+    // -----------------------
+
+    if (name) {
+      superAdmin.name = name.trim();
+    }
+
+    // -----------------------
+    // Email
+    // -----------------------
+
+    if (
+      email &&
+      email !== superAdmin.email
+    ) {
+      const existingEmail =
+        await SuperAdmin.findOne({
+          email: email.toLowerCase(),
+          _id: { $ne: req.admin._id },
+        });
+
+      if (existingEmail) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists",
+        });
+      }
+
+      superAdmin.email =
+        email.toLowerCase();
+    }
+
+    // -----------------------
+    // Profile Picture
+    // -----------------------
+
+    if (req.file) {
+      superAdmin.profilePic =
+        req.file.filename;
+    }
+
+    await superAdmin.save();
+
+    const updatedAdmin =
+      await SuperAdmin.findById(
+        req.admin._id
+      ).select(
+        "-password -resetOtp -resetOtpExpire"
+      );
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Profile updated successfully",
+      superAdmin: updatedAdmin,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // Login
 export const loginSuperAdmin = async (
   req,
@@ -94,7 +205,7 @@ export const loginSuperAdmin = async (
 
     const token = jwt.sign(
       {
-        id: admin._id,
+        _id: admin._id,
         role: admin.role,
       },
       "secretkey",

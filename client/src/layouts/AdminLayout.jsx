@@ -3,15 +3,16 @@ import {
   Outlet,
   useNavigate,
 } from "react-router-dom";
-
+import { useState } from "react";
 import api from "../services/axios";
 import SuperAdminNavbar from "../shared/SuperAdminNavbar";
+import SuperAdminProfileModal from "../components/SuperAdminProfileModal";
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-
-  const user = JSON.parse(
-    localStorage.getItem("user")
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [user, setUser] = useState(
+    JSON.parse(localStorage.getItem("user"))
   );
 
   const handleLogout = async () => {
@@ -46,9 +47,16 @@ const AdminLayout = () => {
       <SuperAdminNavbar
         user={user}
         handleLogout={handleLogout}
+        onProfileClick={() => setProfileOpen(true)}
       />
 
       <Outlet />
+      <SuperAdminProfileModal
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          user={user}
+          setUser={setUser}
+      />
     </div>
   );
 };

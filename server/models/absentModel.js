@@ -19,6 +19,13 @@ const absentSchema = new mongoose.Schema(
       required: true,
     },
 
+    duration: {
+      type: Number,
+      enum: [0.5, 1],
+      default: 1,
+      required: true,
+    },
+
     markedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SuperAdmin",

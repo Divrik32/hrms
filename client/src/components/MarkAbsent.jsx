@@ -21,6 +21,7 @@ const MarkAbsent = () => {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState("");
   const [absentDate, setAbsentDate] = useState("");
+  const [duration, setDuration] = useState(1);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -65,6 +66,7 @@ const MarkAbsent = () => {
           companyId,
           employeeId: selectedEmployee,
           absentDate,
+          duration,
         },
         {
           withCredentials: true,
@@ -75,6 +77,7 @@ const MarkAbsent = () => {
 
       setSelectedEmployee("");
       setAbsentDate("");
+      setDuration(1);
     } catch (error) {
       toast.error(
         error.response?.data?.message
@@ -235,13 +238,46 @@ const MarkAbsent = () => {
                 </div>
               </div>
 
+              {/* Duration */}
+<div>
+  <label className="text-slate-300 mb-2 block text-sm font-medium">
+    Absent Duration
+  </label>
+
+  <div className="grid grid-cols-2 gap-3">
+    <button
+      type="button"
+      onClick={() => setDuration(1)}
+      className={`py-3 rounded-xl border transition-all font-medium ${
+        duration === 1
+          ? "bg-rose-600 border-rose-500 text-white"
+          : "bg-slate-800 border-slate-700 text-slate-300 hover:border-rose-400"
+      }`}
+    >
+      Full Day
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setDuration(0.5)}
+      className={`py-3 rounded-xl border transition-all font-medium ${
+        duration === 0.5
+          ? "bg-[#ffff00] border-[#ffff00] text-black"
+          : "bg-slate-800 border-slate-700 text-slate-300 hover:border-amber-400"
+      }`}
+    >
+      Half Day
+    </button>
+  </div>
+</div>
+
               {/* Submit */}
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 disabled={saving}
                 onClick={handleSubmit}
-                className="w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 disabled:opacity-60 disabled:cursor-not-allowed rounded-xl py-3.5 font-semibold transition-all shadow-lg shadow-rose-900/30 flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-[#8f008f] to-[#a300a3] hover:from-[#7b007b] hover:to-[#8f008f] disabled:opacity-60 disabled:cursor-not-allowed rounded-xl py-3.5 font-semibold transition-all shadow-lg shadow-rose-900/30 flex items-center justify-center gap-2 brightness-125"
               >
                 {saving ? (
                   <>
@@ -335,6 +371,23 @@ const MarkAbsent = () => {
                 </p>
               </div>
             </div>
+            {formattedDate && (
+  <div className="mt-3 flex items-center gap-2">
+    <span className="text-xs text-slate-500">
+      Duration :
+    </span>
+
+    <span
+      className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+        duration === 1
+          ? "bg-rose-500/20 text-rose-300"
+          : "bg-amber-500/20 text-amber-300"
+      }`}
+    >
+      {duration === 1 ? "Full Day" : "Half Day"}
+    </span>
+  </div>
+)}
 
             {selectedEmployeeData && formattedDate && (
               <motion.div

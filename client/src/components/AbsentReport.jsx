@@ -208,9 +208,13 @@ const loadEmployeeAbsentDates = async () => {
         year,
       }
     );
+    console.log(data);
+    
 
     if (data.success) {
-      setEmployeeAbsentDates(data.absentDates);
+      setEmployeeAbsentDates(
+  data.absentDates || []
+);
     }
   } catch (error) {
     console.log(error);
@@ -261,10 +265,11 @@ const loadMonthlyAbsents = async () => {
 
         }
 
-        grouped[empId].absentDates.push({
-          absentDate: item.absentDate,
-          absentId: item._id,
-        });
+grouped[empId].absentDates.push({
+  absentDate: item.absentDate,
+  absentId: item._id,
+  duration: item.duration,
+});
 
       });
 
@@ -594,7 +599,7 @@ const handleRemoveAbsent =
 
               {/* Employee Absent List */}
 
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 backdrop-blur sm:p-6">
+<div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 backdrop-blur sm:p-6">
 
                 <div className="mb-5 flex items-center justify-between">
                   <h2 className="text-lg font-semibold !text-white sm:text-xl">
@@ -610,11 +615,11 @@ const handleRemoveAbsent =
 
                 {loadingEmployeeReport ? (
 
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
                     {[...Array(3)].map((_, i) => (
                       <div
                         key={i}
-                        className="h-16 animate-pulse rounded-xl bg-slate-800/50"
+                        className="h-14 animate-pulse rounded-lg bg-slate-800/50"
                       />
                     ))}
                   </div>
@@ -639,43 +644,63 @@ const handleRemoveAbsent =
                     variants={listContainerVariants}
                     initial="hidden"
                     animate="show"
-                    className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                    className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
                   >
 
                     <AnimatePresence>
-                      {employeeAbsentDates.map((date) => (
+                      {employeeAbsentDates.map((item) => (
 
                         <motion.div
-                          key={date}
+                          key={item.absentDate}
                           variants={listItemVariants}
                           exit="exit"
                           layout
-                          className="group flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-[#0d1220] p-4 transition-colors hover:border-indigo-500/40"
+                          className="group flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-[#0d1220] px-4 py-3 transition-colors hover:border-indigo-500/40"
                         >
 
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10">
-                              <CalendarX2 size={16} className="text-amber-400" />
+                          <div className="flex min-w-0 items-center gap-3">
+
+                            <span
+                              className={`h-2 w-2 shrink-0 rounded-full ${
+                                item.duration === 0.5
+                                  ? "bg-orange-400"
+                                  : "bg-emerald-400"
+                              }`}
+                            />
+
+                            <div className="flex min-w-0 flex-col">
+
+                              <p className="truncate text-sm font-medium text-white">
+                                {new Date(item.absentDate).toLocaleDateString(undefined, {
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </p>
+
+                              <span
+                                className={`text-[11px] font-medium ${
+                                  item.duration === 0.5
+                                    ? "text-orange-400"
+                                    : "text-emerald-400"
+                                }`}
+                              >
+                                {item.duration === 0.5 ? "Half Day" : "Full Day"}
+                              </span>
+
                             </div>
-                            <p className="font-semibold text-white">
-                              {new Date(date).toLocaleDateString(undefined, {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
-                            </p>
+
                           </div>
 
                           <button
                             onClick={() => {
                               setDeleteEmployeeId(selectedEmployee);
-                              setDeleteAbsentDate(date);
+                              setDeleteAbsentDate(item.absentDate);
                               setShowDeleteModal(true);
                             }}
-                            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-red-600/90 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-red-600"
+                            className="flex shrink-0 items-center justify-center rounded-md bg-red-600/90 p-1.5 text-white transition-colors hover:bg-red-600"
                           >
-                            <Trash2 size={14} />
-                            <span className="hidden sm:inline">Remove</span>
+                            <Trash2 size={13} />
                           </button>
 
                         </motion.div>
@@ -778,7 +803,7 @@ const handleRemoveAbsent =
                         className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 backdrop-blur transition-colors hover:border-slate-700 sm:p-6"
                       >
 
-                        {/* Employee */}
+{/* Employee */}
 
                         <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
 
@@ -823,7 +848,7 @@ const handleRemoveAbsent =
 
                         {/* Dates */}
 
-                        <div className="flex flex-wrap gap-3">
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
 
                           <AnimatePresence>
                             {item.absentDates.map((date) => (
@@ -831,18 +856,48 @@ const handleRemoveAbsent =
                               <motion.div
                                 key={date.absentDate}
                                 layout
-                                initial={{ opacity: 0, scale: 0.9 }}
+                                initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.85 }}
-                                className="group flex items-center gap-3 rounded-xl border border-slate-800 bg-[#0d1220] px-4 py-3 transition-colors hover:border-indigo-500/40"
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="group flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-[#0d1220] px-4 py-3 transition-colors hover:border-indigo-500/40"
                               >
 
-                                <p className="text-sm font-medium text-white">
-                                  {new Date(date.absentDate).toLocaleDateString(
-                                    undefined,
-                                    { day: "2-digit", month: "short", year: "numeric" }
-                                  )}
-                                </p>
+                                <div className="flex items-center gap-3 min-w-0">
+
+                                  <span
+                                    className={`h-2 w-2 shrink-0 rounded-full ${
+                                      date.duration === 0.5
+                                        ? "bg-orange-400"
+                                        : "bg-emerald-400"
+                                    }`}
+                                  />
+
+                                  <div className="flex min-w-0 flex-col">
+
+                                    <p className="truncate text-sm font-medium text-white">
+                                      {new Date(date.absentDate).toLocaleDateString(
+                                        undefined,
+                                        {
+                                          day: "2-digit",
+                                          month: "short",
+                                          year: "numeric",
+                                        }
+                                      )}
+                                    </p>
+
+                                    <span
+                                      className={`text-[11px] font-medium ${
+                                        date.duration === 0.5
+                                          ? "text-orange-400"
+                                          : "text-emerald-400"
+                                      }`}
+                                    >
+                                      {date.duration === 0.5 ? "Half Day" : "Full Day"}
+                                    </span>
+
+                                  </div>
+
+                                </div>
 
                                 <button
                                   onClick={() => {
@@ -850,7 +905,7 @@ const handleRemoveAbsent =
                                     setDeleteAbsentDate(date.absentDate);
                                     setShowDeleteModal(true);
                                   }}
-                                  className="flex items-center gap-1.5 rounded-lg bg-red-600/90 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-600"
+                                  className="flex shrink-0 items-center justify-center rounded-md bg-red-600/90 p-1.5 text-white transition-colors hover:bg-red-600"
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -904,21 +959,25 @@ const handleRemoveAbsent =
 
                 {/* Header */}
 
-                <div className="flex flex-col items-center justify-center px-8 py-8">
+<div className="flex flex-col items-center justify-center px-8 py-8">
 
                   <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/15">
-                    <AlertTriangle size={32} className="text-red-500" />
+                    <AlertTriangle size={30} className="text-red-500" />
                   </div>
 
-                  <h2 className="text-xl font-bold text-white sm:text-2xl">
+                  <h2 className="text-xl font-bold !text-white sm:text-2xl">
                     Remove Absent?
                   </h2>
 
-                  <p className="mt-3 text-center leading-7 text-slate-400">
+                  <p className="mt-3 text-center text-sm leading-6 text-slate-400 sm:text-base sm:leading-7">
                     Are you sure you want to remove the absent record on{" "}
                     <span className="font-semibold text-red-400">
                       {deleteAbsentDate &&
-                        new Date(deleteAbsentDate).toLocaleDateString()}
+                        new Date(deleteAbsentDate).toLocaleDateString(undefined, {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })}
                     </span>
                     ?
                     <br />
@@ -929,24 +988,24 @@ const handleRemoveAbsent =
 
                 {/* Footer */}
 
-                <div className="flex justify-end gap-3 border-t border-slate-800 px-6 py-5">
+<div className="flex justify-between border-t border-slate-800 px-6 py-5">
 
-                  <button
-                    onClick={() => setShowDeleteModal(false)}
-                    className="rounded-xl bg-slate-800 px-5 py-3 font-medium text-slate-200 transition-colors hover:bg-slate-700 sm:px-6"
-                  >
-                    Cancel
-                  </button>
+  <button
+    onClick={() => setShowDeleteModal(false)}
+    className="rounded-xl bg-slate-800 px-5 py-3 font-medium text-slate-200 transition-colors hover:bg-slate-700 sm:px-6"
+  >
+    Cancel
+  </button>
 
-                  <button
-                    onClick={handleRemoveAbsent}
-                    className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-red-700 sm:px-6"
-                  >
-                    <Trash2 size={18} />
-                    Delete
-                  </button>
+  <button
+    onClick={handleRemoveAbsent}
+    className="flex items-center gap-2 rounded-xl bg-red-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-red-700 sm:px-6"
+  >
+    <Trash2 size={18} />
+    Delete
+  </button>
 
-                </div>
+</div>
 
               </motion.div>
 

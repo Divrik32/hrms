@@ -9,17 +9,19 @@ export const markAbsent = async (
       companyId,
       employeeId,
       absentDate,
+      duration,
     } = req.body;
 
     if (
       !companyId ||
       !employeeId ||
-      !absentDate
+      !absentDate ||
+      !duration
     ) {
       return res.status(400).json({
         success: false,
         message:
-          "Company, Employee and Date are required",
+          "Company, Employee, Date and Duration are required",
       });
     }
 
@@ -44,6 +46,7 @@ export const markAbsent = async (
         companyId,
         employeeId,
         absentDate,
+        duration,
         markedBy:
           req.admin?._id,
       });
@@ -128,10 +131,18 @@ export const getEmployeeAbsentDates = async (req, res) => {
     }).sort({ absentDate: 1 });
 
     return res.status(200).json({
-      success: true,
-      totalAbsentDays: absents.length,
-      absentDates: absents.map((item) => item.absentDate),
-    });
+  success: true,
+
+  totalAbsentDays: absents.reduce(
+    (sum, item) => sum + item.duration,
+    0
+  ),
+
+  absentDates: absents.map((item) => ({
+    absentDate: item.absentDate,
+    duration: item.duration,
+  })),
+});
   } catch (error) {
     console.log(error);
 
@@ -179,11 +190,16 @@ export const getMonthlyAbsents = async (req, res) => {
         absentDate: 1,
       });
 
-    return res.status(200).json({
-      success: true,
-      totalAbsents: absents.length,
-      absents,
-    });
+return res.status(200).json({
+  success: true,
+
+  totalAbsents: absents.reduce(
+    (sum, item) => sum + item.duration,
+    0
+  ),
+
+  absents,
+});
   } catch (error) {
     console.log(error);
 

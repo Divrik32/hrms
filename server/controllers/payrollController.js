@@ -45,13 +45,13 @@ export const generatePayroll = async (req, res) => {
       year
     );
 
-    // Absent Count
-    const absentCount = await getEmployeeAbsentCount(
-      companyId,
-      employeeId,
-      month,
-      year
-    );
+// Total Absent Days (supports 0.5 day)
+const absentDays = await getEmployeeAbsentCount(
+  companyId,
+  employeeId,
+  month,
+  year
+);
 
     // Salary Calculation
     const inHandSalary = salaryStructure.inHandSalary;
@@ -64,8 +64,10 @@ export const generatePayroll = async (req, res) => {
       leaveSummary.unpaidLeave.extraCasualLeave +
       leaveSummary.unpaidLeave.extraSickLeave;
 
-    const totalLOPDays =
-      unpaidLeaveDays + absentCount;
+const totalLOPDays =
+  Number(
+    (unpaidLeaveDays + absentDays).toFixed(1)
+  );
 
     const deduction = Number(
       (perDaySalary * totalLOPDays).toFixed(2)
@@ -90,7 +92,7 @@ export const generatePayroll = async (req, res) => {
       perDaySalary,
       paidLeave: leaveSummary.paidLeave,
       unpaidLeave: leaveSummary.unpaidLeave,
-      absentDays: absentCount,
+      absentDays,
       totalLOPDays,
       deduction,
       payableSalary,
@@ -169,5 +171,144 @@ export const getAllPayrolls = async (req, res) => {
       success: false,
       message: error.message,
     });
+  }
+};
+
+export const updatePayroll = async (req, res) => {
+  try {
+    const { payrollId } = req.params;
+
+    const payroll = await Payroll.findById(payrollId);
+
+    if (!payroll) {
+      return res.status(404).json({
+        success: false,
+        message: "Payroll not found",
+      });
+    }
+
+    const salaryStructure = await EmployeeSalary.findOne({
+      employeeId: payroll.employeeId,
+      status: "active",
+    });
+
+    if (!salaryStructure) {
+      return res.status(404).json({
+        success: false,
+        message: "Salary structure not found",
+      });
+    }
+
+    const companyId = payroll.companyId;
+
+    const totalDays = getDaysInMonth(
+      payroll.month,
+      payroll.year
+    );
+
+    const leaveSummary =
+      await getEmployeeLeaveSummary(
+        companyId,
+        payroll.employeeId,
+        payroll.month,
+        payroll.year
+      );
+
+    const absentDays =
+      await getEmployeeAbsentCount(
+        companyId,
+        payroll.employeeId,
+        payroll.month,
+        payroll.year
+      );
+
+    const inHandSalary =
+      salaryStructure.inHandSalary;
+
+    const perDaySalary = Number(
+      (inHandSalary / totalDays).toFixed(2)
+    );
+
+    const unpaidLeaveDays =
+      leaveSummary.unpaidLeave.extraCasualLeave +
+      leaveSummary.unpaidLeave.extraSickLeave;
+
+    const totalLOPDays = Number(
+      (unpaidLeaveDays + absentDays).toFixed(1)
+    );
+
+    const deduction = Number(
+      (perDaySalary * totalLOPDays).toFixed(2)
+    );
+
+    const payableSalary = Number(
+      (inHandSalary - deduction).toFixed(2)
+    );
+
+    payroll.totalDays = totalDays;
+    payroll.inHandSalary = inHandSalary;
+    payroll.ctc = salaryStructure.ctc;
+    payroll.pf = salaryStructure.pf;
+    payroll.esi = salaryStructure.esi;
+    payroll.tax = salaryStructure.tax;
+    payroll.perDaySalary = perDaySalary;
+    payroll.paidLeave = leaveSummary.paidLeave;
+    payroll.unpaidLeave = leaveSummary.unpaidLeave;
+    payroll.absentDays = absentDays;
+    payroll.totalLOPDays = totalLOPDays;
+    payroll.deduction = deduction;
+    payroll.payableSalary = payableSalary;
+
+    await payroll.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Payroll updated successfully.",
+      payroll,
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
+  }
+};
+
+export const deletePayroll = async (req, res) => {
+  try {
+
+    const { payrollId } = req.params;
+
+    const payroll =
+      await Payroll.findById(payrollId);
+
+    if (!payroll) {
+      return res.status(404).json({
+        success: false,
+        message: "Payroll not found",
+      });
+    }
+
+    await Payroll.findByIdAndDelete(payrollId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Payroll deleted successfully.",
+    });
+
+  } catch (error) {
+
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+
   }
 };

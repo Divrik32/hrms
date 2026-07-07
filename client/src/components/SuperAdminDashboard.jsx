@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, LayoutGrid, LogOut, ShieldCheck, Mail, Tag, ChevronRight, CalendarClock, ClipboardCheck, CalendarDays, Handshake, Sparkles, PartyPopper, Zap, Wand2 } from "lucide-react";
+import { Building2, LayoutGrid, LogOut, ShieldCheck, Mail, Tag, ChevronRight, CalendarClock, ClipboardCheck, CalendarDays, Handshake, Sparkles, PartyPopper, Zap, Wand2, WalletCards } from "lucide-react";
 
 const StatCard = ({ icon: Icon, label, value, color }) => (
   <motion.div
@@ -257,6 +257,13 @@ const SuperAdminDashboard = () => {
               onClick={() => navigate("/admin/edit-employee-salary")}
               color="bg-teal-600/80"
             />
+            {/* <ActionButton
+              icon={WalletCards}
+              label="Payroll Management"
+              description="Generate, edit and manage employee payrolls"
+              onClick={() => navigate("/admin/payroll-management")}
+              color="bg-sky-600/80"
+            /> */}
           </div>
         </div>
 
