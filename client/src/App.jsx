@@ -34,6 +34,7 @@ import ApprovedLeaves from "./components/ApprovedLeaves";
 import RejectedLeaves from "./components/RejectedLeaves";
 import EmployeeProtectedRoute from "./protected/EmployeeProtectedRoute";
 import MarkAbsent from "./components/MarkAbsent";
+import AbsentReport from "./components/AbsentReport";
 
 
 const router = createBrowserRouter([
@@ -180,6 +181,10 @@ const router = createBrowserRouter([
       {
         path: "mark-absent",
         element: <MarkAbsent />,
+      },
+      {
+        path: "absent-report",
+        element: <AbsentReport />,
       },
     ],
   },

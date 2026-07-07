@@ -1,13 +1,12 @@
 import express from "express";
-import {createEmployeeSalaryStructure, editEmployeeSalaryStructure, getEmployeeLeaveSummary, getEmployeeSalaryStructure} from "../controllers/payrollController.js";
+import { generatePayroll, getAllPayrolls, getEmployeePayroll } from "../controllers/payrollController.js";
 import { protectSuperAdmin } from "../middleware/authMiddleware.js";
-import { protectEmployee } from "../middleware/protectEmployee.js";
 
 const router = express.Router();
 
-router.get("/leave-summary", protectEmployee, getEmployeeLeaveSummary);
-router.post("/create-salary-structure", protectSuperAdmin, createEmployeeSalaryStructure);
-router.put("/update-salary-structure/:employeeId", protectSuperAdmin, editEmployeeSalaryStructure);
-router.get("/salary-structure/:employeeId", protectSuperAdmin, getEmployeeSalaryStructure);
+// Generate Payroll
+router.post("/generate", protectSuperAdmin, generatePayroll);
+router.get("/employee/:employeeId", protectSuperAdmin, getEmployeePayroll);
+router.get("/all", protectSuperAdmin, getAllPayrolls);
 
 export default router;

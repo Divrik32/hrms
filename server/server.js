@@ -4,15 +4,16 @@ import dotenv from "dotenv";
 import dns from 'dns';
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import path from "path";
 import companyRoutes from "./routes/companyRoutes.js";
 import departmentRoutes from "./routes/departmentRoutes.js";
 import superAdminRoutes from "./routes/superAdminRoutes.js";
 import employeeRoutes from "./routes/employeeRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import leaveRoutes from "./routes/leaveRequests.js";
-import payrollRoutes from "./routes/payrollRoutes.js";
+import salaryRoutes from "./routes/salaryRoutes.js";
 import absentRoutes from "./routes/absentRoutes.js";
-import path from "path";
+import payrollRoutes from "./routes/payrollRoutes.js";
 import { fileURLToPath } from "url";
 import { createCurrentLeaveBalance } from "./controllers/leaveRequestController.js";
 import { startMonthlyLeaveCreditJob } from "./jobs/monthlyLeaveCredit.js";
@@ -45,8 +46,9 @@ app.use("/api/superadmin", superAdminRoutes);
 app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
-app.use("/api/payroll", payrollRoutes);
+app.use("/api/salary", salaryRoutes);
 app.use("/api/absent", absentRoutes);
+app.use("/api/payroll", payrollRoutes);
 
 // Test Route
 app.get("/", (req, res) => {

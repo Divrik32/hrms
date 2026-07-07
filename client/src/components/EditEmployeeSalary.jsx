@@ -47,7 +47,7 @@ const EditEmployeeSalary = () => {
     try {
       setSalaryLoading(true);
       const res = await api.get(
-        `/payroll/salary-structure/${employeeId}`,
+        `/salary/salary-structure/${employeeId}`,
         { withCredentials: true }
       );
       const salary = res.data.salaryStructure;
@@ -91,7 +91,7 @@ const EditEmployeeSalary = () => {
     try {
       setLoading(true);
       const res = await api.put(
-        `/payroll/update-salary-structure/${formData.employeeId}`,
+        `/salary/update-salary-structure/${formData.employeeId}`,
         { companyId: formData.companyId, employeeId: formData.employeeId,
           inHandSalary: formData.inHandSalary, pf: formData.pf, esi: formData.esi, tax: formData.tax, ctc },
         { withCredentials: true }

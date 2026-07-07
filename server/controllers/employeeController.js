@@ -405,23 +405,19 @@ async (req, res) => {
 export const loginEmployee = async (req, res) => {
   try {    
     const { email, password } = req.body;
-
     // find employee
     const employee = await Employee.findOne({ email });
-
     if (!employee) {
       return res.status(404).json({
         success: false,
         message: "Employee not found",
       });
     }
-
     // check password
     const isMatch = await bcrypt.compare(
       password,
       employee.password
     );
-
     if (!isMatch) {
       return res.status(400).json({
         success: false,

@@ -65,7 +65,7 @@ const CreateEmployeeSalary = () => {
     try {
       setLoading(true);
       const res = await api.post(
-        "/payroll/create-salary-structure",
+        "/salary/create-salary-structure",
         { ...formData, ctc },
         { withCredentials: true }
       );
