@@ -100,6 +100,11 @@ const payrollSchema = new mongoose.Schema(
       default: 0,
     },
 
+    workingDays: {
+      type: Number,
+      default: 0,
+    },
+
     totalLOPDays: {
       type: Number,
       default: 0,

@@ -110,6 +110,21 @@ export const checkIn = async (req, res) => {
       timing = "inTime";
     }
 
+    console.log(now);
+console.log(now.getHours());
+console.log(now.getMinutes());
+
+console.log(
+  now.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+  })
+);
+console.log({
+  totalMinutes,
+  earlyLimit,
+  lateLimit,
+  timing,
+});
    attendance = await Attendance.create({
      employeeId,
      companyId: employee.companyId,

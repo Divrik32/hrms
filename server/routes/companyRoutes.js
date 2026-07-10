@@ -5,7 +5,9 @@ import {
   createCompany,
   getAllCompanies,
   getCompanyById,
+  updateCompany,
 } from "../controllers/companyController.js";
+
 import { protectSuperAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -26,12 +28,40 @@ const upload = multer({ storage });
 router.post(
   "/",
   protectSuperAdmin,
-  upload.single("logo"),
+  upload.fields([
+    {
+      name: "logo",
+      maxCount: 1,
+    },
+    {
+      name: "signature",
+      maxCount: 1,
+    },
+  ]),
   createCompany
+);
+
+// Update Company
+router.put(
+  "/:companyId",
+  protectSuperAdmin,
+  upload.fields([
+    {
+      name: "logo",
+      maxCount: 1,
+    },
+    {
+      name: "signature",
+      maxCount: 1,
+    },
+  ]),
+  updateCompany
 );
 
 // Get Company By Id
 router.get("/:companyId", getCompanyById);
+
+// Get All Companies
 router.get("/", getAllCompanies);
 
 export default router;

@@ -77,6 +77,10 @@ const companySchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    signature: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
