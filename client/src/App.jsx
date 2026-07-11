@@ -35,6 +35,13 @@ import RejectedLeaves from "./components/RejectedLeaves";
 import EmployeeProtectedRoute from "./protected/EmployeeProtectedRoute";
 import MarkAbsent from "./components/MarkAbsent";
 import AbsentReport from "./components/AbsentReport";
+import PayrollManagement from "./components/PayrollManagement";
+import GeneratePayroll from "./components/GeneratePayroll";
+import CompanyManagement from "./components/CompanyManagement";
+import EditCompany from "./components/EditCompany";
+import AllPayrolls from "./components/AllPayrolls";
+import UpdatePayroll from "./components/UpdatePayroll";
+// import EditCompany from "./components/EditCompany";
 
 
 const router = createBrowserRouter([
@@ -96,14 +103,42 @@ const router = createBrowserRouter([
         path: "edit-employee-salary",
         element: <EditEmployeeSalary />
       },
-      // {
-      //   path: "create-payroll",
-      //   element: <CreatePayroll />
-      // }
       {
         path: "create-holiday",
         element: <CreateHoliday />,
-      }
+      },
+      {
+        path: "payroll-management",
+        element: <PayrollManagement />
+      },
+      {
+        path: "generate-payroll",
+        element: <GeneratePayroll />,
+      },
+   // {
+   //   path: "employee-payroll",
+   //   element: <EmployeePayroll />,
+   // },
+   {
+     path: "all-payrolls",
+     element: <AllPayrolls />,
+   },
+   {
+     path: "update-payroll/:payrollId",
+     element: <UpdatePayroll />,
+   },
+   // {
+   //   path: "delete-payroll",
+   //   element: <DeletePayroll />,
+   // },
+      {
+        path: "company-management",
+        element: <CompanyManagement />,
+      },
+      {
+        path: "edit-company/:companyId",
+        element: <EditCompany />,
+      },
     ],
   },
 

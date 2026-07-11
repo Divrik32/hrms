@@ -90,9 +90,11 @@ export default function CreateCompany() {
     industry: "",
     address: "",
     logo: null,
+    signature: null,
   });
 
   const [logoPreview, setLogoPreview] = useState(null);
+  const [ signaturePreview, setSignaturePreview] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -103,12 +105,28 @@ export default function CreateCompany() {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (files) {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-      setLogoPreview(URL.createObjectURL(files[0]));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+if (files) {
+
+  const file = files[0];
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: file,
+  }));
+
+  if (name === "logo") {
+    setLogoPreview(
+      URL.createObjectURL(file)
+    );
+  }
+
+  if (name === "signature") {
+    setSignaturePreview(
+      URL.createObjectURL(file)
+    );
+  }
+
+}
   };
 
   const createCompany = async (e) => {
@@ -130,9 +148,9 @@ export default function CreateCompany() {
         setFormData({
           companyName: "", companyType: "Private Limited", gstNumber: "",
           panNumber: "", email: "", phone: "", website: "",
-          industry: "", address: "", logo: null,
+          industry: "", address: "", logo: null, signature: null,
         });
-        setLogoPreview(null);
+        setLogoPreview(null); setSignaturePreview(null);
       }, 2200);
     } catch (error) {
       setSnackbar({
@@ -382,6 +400,86 @@ export default function CreateCompany() {
                     )}
                   </AnimatePresence>
                 </label>
+              </div>
+            </motion.div>
+
+            {/* Signeture Upload */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white/[0.03] border border-white/[0.07] rounded-2xl overflow-hidden"
+            >
+              <div className="flex items-center gap-3 px-5 py-4 border-b border-white/[0.06]">
+            
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center">
+                  <Upload
+                    size={14}
+                    className="text-white"
+                  />
+                </div>
+            
+                <span className="text-sm font-semibold text-gray-300">
+                  Authorized Signature
+                </span>
+            
+                <span className="text-xs text-gray-600 ml-auto">
+                  Optional
+                </span>
+            
+              </div>
+            
+              <div className="p-5">
+            
+                <label className="block cursor-pointer">
+            
+                  <input
+                    type="file"
+                    name="signature"
+                    accept="image/*"
+                    onChange={handleChange}
+                    className="hidden"
+                  />
+            
+                  {signaturePreview ? (
+            
+                    <div className="flex items-center gap-4 p-3 bg-white/[0.04] rounded-xl border border-white/[0.08]">
+            
+                      <img
+                        src={signaturePreview}
+                        alt="Signature"
+                        className="h-16 object-contain"
+                      />
+            
+                      <div>
+            
+                        <p className="text-sm font-medium text-gray-200">
+                          {formData.signature?.name}
+                        </p>
+            
+                        <p className="text-xs text-gray-500">
+                          Click to change signature
+                        </p>
+            
+                      </div>
+            
+                    </div>
+            
+                  ) : (
+            
+                    <div className="flex flex-col items-center justify-center py-8 border-2 border-dashed border-white/[0.08] rounded-xl">
+            
+                      <Upload className="mb-3 text-gray-500" />
+            
+                      <p className="text-sm text-gray-400">
+                        Upload Authorized Signature
+                      </p>
+            
+                    </div>
+            
+                  )}
+            
+                </label>
+            
               </div>
             </motion.div>
           </div>

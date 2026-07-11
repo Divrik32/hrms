@@ -257,13 +257,20 @@ const SuperAdminDashboard = () => {
               onClick={() => navigate("/admin/edit-employee-salary")}
               color="bg-teal-600/80"
             />
-            {/* <ActionButton
+            <ActionButton
               icon={WalletCards}
               label="Payroll Management"
               description="Generate, edit and manage employee payrolls"
               onClick={() => navigate("/admin/payroll-management")}
               color="bg-sky-600/80"
-            /> */}
+            />
+            <ActionButton
+              icon={Building2}
+              label="Company Management"
+              description="View and edit registered companies"
+              onClick={() => navigate("/admin/company-management")}
+              color="bg-violet-600/80"
+            />
           </div>
         </div>
 
