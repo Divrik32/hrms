@@ -140,27 +140,19 @@ const SuperAdminDashboard = () => {
   `}</style>
 
 <div className="space-y-3">
-  <h1
-    style={{
-      fontFamily: "'Playfair Display', serif",
-      fontSize: "clamp(1.35rem, 4vw, 2rem)",
-      fontWeight: 800,
-      letterSpacing: "0.04em",
-      textTransform: "uppercase",
-      lineHeight: 1.3,
-      background:
-        "linear-gradient(110deg, #990099 0%, #d900d9 20%, #6c006c 40%, #c500c5 60%, #700070 80%, #990099 100%)",
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "transparent",
-      backgroundClip: "text",
-      filter:
-        "brightness(1.4) saturate(1.3) drop-shadow(0 0 10px rgba(230,0,230,0.8)) drop-shadow(0 0 28px rgba(230,0,230,0.5)) drop-shadow(0 0 45px rgba(153,0,153,0.35))",
-      backgroundSize: "200% auto",
-      animation: "shimmerName 3s linear infinite",
-    }}
-  >
-    Welcome back, {user.name}
-  </h1>
+<h1
+  className="!text-[#2563eb]"
+  style={{
+    fontFamily: "'Playfair Display', serif",
+    fontSize: "clamp(1.35rem, 4vw, 2rem)",
+    fontWeight: 700,
+    letterSpacing: "0.01em",
+    lineHeight: 1.3,
+    color: "#1e293b",
+  }}
+>
+  Welcome back, <span style={{ color: "#2563eb", fontWeight: 800 }}>{user.name}</span>
+</h1>
 
   <div className="flex items-center gap-3 pt-1">
     <div className="h-px w-10 bg-gradient-to-r from-indigo-400 to-transparent shrink-0" />
@@ -186,7 +178,7 @@ const SuperAdminDashboard = () => {
         {/* Actions */}
         <div className="mb-6">
 <div className="flex items-center justify-between mb-3">
-  <h2 className="text-slate-400 text-xs font-semibold uppercase tracking-widest">
+  <h2 className="!text-slate-400 text-xs font-semibold uppercase tracking-widest">
     Quick Actions
   </h2>
 </div>

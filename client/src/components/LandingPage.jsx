@@ -83,7 +83,7 @@ const LandingPage = () => {
           transition={{ duration: 0.55, delay: 0.05 }}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight leading-tight mb-3">
+          <h1 className="text-4xl sm:text-5xl font-bold !text-white tracking-tight leading-tight mb-3">
             Welcome back
           </h1>
           <p className="text-slate-500 text-base sm:text-lg max-w-sm mx-auto">
@@ -151,7 +151,7 @@ const LandingPage = () => {
               </div>
 
               {/* Text */}
-              <h2 className="text-lg font-semibold text-white mb-1.5 leading-snug">
+              <h2 className="text-lg font-semibold !text-white mb-1.5 leading-snug">
                 {headline}
               </h2>
               <p className="text-sm text-slate-500 group-hover:text-slate-400 transition-colors leading-relaxed">

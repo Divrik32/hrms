@@ -92,7 +92,7 @@ const CreateDepartment = () => {
                 Organization
               </span>
             </div>
-            <h1 className="text-2xl font-bold !bg-gradient-to-r !from-[#de086c] !via-[#640361] !to-[#ffd500] bg-clip-text !text-transparent mt-3 tracking-tight">
+            <h1 className="text-2xl font-bold !bg-gradient-to-r !from-[#de086c] !via-[#640361] !to-[#ffd500] bg-clip-text !text-blue-400  mt-3 tracking-tight">
               New Department
             </h1>
             <p className="text-sm text-slate-400 mt-1">

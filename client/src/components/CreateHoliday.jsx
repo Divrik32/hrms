@@ -162,7 +162,7 @@ const showToast = (type, message) => {
               />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold !bg-gradient-to-r !from-[#de5e08] !via-[#640361] !to-[#ff0000] bg-clip-text !text-transparent leading-tight">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold !bg-gradient-to-r !from-[#de5e08] !via-[#640361] !to-[#ff0000] bg-clip-text !text-blue-400  leading-tight">
                 Create Holiday
               </h1>
               <p className="text-slate-500 text-xs sm:text-sm mt-1 flex items-center gap-1.5">

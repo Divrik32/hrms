@@ -103,31 +103,35 @@ export default function CreateCompany() {
     (completionFields.filter((f) => formData[f]?.toString().trim()).length / completionFields.length) * 100
   );
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-if (files) {
+const handleChange = (e) => {
+  const { name, value, files } = e.target;
 
-  const file = files[0];
+  // File input
+  if (files && files.length > 0) {
+    const file = files[0];
 
+    setFormData((prev) => ({
+      ...prev,
+      [name]: file,
+    }));
+
+    if (name === "logo") {
+      setLogoPreview(URL.createObjectURL(file));
+    }
+
+    if (name === "signature") {
+      setSignaturePreview(URL.createObjectURL(file));
+    }
+
+    return;
+  }
+
+  // TextField / Select
   setFormData((prev) => ({
     ...prev,
-    [name]: file,
+    [name]: value,
   }));
-
-  if (name === "logo") {
-    setLogoPreview(
-      URL.createObjectURL(file)
-    );
-  }
-
-  if (name === "signature") {
-    setSignaturePreview(
-      URL.createObjectURL(file)
-    );
-  }
-
-}
-  };
+};
 
   const createCompany = async (e) => {
     e.preventDefault();

@@ -117,13 +117,13 @@ function TableRow({ children, index }) {
   );
 }
 
-function SectionHeader({ icon: Icon, title }) {
+function SectionHeader({ icon: Icon, title }){
   return (
     <div className="flex items-center gap-2.5 mb-6">
       <span className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
         <Icon size={17} className="text-indigo-400" />
       </span>
-      <h2 className="text-base font-bold text-white tracking-tight">{title}</h2>
+      <h2 className="text-base font-bold !text-white tracking-tight">{title}</h2>
     </div>
   );
 }
