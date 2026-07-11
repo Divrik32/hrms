@@ -82,7 +82,7 @@ const handleSubmit = async (e) => {
               <div className="w-14 h-14 bg-violet-500/20 border border-violet-500/30 rounded-xl flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(139,92,246,0.3)]">
                 <ShieldAlert className="text-violet-400" size={26} strokeWidth={1.8} />
               </div>
-              <h2 className="text-2xl font-bold text-white tracking-tight">Forgot password?</h2>
+              <h2 className="text-2xl font-bold !text-white tracking-tight">Forgot password?</h2>
               <p className="text-slate-400 text-sm mt-1.5 text-center leading-relaxed px-4">
                 Enter your work email and we'll send you a one-time OTP to reset your password.
               </p>

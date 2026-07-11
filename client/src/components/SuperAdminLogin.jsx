@@ -73,7 +73,7 @@ const SuperAdminLogin = () => {
             >
               <ShieldCheck className="text-white w-8 h-8" />
             </motion.div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Welcome back</h1>
+            <h1 className="text-2xl font-bold !text-white tracking-tight">Welcome back</h1>
             <p className="text-slate-400 text-sm mt-1">Sign in to your Super Admin account</p>
           </div>
 

@@ -105,7 +105,7 @@ const EmployeeLogin = () => {
               <div className="w-14 h-14 bg-indigo-500/20 border border-indigo-500/30 rounded-xl flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(99,102,241,0.3)]">
                 <ShieldCheck className="text-indigo-400" size={26} strokeWidth={1.8} />
               </div>
-              <h2 className="text-2xl font-bold text-white tracking-tight">Welcome back</h2>
+              <h2 className="text-2xl font-bold !text-white tracking-tight">Welcome back</h2>
               <p className="text-slate-400 text-sm mt-1">Sign in to your employee portal</p>
             </motion.div>
 
