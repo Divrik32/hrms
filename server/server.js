@@ -21,7 +21,8 @@ dotenv.config();
 dns.setServers(["1.1.1.1","8.8.8.8"])
 
 const app = express();
-
+console.log("FRONTEND_URL =", process.env.FRONTEND_URL);
+console.log("BACKEND_URL =", process.env.BACKEND_URL);
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
