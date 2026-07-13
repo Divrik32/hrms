@@ -41,6 +41,20 @@ const AdminEmployeeProfile = () => {
   const [departments, setDepartments] = useState([]);
   const [editingDepartment, setEditingDepartment] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [editingRole, setEditingRole] = useState(false);
+const [selectedRole, setSelectedRole] = useState("");
+
+const roles = [
+  "Vice President",
+  "General Manager",
+  "Senior Manager",
+  "Project Manager",
+  "Team Lead",
+  "Senior Software Engineer",
+  "Software Engineer",
+  "Associate Trainee",
+  "Intern",
+];
 
   useEffect(() => {
     loadEmployeeData();
@@ -66,6 +80,7 @@ const AdminEmployeeProfile = () => {
 
       setEmployee(employeeData);
       setSelectedDepartment(employeeData.departmentId?._id || "");
+      setSelectedRole(employeeData.role || "");
 
       const depRes = await api.get(
         `/departments/company/${employeeData.companyId._id}`,
@@ -119,6 +134,30 @@ setDepartments(depRes.data.departments);
   }
 };
 
+const updateRole = async () => {
+  try {
+    const res = await api.put(
+      "/superadmin/edit-employee",
+      {
+        employeeId: employee._id,
+        role: selectedRole,
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    setEmployee(res.data.employee);
+    setEditingRole(false);
+
+    toast.success("Role updated");
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Update failed"
+    );
+  }
+};
+
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-slate-950 text-white gap-3">
@@ -152,7 +191,7 @@ setDepartments(depRes.data.departments);
     { icon: Mail, label: "Email", value: employee.email },
     { icon: Phone, label: "Phone", value: employee.phone },
     { icon: UserRound, label: "Gender", value: employee.gender },
-    { icon: Briefcase, label: "Role", value: employee.role },
+    // { icon: Briefcase, label: "Role", value: employee.role },
     { icon: MapPin, label: "Address", value: employee.presentAddress },
     {
       icon: CalendarDays,
@@ -291,7 +330,7 @@ const stats = [
         </motion.div>
 
         {/* Company & Department */}
-        <div className="grid sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="grid sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <motion.div
             custom={1}
             initial="hidden"
@@ -372,6 +411,72 @@ const stats = [
     </p>
   )}
 </motion.div>
+
+<motion.div
+  custom={3}
+  initial="hidden"
+  animate="show"
+  variants={fadeUp}
+  className="bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/40 transition-colors"
+>
+  <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center gap-2">
+      <Briefcase className="w-5 h-5 text-indigo-400" />
+      <h3 className="text-lg font-bold text-indigo-400">
+        Role
+      </h3>
+    </div>
+
+    {!editingRole && (
+      <button
+        onClick={() => setEditingRole(true)}
+        className="p-2 rounded-lg bg-slate-800 hover:bg-indigo-600 transition"
+      >
+        <Pencil className="w-4 h-4 text-white" />
+      </button>
+    )}
+  </div>
+
+  {editingRole ? (
+    <div className="flex items-center gap-2">
+      <select
+        value={selectedRole}
+        onChange={(e) =>
+          setSelectedRole(e.target.value)
+        }
+        className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
+      >
+        {roles.map((role) => (
+          <option key={role} value={role}>
+            {role}
+          </option>
+        ))}
+      </select>
+
+      <button
+        onClick={updateRole}
+        className="p-2 rounded-lg bg-emerald-600 hover:bg-emerald-700"
+      >
+        <Check className="w-4 h-4 text-white" />
+      </button>
+
+      <button
+        onClick={() => {
+          setEditingRole(false);
+          setSelectedRole(employee.role);
+        }}
+        className="p-2 rounded-lg bg-red-600 hover:bg-red-700"
+      >
+        <X className="w-4 h-4 text-white" />
+      </button>
+    </div>
+  ) : (
+    <p className="text-white text-base">
+      {employee.role}
+    </p>
+  )}
+</motion.div>
+
         </div>
 
         {/* Leave Statistics */}

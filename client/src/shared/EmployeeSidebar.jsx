@@ -17,11 +17,11 @@ const navItems = [
     icon: LayoutDashboard,
     path: "/employee/dashboard",
   },
-  {
-    label: "Attendance History",
-    icon: Clock,
-    path: null,
-  },
+  // {
+  //   label: "Attendance History",
+  //   icon: Clock,
+  //   path: null,
+  // },
   {
     label: "Profile",
     icon: User,

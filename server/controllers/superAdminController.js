@@ -1398,14 +1398,14 @@ export const getEmployeeLeaveCountsAndBalance =
     }
   };
   
-  export const editEmployeeForSuperAdmin = async (req, res) => {
+export const editEmployeeForSuperAdmin = async (req, res) => {
   try {
-    const { employeeId, departmentId } = req.body;
+    const { employeeId, departmentId, role } = req.body;
 
-    if (!employeeId || !departmentId) {
+    if (!employeeId) {
       return res.status(400).json({
         success: false,
-        message: "Employee ID and Department ID are required",
+        message: "Employee ID is required",
       });
     }
 
@@ -1418,20 +1418,37 @@ export const getEmployeeLeaveCountsAndBalance =
       });
     }
 
-    const department = await Department.findOne({
-      _id: departmentId,
-      companyId: employee.companyId,
-      status: "active",
-    });
-
-    if (!department) {
-      return res.status(404).json({
-        success: false,
-        message: "Department not found for this company",
+    // Update Department
+    if (departmentId) {
+      const department = await Department.findOne({
+        _id: departmentId,
+        companyId: employee.companyId,
+        status: "active",
       });
+
+      if (!department) {
+        return res.status(404).json({
+          success: false,
+          message: "Department not found for this company",
+        });
+      }
+
+      employee.departmentId = department._id;
     }
 
-    employee.departmentId = department._id;
+    // Update Role
+    if (role) {
+      const allowedRoles = Employee.schema.path("role").enumValues;
+
+      if (!allowedRoles.includes(role)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid role selected",
+        });
+      }
+
+      employee.role = role;
+    }
 
     await employee.save();
 
@@ -1448,7 +1465,7 @@ export const getEmployeeLeaveCountsAndBalance =
 
     return res.status(200).json({
       success: true,
-      message: "Department updated successfully",
+      message: "Employee updated successfully",
       employee: updatedEmployee,
     });
   } catch (error) {
