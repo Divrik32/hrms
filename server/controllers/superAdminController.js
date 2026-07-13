@@ -9,6 +9,7 @@ import LeaveRequest from "../models/LeaveRequest.js";
 import RejectedLeave from "../models/RejectedLeave.js";
 import Holiday from "../models/Holiday.js";
 import EmployeeLeaveBalance from "../models/EmployeeLeaveBalance.js";
+import Department from "../models/departmentModel.js";
 
 // Create Super Admin
 export const createSuperAdmin = async (req, res) => {
@@ -1397,3 +1398,65 @@ export const getEmployeeLeaveCountsAndBalance =
     }
   };
   
+  export const editEmployeeForSuperAdmin = async (req, res) => {
+  try {
+    const { employeeId, departmentId } = req.body;
+
+    if (!employeeId || !departmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID and Department ID are required",
+      });
+    }
+
+    const employee = await Employee.findById(employeeId);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found",
+      });
+    }
+
+    const department = await Department.findOne({
+      _id: departmentId,
+      companyId: employee.companyId,
+      status: "active",
+    });
+
+    if (!department) {
+      return res.status(404).json({
+        success: false,
+        message: "Department not found for this company",
+      });
+    }
+
+    employee.departmentId = department._id;
+
+    await employee.save();
+
+    const updatedEmployee = await Employee.findById(employeeId)
+      .populate({
+        path: "companyId",
+        select: "-createdAt -updatedAt -__v",
+      })
+      .populate({
+        path: "departmentId",
+        select: "-createdAt -updatedAt -__v",
+      })
+      .select("-password");
+
+    return res.status(200).json({
+      success: true,
+      message: "Department updated successfully",
+      employee: updatedEmployee,
+    });
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

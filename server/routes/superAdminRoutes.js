@@ -4,6 +4,7 @@ import multer from "multer";
 import {
   createHoliday,
   createSuperAdmin,
+  editEmployeeForSuperAdmin,
   forgotPasswordSuperAdmin,
   getAllMonthlyAttendance,
   getApprovedLeavesByEmployee,
@@ -66,5 +67,6 @@ router.post("/create-holiday", protectSuperAdmin, createHoliday);
 router.post("/employee-leave-stats", protectSuperAdmin, getEmployeeLeaveCountsAndBalance);
 router.get("/profile", protectSuperAdmin, getSuperAdminProfile);
 router.put("/profile", protectSuperAdmin, upload.single("profilePic"), updateSuperAdminProfile);
+router.put("/edit-employee", protectSuperAdmin, editEmployeeForSuperAdmin);
 
 export default router;

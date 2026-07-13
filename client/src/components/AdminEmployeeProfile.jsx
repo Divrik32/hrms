@@ -15,7 +15,12 @@ import {
   Sun,
   Stethoscope,
   Loader2,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
+
+import toast from "react-hot-toast";
 import api, { BACKEND_URL } from "../services/axios";
 
 const fadeUp = {
@@ -33,6 +38,9 @@ const AdminEmployeeProfile = () => {
   const [employee, setEmployee] = useState(null);
   const [leaveSummary, setLeaveSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [departments, setDepartments] = useState([]);
+  const [editingDepartment, setEditingDepartment] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState("");
 
   useEffect(() => {
     loadEmployeeData();
@@ -57,7 +65,16 @@ const AdminEmployeeProfile = () => {
         employeeRes.data.employee;
 
       setEmployee(employeeData);
+      setSelectedDepartment(employeeData.departmentId?._id || "");
 
+      const depRes = await api.get(
+        `/departments/company/${employeeData.companyId._id}`,
+        {
+          withCredentials: true,
+        }
+      );
+
+setDepartments(depRes.data.departments);
       const leaveStatsRes =
         await api.post(
           "/superadmin/employee-leave-stats",
@@ -78,6 +95,29 @@ const AdminEmployeeProfile = () => {
       setLoading(false);
     }
   };
+  const updateDepartment = async () => {
+  try {
+    const res = await api.put(
+      "/superadmin/edit-employee",
+      {
+        employeeId: employee._id,
+        departmentId: selectedDepartment,
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    setEmployee(res.data.employee);
+    setEditingDepartment(false);
+
+    toast.success("Department updated");
+  } catch (error) {
+    toast.error(
+      error.response?.data?.message || "Update failed"
+    );
+  }
+};
 
   if (loading) {
     return (
@@ -268,21 +308,70 @@ const stats = [
             </p>
           </motion.div>
 
-          <motion.div
-            custom={2}
-            initial="hidden"
-            animate="show"
-            variants={fadeUp}
-            className="bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/40 transition-colors"
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <Briefcase className="w-5 h-5 text-indigo-400" />
-              <h3 className="text-lg font-bold text-indigo-400">Department</h3>
-            </div>
-            <p className="text-white text-base">
-              {employee.departmentId?.departmentName || "—"}
-            </p>
-          </motion.div>
+<motion.div
+  custom={2}
+  initial="hidden"
+  animate="show"
+  variants={fadeUp}
+  className="bg-slate-900/70 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 hover:border-indigo-500/40 transition-colors"
+>
+  <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center gap-2">
+      <Briefcase className="w-5 h-5 text-indigo-400" />
+      <h3 className="text-lg font-bold text-indigo-400">
+        Department
+      </h3>
+    </div>
+
+    {!editingDepartment && (
+      <button
+        onClick={() => setEditingDepartment(true)}
+        className="p-2 rounded-lg bg-slate-800 hover:bg-indigo-600 transition"
+      >
+        <Pencil className="w-4 h-4 text-white" />
+      </button>
+    )}
+  </div>
+
+  {editingDepartment ? (
+    <div className="flex items-center gap-2">
+      <select
+        value={selectedDepartment}
+        onChange={(e) =>
+          setSelectedDepartment(e.target.value)
+        }
+        className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
+      >
+        {departments.map((dept) => (
+          <option key={dept._id} value={dept._id}>
+            {dept.departmentName}
+          </option>
+        ))}
+      </select>
+
+      <button
+        onClick={updateDepartment}
+        className="p-2 rounded-lg bg-emerald-600 hover:bg-emerald-700"
+      >
+        <Check className="w-4 h-4 text-white" />
+      </button>
+
+      <button
+        onClick={() => {
+          setEditingDepartment(false);
+          setSelectedDepartment(employee.departmentId?._id);
+        }}
+        className="p-2 rounded-lg bg-red-600 hover:bg-red-700"
+      >
+        <X className="w-4 h-4 text-white" />
+      </button>
+    </div>
+  ) : (
+    <p className="text-white text-base">
+      {employee.departmentId?.departmentName || "—"}
+    </p>
+  )}
+</motion.div>
         </div>
 
         {/* Leave Statistics */}
