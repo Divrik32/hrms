@@ -165,7 +165,7 @@ const EmployeeLogin = () => {
                   </label>
                   <motion.button
                     type="button"
-                    onClick={() => navigate("/employee/forgot-password")}
+                    onClick={() => navigate("/forgot-password")}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.97 }}
                     className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors duration-150 font-medium"
