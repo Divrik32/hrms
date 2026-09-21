@@ -14,8 +14,8 @@ import leaveRoutes from "./routes/leaveRequests.js";
 import salaryRoutes from "./routes/salaryRoutes.js";
 import absentRoutes from "./routes/absentRoutes.js";
 import payrollRoutes from "./routes/payrollRoutes.js";
+import superAdminDashboardRoutes from "./routes/superAdminDashboardRoutes.js";
 import { fileURLToPath } from "url";
-import { createCurrentLeaveBalance } from "./controllers/leaveRequestController.js";
 import { startMonthlyLeaveCreditJob } from "./jobs/monthlyLeaveCredit.js";
 dotenv.config();
 dns.setServers(["1.1.1.1","8.8.8.8"])
@@ -50,6 +50,7 @@ app.use("/api/leaves", leaveRoutes);
 app.use("/api/salary", salaryRoutes);
 app.use("/api/absent", absentRoutes);
 app.use("/api/payroll", payrollRoutes);
+app.use("/api/superadmin-dashboard", superAdminDashboardRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
@@ -61,7 +62,6 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(async () => {
     console.log("MongoDB Connected");
-    await createCurrentLeaveBalance();
     startMonthlyLeaveCreditJob();
     app.listen(
       process.env.PORT || 5001,

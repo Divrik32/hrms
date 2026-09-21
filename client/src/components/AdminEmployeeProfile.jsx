@@ -60,56 +60,77 @@ const roles = [
     loadEmployeeData();
   }, [empId]);
 
-  const loadEmployeeData = async () => {
-    try {
-      setLoading(true);
-      // employee details
-      const employeeRes =
-        await api.post(
-          "/superadmin/get-by-id",
-          {
-            employeeId: empId,
-          },
-          {
-            withCredentials: true,
-          }
-        );
+const loadEmployeeData = async () => {
+  try {
+    setLoading(true);
 
-      const employeeData =
-        employeeRes.data.employee;
+    // ==============================
+    // 1. Get employee
+    // ==============================
+    const employeeRes = await api.post(
+      "/superadmin/get-by-id",
+      {
+        employeeId: empId,
+      },
+      {
+        withCredentials: true,
+      }
+    );
 
-      setEmployee(employeeData);
-      setSelectedDepartment(employeeData.departmentId?._id || "");
-      setSelectedRole(employeeData.role || "");
+    const employeeData = employeeRes.data.employee;
 
-      const depRes = await api.get(
-        `/departments/company/${employeeData.companyId._id}`,
-        {
-          withCredentials: true,
-        }
-      );
+    setEmployee(employeeData);
+    setSelectedDepartment(
+      employeeData.departmentId?._id || ""
+    );
+    setSelectedRole(employeeData.role || "");
 
-setDepartments(depRes.data.departments);
-      const leaveStatsRes =
-        await api.post(
-          "/superadmin/employee-leave-stats",
-          {
-            employeeId: empId,
-          },
-          {
-            withCredentials: true,
-          }
-        );
+    // ==============================
+    // 2. Create current month leave balance
+    // ==============================
+    await api.post(
+      "/superadmin/create-current-leave-balance",
+      {
+        employeeId: empId,
+      },
+      {
+        withCredentials: true,
+      }
+    );
 
-      setLeaveSummary(
-        leaveStatsRes.data
-      );
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    // ==============================
+    // 3. Get departments
+    // ==============================
+    const depRes = await api.get(
+      `/departments/company/${employeeData.companyId._id}`,
+      {
+        withCredentials: true,
+      }
+    );
+
+    setDepartments(depRes.data.departments);
+
+    // ==============================
+    // 4. Get leave statistics
+    // ==============================
+    const leaveStatsRes = await api.post(
+      "/superadmin/employee-leave-stats",
+      {
+        employeeId: empId,
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    setLeaveSummary(leaveStatsRes.data);
+  } catch (error) {
+    console.log(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
   const updateDepartment = async () => {
   try {
     const res = await api.put(

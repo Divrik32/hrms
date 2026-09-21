@@ -1,282 +1,2051 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Building2, LayoutGrid, LogOut, ShieldCheck, Mail, Tag, ChevronRight, CalendarClock, ClipboardCheck, CalendarDays, Handshake, Sparkles, PartyPopper, Zap, Wand2, WalletCards } from "lucide-react";
 
-const StatCard = ({ icon: Icon, label, value, color }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 16 }}
-    animate={{ opacity: 1, y: 0 }}
-    className={`bg-slate-800/60 border border-slate-700/50 rounded-2xl p-5 flex items-center gap-4`}
-  >
-    <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
-      <Icon className="w-5 h-5 text-white" />
-    </div>
-    <div>
-      <p className="text-slate-400 text-xs">{label}</p>
-      <p className="text-white font-semibold text-sm mt-0.5">{value}</p>
-    </div>
-  </motion.div>
-);
+import {
+  Building2,
+  LayoutGrid,
+  LogOut,
+  ShieldCheck,
+  ChevronRight,
+  CalendarClock,
+  ClipboardCheck,
+  CalendarDays,
+  Menu,
+  X,
+  Users,
+  WalletCards,
+  BarChart3,
+  UserPlus,
+  BriefcaseBusiness,
+  Sun,
+  Moon,
+  MonitorCog,
+  Check,
+} from "lucide-react";
 
-const ActionButton = ({ icon: Icon, label, description, onClick, color, badge }) => (
-  <motion.button
-    onClick={onClick}
-    whileHover={{ scale: 1.02, x: 2 }}
-    whileTap={{ scale: 0.98 }}
-    className="w-full bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/50 hover:border-slate-600/70 rounded-2xl p-5 flex items-center gap-4 text-left transition-all group"
-  >
-    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${color}`}>
-      <Icon className="w-5 h-5 text-white" />
-    </div>
-    <div className="flex-1 min-w-0">
-      <div className="flex items-center gap-2 flex-wrap">
-        <p className="text-white font-semibold text-sm">{label}</p>
-        {badge > 0 && (
-          <span className="inline-flex items-center gap-1.5 bg-red-500/15 border border-red-500/40 text-red-300 text-xs font-semibold px-2.5 py-0.5 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 inline-block" />
-            {badge} pending
-          </span>
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  Legend,
+} from "recharts";
+
+/* =========================================================
+   DEMO DATA
+========================================================= */
+
+// 1. Company-wise employee count
+const companyEmployeeData = [
+  {
+    company: "WSDS Technologies",
+    employees: 120,
+  },
+  {
+    company: "ABC Solutions",
+    employees: 85,
+  },
+  {
+    company: "XYZ Industries",
+    employees: 65,
+  },
+  {
+    company: "Global Services",
+    employees: 48,
+  },
+  {
+    company: "Tech Innovations",
+    employees: 32,
+  },
+];
+
+// 2. Leave status
+const leaveData = [
+  {
+    name: "Pending",
+    value: 18,
+  },
+  {
+    name: "Approved",
+    value: 72,
+  },
+  {
+    name: "Rejected",
+    value: 14,
+  },
+];
+
+// 3. Company + Department employee count
+const departmentEmployeeData = [
+  {
+    department: "WSDS - IT",
+    employees: 42,
+  },
+  {
+    department: "WSDS - HR",
+    employees: 18,
+  },
+  {
+    department: "WSDS - Finance",
+    employees: 15,
+  },
+  {
+    department: "ABC - Development",
+    employees: 35,
+  },
+  {
+    department: "ABC - HR",
+    employees: 12,
+  },
+  {
+    department: "XYZ - Operations",
+    employees: 28,
+  },
+  {
+    department: "XYZ - Finance",
+    employees: 16,
+  },
+  {
+    department: "Global - Support",
+    employees: 22,
+  },
+  {
+    department: "Global - HR",
+    employees: 10,
+  },
+];
+
+// 4. Monthly payroll generated count
+const payrollData = [
+  { month: "Jan", payrolls: 82 },
+  { month: "Feb", payrolls: 91 },
+  { month: "Mar", payrolls: 95 },
+  { month: "Apr", payrolls: 103 },
+  { month: "May", payrolls: 110 },
+  { month: "Jun", payrolls: 118 },
+  { month: "Jul", payrolls: 124 },
+  { month: "Aug", payrolls: 130 },
+  { month: "Sep", payrolls: 136 },
+];
+
+const LEAVE_COLORS = [
+  "#f59e0b",
+  "#10b981",
+  "#ef4444",
+];
+
+/* =========================================================
+   THEMES
+========================================================= */
+
+const THEMES = {
+  dark: {
+    name: "Dark",
+    icon: Moon,
+
+    page:
+      "bg-[#0b1120] text-slate-100",
+
+    main:
+      "bg-gradient-to-br from-[#0b1120] via-[#111827] to-[#17134a]",
+
+    sidebar:
+      "bg-[#0b1120] border-slate-800",
+
+    topbar:
+      "bg-[#0b1120]/95 border-slate-800",
+
+    card:
+      "bg-[#111827]/90 border-slate-700/80",
+
+    cardHover:
+      "hover:border-slate-600",
+
+    userCard:
+      "bg-[#111827] border-slate-700",
+
+    navHover:
+      "hover:bg-slate-800",
+
+    navIcon:
+      "bg-slate-800 group-hover:bg-indigo-600",
+
+    primaryText:
+      "text-slate-100",
+
+    secondaryText:
+      "text-slate-300",
+
+    mutedText:
+      "text-slate-400",
+
+    subtleText:
+      "text-slate-500",
+
+    border:
+      "border-slate-700",
+
+    chartGrid:
+      "#334155",
+
+    chartText:
+      "#cbd5e1",
+
+    tooltip:
+      "#020617",
+  },
+
+  light: {
+    name: "Light",
+    icon: Sun,
+
+    page:
+      "bg-slate-100 text-slate-900",
+
+    main:
+      "bg-gradient-to-br from-slate-100 via-white to-indigo-50",
+
+    sidebar:
+      "bg-white border-slate-200",
+
+    topbar:
+      "bg-white/95 border-slate-200",
+
+    card:
+      "bg-white border-slate-200",
+
+    cardHover:
+      "hover:border-slate-300",
+
+    userCard:
+      "bg-slate-50 border-slate-200",
+
+    navHover:
+      "hover:bg-indigo-50",
+
+    navIcon:
+      "bg-slate-100 group-hover:bg-indigo-600",
+
+    primaryText:
+      "text-slate-900",
+
+    secondaryText:
+      "text-slate-700",
+
+    mutedText:
+      "text-slate-600",
+
+    subtleText:
+      "text-slate-500",
+
+    border:
+      "border-slate-200",
+
+    chartGrid:
+      "#e2e8f0",
+
+    chartText:
+      "#475569",
+
+    tooltip:
+      "#ffffff",
+  },
+
+  midnight: {
+    name: "Midnight",
+    icon: MonitorCog,
+
+    page:
+      "bg-[#050816] text-white",
+
+    main:
+      "bg-gradient-to-br from-[#050816] via-[#0a1025] to-[#101c3d]",
+
+    sidebar:
+      "bg-[#060b19] border-indigo-900/50",
+
+    topbar:
+      "bg-[#060b19]/95 border-indigo-900/50",
+
+    card:
+      "bg-[#0b1226]/95 border-indigo-900/50",
+
+    cardHover:
+      "hover:border-indigo-800",
+
+    userCard:
+      "bg-[#0b1226] border-indigo-900/50",
+
+    navHover:
+      "hover:bg-indigo-950/70",
+
+    navIcon:
+      "bg-indigo-950 group-hover:bg-indigo-600",
+
+    primaryText:
+      "text-white",
+
+    secondaryText:
+      "text-slate-200",
+
+    mutedText:
+      "text-slate-300",
+
+    subtleText:
+      "text-slate-400",
+
+    border:
+      "border-indigo-900/50",
+
+    chartGrid:
+      "#26365f",
+
+    chartText:
+      "#cbd5e1",
+
+    tooltip:
+      "#020617",
+  },
+};
+
+/* =========================================================
+   SIDEBAR ITEM
+========================================================= */
+
+const SidebarAction = ({
+  icon: Icon,
+  label,
+  description,
+  onClick,
+  badge,
+  theme,
+}) => {
+  return (
+    <motion.button
+      onClick={onClick}
+      whileHover={{ x: 3 }}
+      whileTap={{ scale: 0.98 }}
+      className={`
+        w-full
+        flex
+        items-center
+        gap-3
+        px-3
+        py-3
+        rounded-xl
+        text-left
+        transition-all
+        group
+        ${theme.navHover}
+      `}
+    >
+      <div
+        className={`
+          w-9
+          h-9
+          rounded-lg
+          flex
+          items-center
+          justify-center
+          shrink-0
+          transition
+          ${theme.navIcon}
+        `}
+      >
+        <Icon
+          className={`
+            w-4
+            h-4
+            ${theme.mutedText}
+            group-hover:text-white
+          `}
+        />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p
+          className={`
+            text-sm
+            font-semibold
+            truncate
+            ${theme.secondaryText}
+            group-hover:text-indigo-500
+          `}
+        >
+          {label}
+        </p>
+
+        {description && (
+          <p
+            className={`
+              text-[11px]
+              truncate
+              mt-0.5
+              ${theme.subtleText}
+            `}
+          >
+            {description}
+          </p>
         )}
       </div>
-      <p className="text-slate-500 text-xs mt-0.5">{description}</p>
+
+      {badge > 0 && (
+        <span
+          className="
+            bg-red-500
+            text-white
+            text-[10px]
+            font-bold
+            min-w-[22px]
+            h-5
+            px-1.5
+            rounded-full
+            flex
+            items-center
+            justify-center
+          "
+        >
+          {badge}
+        </span>
+      )}
+
+      <ChevronRight
+        className={`
+          w-4
+          h-4
+          ${theme.subtleText}
+          group-hover:text-indigo-500
+          shrink-0
+        `}
+      />
+    </motion.button>
+  );
+};
+
+/* =========================================================
+   STAT CARD
+========================================================= */
+
+const StatCard = ({
+  icon: Icon,
+  label,
+  value,
+  description,
+  iconBg,
+  theme,
+}) => {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 15,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      className={`
+        ${theme.card}
+        ${theme.cardHover}
+        backdrop-blur-xl
+        border
+        rounded-2xl
+        p-5
+        transition
+        shadow-sm
+      `}
+    >
+      <div className="flex items-center justify-between">
+        <div
+          className={`
+            w-10
+            h-10
+            rounded-xl
+            flex
+            items-center
+            justify-center
+            ${iconBg}
+          `}
+        >
+          <Icon className="w-5 h-5 text-white" />
+        </div>
+
+        <BarChart3
+          className={`
+            w-4
+            h-4
+            ${theme.subtleText}
+          `}
+        />
+      </div>
+
+      <p
+        className={`
+          text-xs
+          mt-4
+          font-medium
+          ${theme.mutedText}
+        `}
+      >
+        {label}
+      </p>
+
+      <p
+        className={`
+          text-2xl
+          font-bold
+          mt-1
+          ${theme.primaryText}
+        `}
+      >
+        {value}
+      </p>
+
+      <p
+        className={`
+          text-[11px]
+          mt-1
+          ${theme.subtleText}
+        `}
+      >
+        {description}
+      </p>
+    </motion.div>
+  );
+};
+
+/* =========================================================
+   CHART CARD
+========================================================= */
+
+const ChartCard = ({
+  title,
+  description,
+  icon: Icon,
+  children,
+  className = "",
+  theme,
+}) => {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 18,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      className={`
+        ${theme.card}
+        ${theme.cardHover}
+        backdrop-blur-xl
+        border
+        rounded-2xl
+        p-5
+        sm:p-6
+        transition
+        shadow-sm
+        ${className}
+      `}
+    >
+      <div className="flex items-start gap-3 mb-5">
+        <div
+          className="
+            w-9
+            h-9
+            rounded-lg
+            bg-indigo-500/10
+            border
+            border-indigo-500/20
+            flex
+            items-center
+            justify-center
+            shrink-0
+          "
+        >
+          <Icon className="w-4 h-4 text-indigo-500" />
+        </div>
+
+        <div>
+          <h3
+            className={`
+              font-semibold
+              text-sm
+              sm:text-base
+              ${theme.primaryText}
+            `}
+          >
+            {title}
+          </h3>
+
+          <p
+            className={`
+              text-xs
+              mt-1
+              ${theme.mutedText}
+            `}
+          >
+            {description}
+          </p>
+        </div>
+      </div>
+
+      {children}
+    </motion.div>
+  );
+};
+
+/* =========================================================
+   CUSTOM TOOLTIP
+========================================================= */
+
+const EmployeeTooltip = ({
+  active,
+  payload,
+  label,
+  theme,
+}) => {
+  if (!active || !payload || !payload.length) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`
+        rounded-xl
+        px-3
+        py-2
+        shadow-xl
+        border
+        ${theme.border}
+        ${
+          theme.name === "Light"
+            ? "bg-white"
+            : "bg-slate-950"
+        }
+      `}
+    >
+      <p
+        className={`
+          text-xs
+          mb-1
+          ${theme.mutedText}
+        `}
+      >
+        {label}
+      </p>
+
+      <p
+        className={`
+          text-sm
+          font-semibold
+          ${theme.primaryText}
+        `}
+      >
+        {payload[0].value} Employees
+      </p>
     </div>
-    <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-slate-400 transition-colors flex-shrink-0" />
-  </motion.button>
-);
+  );
+};
+
+/* =========================================================
+   THEME SWITCHER
+========================================================= */
+
+const ThemeSwitcher = ({
+  currentTheme,
+  setCurrentTheme,
+  theme,
+}) => {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`
+          flex
+          items-center
+          gap-2
+          px-3
+          py-2
+          rounded-xl
+          border
+          transition
+          ${theme.border}
+          ${
+            theme.name === "Light"
+              ? "bg-white hover:bg-slate-50"
+              : "bg-slate-900/70 hover:bg-slate-800"
+          }
+        `}
+      >
+        {(() => {
+          const ThemeIcon =
+            THEMES[currentTheme].icon;
+
+          return (
+            <ThemeIcon
+              className={`
+                w-4
+                h-4
+                ${
+                  currentTheme === "light"
+                    ? "text-amber-500"
+                    : "text-indigo-400"
+                }
+              `}
+            />
+          );
+        })()}
+
+        <span
+          className={`
+            hidden
+            sm:block
+            text-xs
+            font-semibold
+            ${theme.secondaryText}
+          `}
+        >
+          {THEMES[currentTheme].name}
+        </span>
+      </button>
+
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setOpen(false)}
+          />
+
+          <div
+            className={`
+              absolute
+              right-0
+              top-12
+              z-50
+              w-44
+              rounded-xl
+              border
+              p-2
+              shadow-2xl
+              ${
+                theme.name === "Light"
+                  ? "bg-white border-slate-200"
+                  : "bg-slate-900 border-slate-700"
+              }
+            `}
+          >
+            {Object.entries(THEMES).map(
+              ([key, item]) => {
+                const Icon = item.icon;
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      setCurrentTheme(key);
+                      setOpen(false);
+                    }}
+                    className={`
+                      w-full
+                      flex
+                      items-center
+                      gap-3
+                      px-3
+                      py-2.5
+                      rounded-lg
+                      transition
+                      ${
+                        currentTheme === key
+                          ? "bg-indigo-500/10"
+                          : "hover:bg-slate-500/10"
+                      }
+                    `}
+                  >
+                    <Icon
+                      className={`
+                        w-4
+                        h-4
+                        ${
+                          key === "light"
+                            ? "text-amber-500"
+                            : "text-indigo-400"
+                        }
+                      `}
+                    />
+
+                    <span
+                      className={`
+                        flex-1
+                        text-left
+                        text-xs
+                        font-semibold
+                        ${
+                          theme.name === "Light"
+                            ? "text-slate-700"
+                            : "text-slate-200"
+                        }
+                      `}
+                    >
+                      {item.name}
+                    </span>
+
+                    {currentTheme === key && (
+                      <Check className="w-4 h-4 text-indigo-500" />
+                    )}
+                  </button>
+                );
+              }
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+/* =========================================================
+   MAIN COMPONENT
+========================================================= */
 
 const SuperAdminDashboard = () => {
   const [user, setUser] = useState(null);
+  const [pendingCount, setPendingCount] =
+    useState(0);
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(false);
+
+  const [currentTheme, setCurrentTheme] =
+    useState(() => {
+      return (
+        localStorage.getItem(
+          "superAdminTheme"
+        ) || "dark"
+      );
+    });
+
   const navigate = useNavigate();
-  const [pendingCount, setPendingCount] = useState(0);
+
+  const theme = THEMES[currentTheme];
+
+  /* =======================================================
+     SAVE THEME
+  ======================================================= */
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
+    localStorage.setItem(
+      "superAdminTheme",
+      currentTheme
+    );
+  }, [currentTheme]);
+
+  /* =======================================================
+     LOAD USER
+  ======================================================= */
+
+  useEffect(() => {
+    const storedUser =
+      localStorage.getItem("user");
+
     if (!storedUser) {
       navigate("/");
       return;
     }
-    setUser(JSON.parse(storedUser));
-  }, []);
+
+    try {
+      setUser(JSON.parse(storedUser));
+    } catch (error) {
+      console.log(error);
+      localStorage.removeItem("user");
+      navigate("/");
+    }
+  }, [navigate]);
+
+  /* =======================================================
+     FETCH PENDING LEAVES
+  ======================================================= */
 
   useEffect(() => {
-  const fetchPendingLeaves =
-    async () => {
+    const fetchPendingLeaves = async () => {
       try {
-        const res =
-          await api.get(
-            "/leaves/pending",
-            {
-              withCredentials: true,
-            }
-          );
+        const res = await api.get(
+          "/leaves/pending",
+          {
+            withCredentials: true,
+          }
+        );
 
         setPendingCount(
-          res.data.totalLeaves
+          res.data.totalLeaves || 0
         );
       } catch (error) {
         console.log(error);
       }
     };
 
-  fetchPendingLeaves();
-}, []);
+    fetchPendingLeaves();
+  }, []);
+
+  /* =======================================================
+     ATTENDANCE TRACKER
+  ======================================================= */
 
   const handleAttendanceTracker = async () => {
-  try {
-    const res = await api.get(
-      "/companies"
-    );
+    try {
+      const res = await api.get("/companies");
 
-    const companies = res.data.companies;
+      const companies =
+        res.data.companies || [];
 
-    if (companies.length > 0) {
-      navigate(
-        `/${companies[0]._id}/company/attendance-tracker`
-      );
+      if (companies.length > 0) {
+        navigate(
+          `/${companies[0]._id}/company/attendance-tracker`
+        );
+      }
+    } catch (error) {
+      console.log(error);
     }
-  } catch (error) {
-    console.log(error);
-  }
-};
+  };
+
+  /* =======================================================
+     LOGOUT
+  ======================================================= */
 
   const handleLogout = async () => {
     try {
       await api.post(
         "/superadmin/logout",
         {},
-        { withCredentials: true }
+        {
+          withCredentials: true,
+        }
       );
+
       localStorage.removeItem("user");
+
       navigate("/");
     } catch (error) {
       console.log(error);
     }
   };
 
+  /* =======================================================
+     CLOSE SIDEBAR
+  ======================================================= */
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
+  /* =======================================================
+     DEMO KPI VALUES
+  ======================================================= */
+
+  const totalEmployees =
+    companyEmployeeData.reduce(
+      (sum, item) =>
+        sum + item.employees,
+      0
+    );
+
+  const totalCompanies =
+    companyEmployeeData.length;
+
+  const totalDepartments =
+    departmentEmployeeData.length;
+
+  const totalPayrolls =
+    payrollData.reduce(
+      (sum, item) =>
+        sum + item.payrolls,
+      0
+    );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
-      {/* Navbar */}
+    <div
+      className={`
+        min-h-screen
+        transition-colors
+        duration-300
+        ${theme.page}
+      `}
+    >
+      {/* ===================================================
+          MOBILE OVERLAY
+      =================================================== */}
 
+      {sidebarOpen && (
+        <div
+          onClick={closeSidebar}
+          className="
+            fixed
+            inset-0
+            bg-black/60
+            backdrop-blur-sm
+            z-40
+            lg:hidden
+          "
+        />
+      )}
 
-      {/* Main */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+      {/* ===================================================
+          SIDEBAR
+      =================================================== */}
 
-        {/* Welcome */}
-        {user && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-8"
+      <aside
+        className={`
+          fixed
+          top-0
+          left-0
+          z-50
+          h-screen
+          w-[280px]
+          border-r
+          transform
+          transition-transform
+          duration-300
+          ${theme.sidebar}
+          ${
+            sidebarOpen
+              ? "translate-x-0"
+              : "-translate-x-full"
+          }
+          lg:translate-x-0
+        `}
+      >
+        {/* Sidebar Header */}
+
+        <div
+          className={`
+            h-20
+            px-5
+            flex
+            items-center
+            justify-between
+            border-b
+            ${theme.border}
+          `}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="
+                w-10
+                h-10
+                rounded-xl
+                bg-gradient-to-br
+                from-indigo-500
+                to-violet-600
+                flex
+                items-center
+                justify-center
+                shadow-lg
+                shadow-indigo-500/20
+              "
+            >
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+
+            <div>
+              <p
+                className={`
+                  font-bold
+                  text-sm
+                  ${theme.primaryText}
+                `}
+              >
+                Admin Panel
+              </p>
+
+              <p
+                className={`
+                  text-[11px]
+                  ${theme.subtleText}
+                `}
+              >
+                HRMS Management
+              </p>
+            </div>
+          </div>
+
+          {/* Mobile Close */}
+
+          <button
+            onClick={closeSidebar}
+            className="
+              lg:hidden
+              p-2
+              rounded-lg
+              hover:bg-slate-800
+            "
           >
-<div className="space-y-3">
-  <style>{`
-    @keyframes shimmerName {
-      0% { background-position: 0% center; }
-      100% { background-position: 200% center; }
-    }
-  `}</style>
+            <X
+              className={`
+                w-5
+                h-5
+                ${theme.mutedText}
+              `}
+            />
+          </button>
+        </div>
 
-<div className="space-y-3">
-<h1
-  className="!text-[#2563eb]"
-  style={{
-    fontFamily: "'Playfair Display', serif",
-    fontSize: "clamp(1.35rem, 4vw, 2rem)",
-    fontWeight: 700,
-    letterSpacing: "0.01em",
-    lineHeight: 1.3,
-    color: "#1e293b",
-  }}
->
-  Welcome back, <span style={{ color: "#2563eb", fontWeight: 800 }}>{user.name}</span>
-</h1>
+        {/* =================================================
+            USER
+        ================================================= */}
 
-  <div className="flex items-center gap-3 pt-1">
-    <div className="h-px w-10 bg-gradient-to-r from-indigo-400 to-transparent shrink-0" />
-    <p className="text-sm text-white/40 tracking-wide">
-      Manage your platform from here.
-    </p>
-  </div>
-</div>
-
-</div>
-          </motion.div>
-        )}
-
-        {/* Stats */}
         {user && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <StatCard icon={Mail} label="Email" value={user.email} color="bg-blue-600/80" />
-            <StatCard icon={Tag} label="Role" value={user.role} color="bg-indigo-600/80" />
-            <StatCard icon={ShieldCheck} label="Status" value="Active" color="bg-emerald-600/80" />
+          <div
+            className={`
+              mx-4
+              mt-5
+              p-3
+              rounded-xl
+              border
+              ${theme.userCard}
+            `}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="
+                  w-9
+                  h-9
+                  rounded-full
+                  bg-indigo-500/15
+                  flex
+                  items-center
+                  justify-center
+                "
+              >
+                <ShieldCheck className="w-4 h-4 text-indigo-500" />
+              </div>
+
+              <div className="min-w-0">
+                <p
+                  className={`
+                    text-sm
+                    font-semibold
+                    truncate
+                    ${theme.primaryText}
+                  `}
+                >
+                  {user.name}
+                </p>
+
+                <p
+                  className={`
+                    text-[11px]
+                    truncate
+                    ${theme.mutedText}
+                  `}
+                >
+                  {user.role}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Actions */}
-        <div className="mb-6">
-<div className="flex items-center justify-between mb-3">
-  <h2 className="!text-slate-400 text-xs font-semibold uppercase tracking-widest">
-    Quick Actions
-  </h2>
-</div>
-          <div className="space-y-3">
-            <ActionButton
+        {/* =================================================
+            NAVIGATION
+        ================================================= */}
+
+        <div
+          className="
+            px-3
+            mt-6
+            overflow-y-auto
+            h-[calc(100vh-210px)]
+            pb-6
+          "
+        >
+          {/* MANAGEMENT */}
+
+          <p
+            className={`
+              text-[10px]
+              font-bold
+              uppercase
+              tracking-widest
+              px-3
+              mb-3
+              ${theme.subtleText}
+            `}
+          >
+            Management
+          </p>
+
+          <div className="space-y-1">
+            <SidebarAction
               icon={Building2}
               label="Create Company"
-              description="Register a new company to the platform"
-              onClick={() => navigate("/admin/create-company")}
-              color="bg-violet-600/80"
+              description="Register new company"
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/create-company"
+                );
+                closeSidebar();
+              }}
             />
-            <ActionButton
+
+            <SidebarAction
               icon={LayoutGrid}
               label="Create Department"
-              description="Add a new department under a company"
-              onClick={() => navigate("/admin/create-department")}
-              color="bg-cyan-600/80"
+              description="Add new department"
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/create-department"
+                );
+                closeSidebar();
+              }}
             />
-            <ActionButton
-              icon={Mail}
+
+            <SidebarAction
+              icon={UserPlus}
               label="Create Employee"
-              description="Add a new employee under company & department"
-              onClick={() => navigate("/admin/create-employee")}
-              color="bg-emerald-600/80"
+              description="Add new employee"
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/create-employee"
+                );
+                closeSidebar();
+              }}
             />
-            
-            <ActionButton
+
+            <SidebarAction
               icon={ClipboardCheck}
               label="Attendance Tracker"
               description="Track employee attendance"
-              onClick={handleAttendanceTracker}
-              color="bg-orange-600/80"
+              theme={theme}
+              onClick={() => {
+                handleAttendanceTracker();
+                closeSidebar();
+              }}
             />
-            
-            <div className="relative">
-            <ActionButton
+
+            <SidebarAction
               icon={CalendarClock}
               label="Pending Leaves"
-              description="View and manage pending leave requests"
-              onClick={() => navigate("/admin/pending-leaves")}
-              color="bg-yellow-600/80"
+              description="Manage leave requests"
               badge={pendingCount}
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/pending-leaves"
+                );
+                closeSidebar();
+              }}
             />
-              {pendingCount > 0 && (
-                <div className="absolute top-3 right-12 bg-red-500 text-white text-xs font-bold min-w-[24px] h-6 px-2 rounded-full flex items-center justify-center">
-                  {pendingCount}
-                </div>
-              )}
-            </div>
-            <ActionButton
+
+            <SidebarAction
               icon={CalendarDays}
               label="Create Holiday"
-              description="Create upcoming holidays for employees"
-              onClick={() => navigate("/admin/create-holiday")}
-              color="bg-purple-600/80"
+              description="Manage holidays"
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/create-holiday"
+                );
+                closeSidebar();
+              }}
             />
-            <ActionButton
-              icon={Tag}
+          </div>
+
+          {/* PAYROLL */}
+
+          <p
+            className={`
+              text-[10px]
+              font-bold
+              uppercase
+              tracking-widest
+              px-3
+              mb-3
+              mt-7
+              ${theme.subtleText}
+            `}
+          >
+            Payroll
+          </p>
+
+          <div className="space-y-1">
+            <SidebarAction
+              icon={WalletCards}
               label="Create Employee Salary"
-              description="Create salary structure for employees"
-              onClick={() => navigate("/admin/create-employee-salary")}
-              color="bg-pink-600/80"
-            /> 
-            <ActionButton
+              description="Create salary structure"
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/create-employee-salary"
+                );
+                closeSidebar();
+              }}
+            />
+
+            <SidebarAction
               icon={ClipboardCheck}
               label="Edit Employee Salary"
-              description="Update existing employee salary structure"
-              onClick={() => navigate("/admin/edit-employee-salary")}
-              color="bg-teal-600/80"
+              description="Update salary structure"
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/edit-employee-salary"
+                );
+                closeSidebar();
+              }}
             />
-            <ActionButton
+
+            <SidebarAction
               icon={WalletCards}
               label="Payroll Management"
-              description="Generate, edit and manage employee payrolls"
-              onClick={() => navigate("/admin/payroll-management")}
-              color="bg-sky-600/80"
+              description="Generate & manage payroll"
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/payroll-management"
+                );
+                closeSidebar();
+              }}
             />
-            <ActionButton
+          </div>
+
+          {/* ADMINISTRATION */}
+
+          <p
+            className={`
+              text-[10px]
+              font-bold
+              uppercase
+              tracking-widest
+              px-3
+              mb-3
+              mt-7
+              ${theme.subtleText}
+            `}
+          >
+            Administration
+          </p>
+
+          <div className="space-y-1">
+            <SidebarAction
               icon={Building2}
               label="Company Management"
-              description="View and edit registered companies"
-              onClick={() => navigate("/admin/company-management")}
-              color="bg-violet-600/80"
+              description="Manage registered companies"
+              theme={theme}
+              onClick={() => {
+                navigate(
+                  "/admin/company-management"
+                );
+                closeSidebar();
+              }}
             />
           </div>
         </div>
 
-        {/* Logout */}
-        {/* <motion.button
-          onClick={handleLogout}
-          whileHover={{ scale: 1.01 }}
-          whileTap={{ scale: 0.98 }}
-          className="w-full flex items-center justify-center gap-2 border border-red-500/30 hover:border-red-500/60 bg-red-500/5 hover:bg-red-500/10 text-red-400 hover:text-red-300 rounded-2xl py-3.5 text-sm font-medium transition-all"
+        {/* =================================================
+            LOGOUT
+        ================================================= */}
+
+        <div
+          className={`
+            absolute
+            bottom-0
+            left-0
+            right-0
+            p-4
+            border-t
+            ${theme.border}
+            ${theme.sidebar}
+          `}
         >
-          <LogOut className="w-4 h-4" />
-          Sign Out
-        </motion.button> */}
-              </main>
+          <button
+            onClick={handleLogout}
+            className="
+              w-full
+              flex
+              items-center
+              gap-3
+              px-3
+              py-3
+              rounded-xl
+              text-slate-500
+              hover:text-red-500
+              hover:bg-red-500/5
+              transition
+            "
+          >
+            <LogOut className="w-4 h-4" />
+
+            <span className="text-sm font-semibold">
+              Sign Out
+            </span>
+          </button>
+        </div>
+      </aside>
+
+      {/* ===================================================
+          MAIN
+      =================================================== */}
+
+      <main
+        className={`
+          lg:ml-[280px]
+          min-h-screen
+          transition-colors
+          duration-300
+          ${theme.main}
+        `}
+      >
+        {/* =================================================
+            MOBILE TOP BAR
+        ================================================= */}
+
+        <div
+          className={`
+            lg:hidden
+            h-16
+            border-b
+            flex
+            items-center
+            justify-between
+            px-4
+            backdrop-blur-xl
+            sticky
+            top-0
+            z-30
+            ${theme.topbar}
+          `}
+        >
+          <div className="flex items-center">
+            <button
+              onClick={() =>
+                setSidebarOpen(true)
+              }
+              className="
+                p-2
+                rounded-lg
+                hover:bg-slate-800/50
+              "
+            >
+              <Menu
+                className={`
+                  w-5
+                  h-5
+                  ${theme.secondaryText}
+                `}
+              />
+            </button>
+
+            <p
+              className={`
+                ml-3
+                font-semibold
+                ${theme.primaryText}
+              `}
+            >
+              Admin Dashboard
+            </p>
+          </div>
+
+          <ThemeSwitcher
+            currentTheme={currentTheme}
+            setCurrentTheme={setCurrentTheme}
+            theme={theme}
+          />
+        </div>
+
+        {/* =================================================
+            CONTENT
+        ================================================= */}
+
+        <div
+          className="
+            max-w-[1500px]
+            mx-auto
+            px-4
+            sm:px-6
+            lg:px-8
+            py-8
+          "
+        >
+          {/* =================================================
+              DESKTOP HEADER
+          ================================================= */}
+
+          <div className="hidden lg:flex justify-end mb-5">
+            <ThemeSwitcher
+              currentTheme={currentTheme}
+              setCurrentTheme={setCurrentTheme}
+              theme={theme}
+            />
+          </div>
+
+          {/* =================================================
+              WELCOME
+          ================================================= */}
+
+          {user && (
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: -15,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
+              className="mb-8"
+            >
+              <div
+                className="
+                  flex
+                  flex-col
+                  sm:flex-row
+                  sm:items-end
+                  sm:justify-between
+                  gap-4
+                "
+              >
+                <div>
+                  <p
+                    className="
+                      text-indigo-500
+                      text-xs
+                      font-bold
+                      uppercase
+                      tracking-widest
+                      mb-2
+                    "
+                  >
+                    Dashboard
+                  </p>
+
+<h1
+  className={`
+    text-3xl
+    sm:text-4xl
+    font-bold
+    leading-tight
+    tracking-tight
+    break-words
+    ${
+      currentTheme === "light"
+        ? "!text-slate-900"
+        : "!text-zinc-100"
+    }
+  `}
+>
+  Welcome back,{" "}
+  <span
+    className="
+      text-indigo-500
+      break-words
+    "
+  >
+    {user.name}
+  </span>
+</h1>
+
+                  <p
+                    className={`
+                      text-sm
+                      mt-2
+                      ${theme.mutedText}
+                    `}
+                  >
+                    Here's what's happening
+                    across your organization.
+                  </p>
+                </div>
+
+                {/* System Status */}
+
+                <div
+                  className={`
+                    flex
+                    items-center
+                    gap-2
+                    text-xs
+                    font-medium
+                    border
+                    px-3
+                    py-2
+                    rounded-xl
+                    w-fit
+                    ${theme.border}
+                    ${
+                      theme.name === "Light"
+                        ? "bg-white"
+                        : "bg-slate-900/60"
+                    }
+                    ${theme.secondaryText}
+                  `}
+                >
+                  <span
+                    className="
+                      w-2
+                      h-2
+                      rounded-full
+                      bg-emerald-500
+                      shadow
+                      shadow-emerald-500/50
+                    "
+                  />
+
+                  System Active
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* =================================================
+              KPI CARDS
+          ================================================= */}
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              sm:grid-cols-2
+              xl:grid-cols-4
+              gap-4
+              mb-6
+            "
+          >
+            <StatCard
+              icon={Users}
+              label="Total Employees"
+              value={totalEmployees}
+              description="Across all companies"
+              iconBg="bg-indigo-600"
+              theme={theme}
+            />
+
+            <StatCard
+              icon={Building2}
+              label="Total Companies"
+              value={totalCompanies}
+              description="Registered companies"
+              iconBg="bg-violet-600"
+              theme={theme}
+            />
+
+            <StatCard
+              icon={BriefcaseBusiness}
+              label="Total Departments"
+              value={totalDepartments}
+              description="Across all companies"
+              iconBg="bg-cyan-600"
+              theme={theme}
+            />
+
+            <StatCard
+              icon={CalendarClock}
+              label="Pending Leaves"
+              value={pendingCount}
+              description="Waiting for approval"
+              iconBg="bg-amber-600"
+              theme={theme}
+            />
+          </div>
+
+          {/* =================================================
+              CHART ROW 1
+          ================================================= */}
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              xl:grid-cols-5
+              gap-6
+              mb-6
+            "
+          >
+            {/* COMPANY EMPLOYEE */}
+
+            <ChartCard
+              title="Employees by Company"
+              description="Employee distribution across all companies"
+              icon={Building2}
+              className="xl:col-span-3"
+              theme={theme}
+            >
+              <div className="h-[340px]">
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <BarChart
+                    data={companyEmployeeData}
+                    margin={{
+                      top: 10,
+                      right: 10,
+                      left: -15,
+                      bottom: 55,
+                    }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={theme.chartGrid}
+                      vertical={false}
+                    />
+
+                    <XAxis
+                      dataKey="company"
+                      tick={{
+                        fill: theme.chartText,
+                        fontSize: 10,
+                      }}
+                      angle={-25}
+                      textAnchor="end"
+                      interval={0}
+                    />
+
+                    <YAxis
+                      tick={{
+                        fill: theme.chartText,
+                        fontSize: 11,
+                      }}
+                    />
+
+                    <Tooltip
+                      cursor={{
+                        fill:
+                          currentTheme ===
+                          "light"
+                            ? "rgba(99,102,241,0.06)"
+                            : "rgba(99,102,241,0.12)",
+                      }}
+                      content={
+                        <EmployeeTooltip
+                          theme={theme}
+                        />
+                      }
+                    />
+
+                    <Bar
+                      dataKey="employees"
+                      name="Employees"
+                      fill="#6366f1"
+                      radius={[
+                        6,
+                        6,
+                        0,
+                        0,
+                      ]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+
+            {/* LEAVE STATUS */}
+
+            <ChartCard
+              title="Leave Overview"
+              description="Pending, approved and rejected leaves"
+              icon={CalendarClock}
+              className="xl:col-span-2"
+              theme={theme}
+            >
+              <div className="h-[340px]">
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <RechartsPieChart>
+                    <Pie
+                      data={leaveData}
+                      cx="50%"
+                      cy="45%"
+                      innerRadius={72}
+                      outerRadius={105}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {leaveData.map(
+                        (entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              LEAVE_COLORS[
+                                index
+                              ]
+                            }
+                          />
+                        )
+                      )}
+                    </Pie>
+
+                    <Tooltip
+                      contentStyle={{
+                        background:
+                          theme.tooltip,
+                        border:
+                          currentTheme ===
+                          "light"
+                            ? "1px solid #e2e8f0"
+                            : "1px solid #334155",
+                        borderRadius: "12px",
+                        color:
+                          currentTheme ===
+                          "light"
+                            ? "#0f172a"
+                            : "#ffffff",
+                      }}
+                    />
+
+                    <Legend
+                      verticalAlign="bottom"
+                      iconType="circle"
+                      formatter={(value) => (
+                        <span
+                          className={`
+                            text-xs
+                            font-medium
+                            ${theme.secondaryText}
+                          `}
+                        >
+                          {value}
+                        </span>
+                      )}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+          </div>
+
+          {/* =================================================
+              CHART ROW 2
+          ================================================= */}
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              xl:grid-cols-2
+              gap-6
+            "
+          >
+            {/* DEPARTMENT EMPLOYEE */}
+
+            <ChartCard
+              title="Employees by Department"
+              description="Employee count across company departments"
+              icon={LayoutGrid}
+              theme={theme}
+            >
+              <div className="h-[430px]">
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <BarChart
+                    data={departmentEmployeeData}
+                    layout="vertical"
+                    margin={{
+                      top: 5,
+                      right: 20,
+                      left: 5,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={theme.chartGrid}
+                      horizontal={false}
+                    />
+
+                    <XAxis
+                      type="number"
+                      tick={{
+                        fill: theme.chartText,
+                        fontSize: 11,
+                      }}
+                    />
+
+                    <YAxis
+                      type="category"
+                      dataKey="department"
+                      width={135}
+                      tick={{
+                        fill: theme.chartText,
+                        fontSize: 10,
+                      }}
+                    />
+
+                    <Tooltip
+                      contentStyle={{
+                        background:
+                          theme.tooltip,
+                        border:
+                          currentTheme ===
+                          "light"
+                            ? "1px solid #e2e8f0"
+                            : "1px solid #334155",
+                        borderRadius: "12px",
+                        color:
+                          currentTheme ===
+                          "light"
+                            ? "#0f172a"
+                            : "#ffffff",
+                      }}
+                    />
+
+                    <Bar
+                      dataKey="employees"
+                      name="Employees"
+                      fill="#06b6d4"
+                      radius={[
+                        0,
+                        6,
+                        6,
+                        0,
+                      ]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+
+            {/* PAYROLL */}
+
+            <ChartCard
+              title="Payroll Generation"
+              description="Number of payrolls generated each month"
+              icon={WalletCards}
+              theme={theme}
+            >
+              <div className="h-[430px]">
+                <ResponsiveContainer
+                  width="100%"
+                  height="100%"
+                >
+                  <BarChart
+                    data={payrollData}
+                    margin={{
+                      top: 10,
+                      right: 10,
+                      left: -15,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={theme.chartGrid}
+                      vertical={false}
+                    />
+
+                    <XAxis
+                      dataKey="month"
+                      tick={{
+                        fill: theme.chartText,
+                        fontSize: 11,
+                      }}
+                    />
+
+                    <YAxis
+                      tick={{
+                        fill: theme.chartText,
+                        fontSize: 11,
+                      }}
+                    />
+
+                    <Tooltip
+                      contentStyle={{
+                        background:
+                          theme.tooltip,
+                        border:
+                          currentTheme ===
+                          "light"
+                            ? "1px solid #e2e8f0"
+                            : "1px solid #334155",
+                        borderRadius: "12px",
+                        color:
+                          currentTheme ===
+                          "light"
+                            ? "#0f172a"
+                            : "#ffffff",
+                      }}
+                    />
+
+                    <Bar
+                      dataKey="payrolls"
+                      name="Payrolls Generated"
+                      fill="#ec4899"
+                      radius={[
+                        6,
+                        6,
+                        0,
+                        0,
+                      ]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </ChartCard>
+          </div>
+
+          {/* =================================================
+              DEMO DATA NOTICE
+          ================================================= */}
+
+          <div
+            className={`
+              mt-6
+              px-4
+              py-3
+              rounded-xl
+              border
+              border-indigo-500/20
+              bg-indigo-500/5
+              text-center
+            `}
+          >
+            <p
+              className={`
+                text-xs
+                font-medium
+                ${theme.secondaryText}
+              `}
+            >
+              Analytics are currently showing
+              demo data. Connect your APIs later
+              to display live statistics.
+            </p>
+          </div>
+
+          {/* =================================================
+              FOOTER
+          ================================================= */}
+
+          <div className="text-center py-6">
+            <p
+              className={`
+                text-[11px]
+                ${theme.subtleText}
+              `}
+            >
+              HRMS Admin Dashboard
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };

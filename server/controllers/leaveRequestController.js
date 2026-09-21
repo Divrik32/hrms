@@ -37,48 +37,6 @@ export const getCurrentLeaveBalance = async (req, res) => {
   }
 };
 
-export const createCurrentLeaveBalance = async () => {
-  try {
-    console.log("Checking employee leave balance...");
-
-    const employees = await Employee.find();
-    const month = new Date().getMonth() + 1;
-    const year = new Date().getFullYear();
-
-    for (const employee of employees) {
-      const existing = await EmployeeLeaveBalance.findOne({
-        employeeId: employee._id,
-        month,
-        year,
-      });
-
-      if (existing) continue;
-
-      const lastBalance = await EmployeeLeaveBalance.findOne({
-        employeeId: employee._id,
-      }).sort({
-        year: -1,
-        month: -1,
-      });
-
-      await EmployeeLeaveBalance.create({
-        employeeId: employee._id,
-        companyId: employee.companyId,
-        departmentId: employee.departmentId,
-        month,
-        year,
-        remainingCasualLeave: lastBalance ? lastBalance.remainingCasualLeave + 0.5 : 0.5,
-        remainingSickLeave: lastBalance ? lastBalance.remainingSickLeave + 0.5 : 0.5,
-        remainingPaidLeave: lastBalance ? lastBalance.remainingPaidLeave + 0.5 : 0.5,
-      });
-    }
-
-    console.log("Leave balance initialization completed");
-  } catch (error) {
-    console.log(error);
-  }
-};
-
 export const applyLeave = async (req, res) => {
   try {
     const employeeId = req.user._id;
@@ -93,7 +51,7 @@ export const applyLeave = async (req, res) => {
       });
     }
     
-    let balance = null;
+let balance = null;
 
 if (leaveDetails) {
 
@@ -106,14 +64,37 @@ if (leaveDetails) {
     });
   }
 
-  const leaveMonth = new Date(firstLeaveDate).getMonth() + 1;
-  const leaveYear = new Date(firstLeaveDate).getFullYear();
+  const leaveDate = new Date(firstLeaveDate);
 
+  const leaveMonth = leaveDate.getMonth() + 1;
+  const leaveYear = leaveDate.getFullYear();
+
+  // First try: Leave যে month-এর জন্য apply করা হচ্ছে
   balance = await EmployeeLeaveBalance.findOne({
     employeeId,
     month: leaveMonth,
     year: leaveYear,
   });
+
+  // যদি সেই month's balance না থাকে,
+  // তাহলে তার আগের available balance খুঁজবে
+  if (!balance) {
+    balance = await EmployeeLeaveBalance.findOne({
+      employeeId,
+      $or: [
+        {
+          year: { $lt: leaveYear },
+        },
+        {
+          year: leaveYear,
+          month: { $lt: leaveMonth },
+        },
+      ],
+    }).sort({
+      year: -1,
+      month: -1,
+    });
+  }
 
   if (!balance) {
     return res.status(404).json({
@@ -121,7 +102,6 @@ if (leaveDetails) {
       message: "Leave balance not found",
     });
   }
-
 }
 
     if (!leaveDetails && !extraLeaveDetails) {
@@ -511,40 +491,73 @@ export const rejectLeave = async (req, res) => {
       });
     }
 
-if (leave.leaveDetails?.leaveDates?.length) {
-  const firstLeaveDate =
-    leave.leaveDetails.leaveDates[0].date;
+    // ==========================================
+    // Restore normal leave balance
+    // ==========================================
+    if (leave.leaveDetails?.leaveDates?.length) {
+      const firstLeaveDate =
+        leave.leaveDetails.leaveDates[0].date;
 
-  const month = new Date(firstLeaveDate).getMonth() + 1;
-  const year = new Date(firstLeaveDate).getFullYear();
+      const leaveDate = new Date(firstLeaveDate);
 
-  const balance = await EmployeeLeaveBalance.findOne({
-    employeeId: leave.employeeId,
-    month,
-    year,
-  });
+      const leaveMonth = leaveDate.getMonth() + 1;
+      const leaveYear = leaveDate.getFullYear();
 
-  if (!balance) {
-    return res.status(404).json({
-      success: false,
-      message: "Leave balance not found",
-    });
-  }
+      // First try: Leave যে month-এর জন্য apply করা হয়েছিল
+      let balance = await EmployeeLeaveBalance.findOne({
+        employeeId: leave.employeeId,
+        month: leaveMonth,
+        year: leaveYear,
+      });
 
-  leave.leaveDetails.leaveDates.forEach(item => {
-    if (item.leaveType === "Casual Leave")
-      balance.remainingCasualLeave += item.duration;
+      // যদি সেই month's balance না থাকে,
+      // তাহলে তার আগের available balance খুঁজবে
+      if (!balance) {
+        balance = await EmployeeLeaveBalance.findOne({
+          employeeId: leave.employeeId,
+          $or: [
+            {
+              year: { $lt: leaveYear },
+            },
+            {
+              year: leaveYear,
+              month: { $lt: leaveMonth },
+            },
+          ],
+        }).sort({
+          year: -1,
+          month: -1,
+        });
+      }
 
-    if (item.leaveType === "Sick Leave")
-      balance.remainingSickLeave += item.duration;
+      if (!balance) {
+        return res.status(404).json({
+          success: false,
+          message: "Leave balance not found",
+        });
+      }
 
-    if (item.leaveType === "Paid Leave")
-      balance.remainingPaidLeave += item.duration;
-  });
+      // Return leave amount back to balance
+      leave.leaveDetails.leaveDates.forEach((item) => {
+        if (item.leaveType === "Casual Leave") {
+          balance.remainingCasualLeave += Number(item.duration || 0);
+        }
 
-  await balance.save();
-}
+        if (item.leaveType === "Sick Leave") {
+          balance.remainingSickLeave += Number(item.duration || 0);
+        }
 
+        if (item.leaveType === "Paid Leave") {
+          balance.remainingPaidLeave += Number(item.duration || 0);
+        }
+      });
+
+      await balance.save();
+    }
+
+    // ==========================================
+    // Reject leave request
+    // ==========================================
     leave.status = "Rejected";
     leave.adminRemark = adminRemark || "";
 
@@ -565,6 +578,7 @@ if (leave.leaveDetails?.leaveDates?.length) {
     });
   }
 };
+
 
 export const getAllLeaveRequests = async (req, res) => {
   try {
@@ -717,131 +731,126 @@ export const getAllMyLeaves = async (req, res) => {
 };
 
 // Employee Withdraw Leave Request
-export const withdrawPendingLeaveRequest =
-  async (req, res) => {
-    try {
-      const { leaveId } = req.params;
-      const employeeId = req.user._id;
+export const withdrawPendingLeaveRequest = async (req, res) => {
+  try {
+    const { leaveId } = req.params;
+    const employeeId = req.user._id;
 
-      const leave =
-        await LeaveRequest.findById(
-          leaveId
-        );
+    const leave = await LeaveRequest.findById(leaveId);
 
-      if (!leave) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Leave request not found",
-        });
-      }
-
-      if (
-        leave.employeeId.toString() !==
-        employeeId.toString()
-      ) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "Unauthorized access",
-        });
-      }
-
-      if (
-        leave.status !== "Pending"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Only pending leave can be withdrawn",
-        });
-      }
-
-      if (
-        leave.leaveDetails
-          ?.leaveDates?.length
-      ) {
-        const firstLeaveDate =
-          leave.leaveDetails
-            .leaveDates[0].date;
-
-        const month =
-          new Date(
-            firstLeaveDate
-          ).getMonth() + 1;
-
-        const year =
-          new Date(
-            firstLeaveDate
-          ).getFullYear();
-
-        const balance =
-          await EmployeeLeaveBalance.findOne(
-            {
-              employeeId,
-              month,
-              year,
-            }
-          );
-
-        if (!balance) {
-          return res.status(404).json({
-            success: false,
-            message:
-              "Leave balance not found",
-          });
-        }
-
-        leave.leaveDetails.leaveDates.forEach(
-          (item) => {
-            if (
-              item.leaveType ===
-              "Casual Leave"
-            ) {
-              balance.remainingCasualLeave +=
-                item.duration;
-            }
-
-            if (
-              item.leaveType ===
-              "Sick Leave"
-            ) {
-              balance.remainingSickLeave +=
-                item.duration;
-            }
-
-            if (
-              item.leaveType ===
-              "Paid Leave"
-            ) {
-              balance.remainingPaidLeave +=
-                item.duration;
-            }
-          }
-        );
-
-        await balance.save();
-      }
-
-      await LeaveRequest.findByIdAndDelete(
-        leaveId
-      );
-
-      return res.status(200).json({
-        success: true,
-        message:
-          "Leave request withdrawn successfully",
-      });
-    } catch (error) {
-      console.log(error);
-
-      return res.status(500).json({
+    if (!leave) {
+      return res.status(404).json({
         success: false,
-        message: error.message,
+        message: "Leave request not found",
       });
     }
-  };
 
+    if (
+      leave.employeeId.toString() !==
+      employeeId.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized access",
+      });
+    }
+
+    if (leave.status !== "Pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Only pending leave can be withdrawn",
+      });
+    }
+
+    // ==========================================
+    // Restore normal leave balance
+    // ==========================================
+    if (leave.leaveDetails?.leaveDates?.length) {
+      const firstLeaveDate =
+        leave.leaveDetails.leaveDates[0].date;
+
+      const leaveDate = new Date(firstLeaveDate);
+
+      const leaveMonth = leaveDate.getMonth() + 1;
+      const leaveYear = leaveDate.getFullYear();
+
+      // First try: Leave যে month-এর জন্য apply করা হয়েছিল
+      let balance = await EmployeeLeaveBalance.findOne({
+        employeeId,
+        month: leaveMonth,
+        year: leaveYear,
+      });
+
+      // যদি সেই month's balance না থাকে,
+      // তাহলে তার আগের available balance খুঁজবে
+      if (!balance) {
+        balance = await EmployeeLeaveBalance.findOne({
+          employeeId,
+          $or: [
+            {
+              year: { $lt: leaveYear },
+            },
+            {
+              year: leaveYear,
+              month: { $lt: leaveMonth },
+            },
+          ],
+        }).sort({
+          year: -1,
+          month: -1,
+        });
+      }
+
+      if (!balance) {
+        return res.status(404).json({
+          success: false,
+          message: "Leave balance not found",
+        });
+      }
+
+      // Return leave amount back to balance
+      leave.leaveDetails.leaveDates.forEach((item) => {
+        if (item.leaveType === "Casual Leave") {
+          balance.remainingCasualLeave += Number(
+            item.duration || 0
+          );
+        }
+
+        if (item.leaveType === "Sick Leave") {
+          balance.remainingSickLeave += Number(
+            item.duration || 0
+          );
+        }
+
+        if (item.leaveType === "Paid Leave") {
+          balance.remainingPaidLeave += Number(
+            item.duration || 0
+          );
+        }
+      });
+
+      await balance.save();
+    }
+
+    // ==========================================
+    // Delete pending leave request
+    // ==========================================
+    await LeaveRequest.findByIdAndDelete(leaveId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Leave request withdrawn successfully",
+    });
+
+  } catch (error) {
+    console.log(error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 export const getMyRejectedLeaves =
   async (req, res) => {

@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 
 import {
+  createEmployeeCurrentLeaveBalance,
   createHoliday,
   createSuperAdmin,
   editEmployeeForSuperAdmin,
@@ -68,5 +69,6 @@ router.post("/employee-leave-stats", protectSuperAdmin, getEmployeeLeaveCountsAn
 router.get("/profile", protectSuperAdmin, getSuperAdminProfile);
 router.put("/profile", protectSuperAdmin, upload.single("profilePic"), updateSuperAdminProfile);
 router.put("/edit-employee", protectSuperAdmin, editEmployeeForSuperAdmin);
+router.post("/create-current-leave-balance", createEmployeeCurrentLeaveBalance);
 
 export default router;

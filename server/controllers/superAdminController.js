@@ -1477,3 +1477,72 @@ export const editEmployeeForSuperAdmin = async (req, res) => {
     });
   }
 };
+
+export const createEmployeeCurrentLeaveBalance = async (req, res) => {
+  try {
+    const { employeeId } = req.body;
+
+    if (!employeeId) {
+      return res.status(400).json({
+        message: "Employee ID is required",
+      });
+    }
+
+    // Employee check
+    const employee = await Employee.findById(employeeId);
+
+    if (!employee) {
+      return res.status(404).json({
+        message: "Employee not found",
+      });
+    }
+
+    const now = new Date();
+
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
+
+    // Check current month's balance
+    const existingBalance = await EmployeeLeaveBalance.findOne({
+      employeeId: employee._id,
+      month,
+      year,
+    });
+
+    // Already exists → don't create again
+    if (existingBalance) {
+      return res.status(200).json({
+        message: "Current month leave balance already exists",
+        balance: existingBalance,
+      });
+    }
+
+    // Create initial balance
+    const balance = await EmployeeLeaveBalance.create({
+      employeeId: employee._id,
+      companyId: employee.companyId,
+      departmentId: employee.departmentId,
+      month,
+      year,
+
+      remainingCasualLeave: 0.5,
+      remainingSickLeave: 0.5,
+      remainingPaidLeave: 0.5,
+    });
+
+    return res.status(201).json({
+      message: "Employee leave balance created successfully",
+      balance,
+    });
+  } catch (error) {
+    console.error(
+      "Create employee leave balance error:",
+      error
+    );
+
+    return res.status(500).json({
+      message: "Failed to create employee leave balance",
+      error: error.message,
+    });
+  }
+};
