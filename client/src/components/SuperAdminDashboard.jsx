@@ -39,102 +39,6 @@ import {
   Legend,
 } from "recharts";
 
-/* =========================================================
-   DEMO DATA
-========================================================= */
-
-// 1. Company-wise employee count
-const companyEmployeeData = [
-  {
-    company: "WSDS Technologies",
-    employees: 120,
-  },
-  {
-    company: "ABC Solutions",
-    employees: 85,
-  },
-  {
-    company: "XYZ Industries",
-    employees: 65,
-  },
-  {
-    company: "Global Services",
-    employees: 48,
-  },
-  {
-    company: "Tech Innovations",
-    employees: 32,
-  },
-];
-
-// 2. Leave status
-const leaveData = [
-  {
-    name: "Pending",
-    value: 18,
-  },
-  {
-    name: "Approved",
-    value: 72,
-  },
-  {
-    name: "Rejected",
-    value: 14,
-  },
-];
-
-// 3. Company + Department employee count
-const departmentEmployeeData = [
-  {
-    department: "WSDS - IT",
-    employees: 42,
-  },
-  {
-    department: "WSDS - HR",
-    employees: 18,
-  },
-  {
-    department: "WSDS - Finance",
-    employees: 15,
-  },
-  {
-    department: "ABC - Development",
-    employees: 35,
-  },
-  {
-    department: "ABC - HR",
-    employees: 12,
-  },
-  {
-    department: "XYZ - Operations",
-    employees: 28,
-  },
-  {
-    department: "XYZ - Finance",
-    employees: 16,
-  },
-  {
-    department: "Global - Support",
-    employees: 22,
-  },
-  {
-    department: "Global - HR",
-    employees: 10,
-  },
-];
-
-// 4. Monthly payroll generated count
-const payrollData = [
-  { month: "Jan", payrolls: 82 },
-  { month: "Feb", payrolls: 91 },
-  { month: "Mar", payrolls: 95 },
-  { month: "Apr", payrolls: 103 },
-  { month: "May", payrolls: 110 },
-  { month: "Jun", payrolls: 118 },
-  { month: "Jul", payrolls: 124 },
-  { month: "Aug", payrolls: 130 },
-  { month: "Sep", payrolls: 136 },
-];
 
 const LEAVE_COLORS = [
   "#f59e0b",
@@ -820,9 +724,44 @@ const ThemeSwitcher = ({
 ========================================================= */
 
 const SuperAdminDashboard = () => {
-  const [user, setUser] = useState(null);
-  const [pendingCount, setPendingCount] =
-    useState(0);
+const [user, setUser] = useState(null);
+
+const [pendingCount, setPendingCount] =
+  useState(0);
+
+const [companyEmployeeData, setCompanyEmployeeData] =
+  useState([]);
+
+const [leaveData, setLeaveData] =
+  useState([
+    {
+      name: "Pending",
+      value: 0,
+    },
+    {
+      name: "Approved",
+      value: 0,
+    },
+    {
+      name: "Rejected",
+      value: 0,
+    },
+  ]);
+
+const [departmentEmployeeData, setDepartmentEmployeeData] =
+  useState([]);
+
+const [payrollData, setPayrollData] =
+  useState([]);
+
+const [totalEmployees, setTotalEmployees] =
+  useState(0);
+
+const [totalCompanies, setTotalCompanies] =
+  useState(0);
+
+const [totalDepartments, setTotalDepartments] =
+  useState(0);
 
   const [sidebarOpen, setSidebarOpen] =
     useState(false);
@@ -873,30 +812,175 @@ const SuperAdminDashboard = () => {
     }
   }, [navigate]);
 
-  /* =======================================================
-     FETCH PENDING LEAVES
-  ======================================================= */
+/* =======================================================
+   FETCH DASHBOARD DATA
+======================================================= */
 
-  useEffect(() => {
-    const fetchPendingLeaves = async () => {
-      try {
-        const res = await api.get(
-          "/leaves/pending",
+useEffect(() => {
+  const fetchDashboardData = async () => {
+    try {
+      const [
+        companyRes,
+        leaveRes,
+        departmentRes,
+        payrollRes,
+        employeeRes,
+      ] = await Promise.all([
+        api.get(
+          "/superadmin-dashboard/company-employee-count",
           {
             withCredentials: true,
           }
-        );
+        ),
 
-        setPendingCount(
-          res.data.totalLeaves || 0
-        );
-      } catch (error) {
-        console.log(error);
-      }
-    };
+        api.get(
+          "/superadmin-dashboard/leave-request-status-count",
+          {
+            withCredentials: true,
+          }
+        ),
 
-    fetchPendingLeaves();
-  }, []);
+        api.get(
+          "/superadmin-dashboard/department-employee-count",
+          {
+            withCredentials: true,
+          }
+        ),
+
+        api.get(
+          "/superadmin-dashboard/monthly-payroll-count",
+          {
+            withCredentials: true,
+          }
+        ),
+
+        api.get(
+          "/superadmin-dashboard/total-employee-count",
+          {
+            withCredentials: true,
+          }
+        ),
+      ]);
+
+      /* ================================================
+         COMPANY EMPLOYEE DATA
+      ================================================= */
+
+      const companies =
+        companyRes.data.companies || [];
+
+      setCompanyEmployeeData(
+        companies.map((company) => ({
+          company: company.companyName,
+          employees: company.employeeCount,
+        }))
+      );
+
+      setTotalCompanies(
+        companies.length
+      );
+
+
+      /* ================================================
+         LEAVE DATA
+      ================================================= */
+
+      const leaveResponse =
+        leaveRes.data;
+
+      setPendingCount(
+        leaveResponse.pending || 0
+      );
+
+      setLeaveData([
+        {
+          name: "Pending",
+          value: leaveResponse.pending || 0,
+        },
+        {
+          name: "Approved",
+          value: leaveResponse.approved || 0,
+        },
+        {
+          name: "Rejected",
+          value: leaveResponse.rejected || 0,
+        },
+      ]);
+
+
+      /* ================================================
+         DEPARTMENT EMPLOYEE DATA
+      ================================================= */
+
+      const departments =
+        departmentRes.data.departments || [];
+
+      setDepartmentEmployeeData(
+        departments.map((department) => ({
+          department:
+            `${department.companyName} - ${department.departmentName}`,
+
+          employees:
+            department.employeeCount,
+        }))
+      );
+
+      setTotalDepartments(
+        departments.length
+      );
+
+
+      /* ================================================
+         PAYROLL DATA
+      ================================================= */
+
+      const payroll =
+        payrollRes.data.payroll || [];
+
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+
+      setPayrollData(
+        payroll.map((item) => ({
+          month:
+            `${monthNames[item.month - 1]} ${item.year}`,
+
+          payrolls:
+            item.payrollCount,
+        }))
+      );
+
+
+      /* ================================================
+         TOTAL EMPLOYEE DATA
+      ================================================= */
+
+      setTotalEmployees(
+        employeeRes.data.employeeCount || 0
+      );
+
+    } catch (error) {
+      console.error(
+        "Dashboard data fetch error:",
+        error
+      );
+    }
+  };
+
+  fetchDashboardData();
+}, []);
 
   /* =======================================================
      ATTENDANCE TRACKER
@@ -948,30 +1032,6 @@ const SuperAdminDashboard = () => {
   const closeSidebar = () => {
     setSidebarOpen(false);
   };
-
-  /* =======================================================
-     DEMO KPI VALUES
-  ======================================================= */
-
-  const totalEmployees =
-    companyEmployeeData.reduce(
-      (sum, item) =>
-        sum + item.employees,
-      0
-    );
-
-  const totalCompanies =
-    companyEmployeeData.length;
-
-  const totalDepartments =
-    departmentEmployeeData.length;
-
-  const totalPayrolls =
-    payrollData.reduce(
-      (sum, item) =>
-        sum + item.payrolls,
-      0
-    );
 
   return (
     <div
@@ -1166,7 +1226,7 @@ const SuperAdminDashboard = () => {
             mt-6
             overflow-y-auto
             h-[calc(100vh-210px)]
-            pb-6
+            pb-24
           "
         >
           {/* MANAGEMENT */}
@@ -1999,35 +2059,6 @@ const SuperAdminDashboard = () => {
                 </ResponsiveContainer>
               </div>
             </ChartCard>
-          </div>
-
-          {/* =================================================
-              DEMO DATA NOTICE
-          ================================================= */}
-
-          <div
-            className={`
-              mt-6
-              px-4
-              py-3
-              rounded-xl
-              border
-              border-indigo-500/20
-              bg-indigo-500/5
-              text-center
-            `}
-          >
-            <p
-              className={`
-                text-xs
-                font-medium
-                ${theme.secondaryText}
-              `}
-            >
-              Analytics are currently showing
-              demo data. Connect your APIs later
-              to display live statistics.
-            </p>
           </div>
 
           {/* =================================================
