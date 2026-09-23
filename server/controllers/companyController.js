@@ -95,7 +95,7 @@ export const getCompanyById = async (req, res) => {
 
 export const getAllCompanies = async (req, res) => {
   try {
-    const companies = await Company.find().sort({ createdAt: -1 });
+    const companies = await Company.find().sort({ createdAt: 1 });
 
     return res.status(200).json({
       success: true,

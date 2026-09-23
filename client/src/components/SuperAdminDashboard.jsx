@@ -992,7 +992,7 @@ useEffect(() => {
 
       const companies =
         res.data.companies || [];
-
+      
       if (companies.length > 0) {
         navigate(
           `/${companies[0]._id}/company/attendance-tracker`
