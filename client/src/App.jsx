@@ -41,6 +41,7 @@ import CompanyManagement from "./components/CompanyManagement";
 import EditCompany from "./components/EditCompany";
 import AllPayrolls from "./components/AllPayrolls";
 import UpdatePayroll from "./components/UpdatePayroll";
+import CreateRole from "./components/CreateRole";
 // import EditCompany from "./components/EditCompany";
 
 
@@ -86,6 +87,10 @@ const router = createBrowserRouter([
       {
         path: "create-department",
         element: <CreateDepartment />,
+      },
+      {
+        path: "create-role",
+        element: <CreateRole />,
       },
       {
         path: "create-employee",

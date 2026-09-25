@@ -1272,6 +1272,19 @@ useEffect(() => {
               }}
             />
 
+            <SidebarAction 
+              icon={BriefcaseBusiness} 
+              label="Create Role" 
+              description="Add new role" 
+              theme={theme} 
+              onClick={() => { 
+                navigate(
+                  "/admin/create-role"
+                ); 
+                closeSidebar(); 
+              }} 
+            />
+
             <SidebarAction
               icon={UserPlus}
               label="Create Employee"

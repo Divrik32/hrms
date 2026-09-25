@@ -55,28 +55,9 @@ const employeeSchema = new mongoose.Schema(
     },
 
     role: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
       required: true,
-
-      enum: [
-        "Vice President",
-
-        "General Manager",
-
-        "Senior Manager",
-
-        "Project Manager",
-
-        "Team Lead",
-
-        "Senior Software Engineer",
-
-        "Software Engineer",
-
-        "Associate Trainee",
-
-        "Intern",
-      ],
     },
 
     companyId: {

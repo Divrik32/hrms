@@ -105,6 +105,7 @@ const Toast = ({ type, message, onClose }) => (
 const CreateEmployee = () => {
   const [companies, setCompanies] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ type: "", message: "" });
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -117,30 +118,38 @@ const CreateEmployee = () => {
     gender: "Male",
     email: "",
     password: "",
-    role: "Intern",
+    role: "",
     companyId: "",
     departmentId: "",
     profilePic: null,
   });
 
-  const roles = [
-    "Vice President",
-    "General Manager",
-    "Senior Manager",
-    "Project Manager",
-    "Team Lead",
-    "Senior Software Engineer",
-    "Software Engineer",
-    "Associate Trainee",
-    "Intern",
-  ];
+useEffect(() => {
+  const fetchInitialData = async () => {
+    try {
+      const [companyRes, roleRes] = await Promise.all([
+        api.get("/companies"),
+        api.get("/roles"),
+      ]);
 
-  useEffect(() => {
-    api
-      .get("/companies")
-      .then((res) => setCompanies(res.data.companies || []))
-      .catch((err) => console.log(err));
-  }, []);
+      setCompanies(
+        Array.isArray(companyRes.data.companies)
+          ? companyRes.data.companies
+          : []
+      );
+
+      setRoles(
+        Array.isArray(roleRes.data.roles)
+          ? roleRes.data.roles
+          : []
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  fetchInitialData();
+}, []);
 
   useEffect(() => {
     if (!formData.companyId) return;
@@ -177,7 +186,7 @@ const CreateEmployee = () => {
       showToast("success", res.data.message || "Employee created successfully!");
       setFormData({
         name: "", empId: "", phone: "", presentAddress: "",
-        gender: "Male", email: "", password: "", role: "Intern",
+        gender: "Male", email: "", password: "", role: "",
         companyId: "", departmentId: "", profilePic: null,
       });
       setPreviewUrl(null);
@@ -283,9 +292,20 @@ const CreateEmployee = () => {
                 Organisation
               </motion.p>
 
-              <FloatingSelect icon={Briefcase} label="Role" name="role" value={formData.role} onChange={handleChange}>
-                {roles.map((r, i) => (
-                  <option key={i} value={r}>{r}</option>
+              <FloatingSelect
+                icon={Briefcase}
+                label="Role"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Role</option>
+              
+                {roles.map((role) => (
+                  <option key={role._id} value={role._id}>
+                    {role.roleName}
+                  </option>
                 ))}
               </FloatingSelect>
 

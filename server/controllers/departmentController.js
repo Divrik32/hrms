@@ -58,6 +58,27 @@ export const createDepartment = async (req, res) => {
   }
 };
 
+export const getAllDepartments = async (req, res) => {
+  try {
+    const departments = await Department.find()
+      .populate("companyId", "companyName companyType email")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: departments.length,
+      departments,
+    });
+  } catch (error) {
+    console.error("Get All Departments Error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 export const getDepartmentsByCompany = async (req, res) => {
   try {
     const { companyId } = req.params;
@@ -101,6 +122,35 @@ export const getDepartmentById = async (req, res) => {
       department,
     });
   } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const deleteDepartment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const department = await Department.findById(id);
+
+    if (!department) {
+      return res.status(404).json({
+        success: false,
+        message: "Department not found",
+      });
+    }
+
+    await Department.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Department deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete Department Error:", error);
+
     return res.status(500).json({
       success: false,
       message: error.message,

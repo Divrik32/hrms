@@ -7,6 +7,7 @@ import sendEmail from "../utils/sendEmail.js";
 import path from "path";
 import fs from "fs";
 import RejectedLeave from "../models/RejectedLeave.js";
+import RoleModel from "../models/RoleModel.js";
 
 // Create Employee
 export const createEmployee = async (
@@ -70,25 +71,27 @@ export const createEmployee = async (
         });
     }
 
-    // department exists
-    const department =
-      await Department.findById(
-        departmentId
-      );
+// department exists
+const department = await Department.findById(
+  departmentId
+);
 
-    if (
-      !department
-    ) {
-      return res
-        .status(404)
-        .json({
-          success:
-            false,
+if (!department) {
+  return res.status(404).json({
+    success: false,
+    message: "Department not found",
+  });
+}
 
-          message:
-            "Department not found",
-        });
-    }
+// role exists
+const roleData = await RoleModel.findById(role);
+
+if (!roleData) {
+  return res.status(404).json({
+    success: false,
+    message: "Role not found",
+  });
+}
 
     // hash password
     const hashedPassword =
@@ -98,37 +101,21 @@ export const createEmployee = async (
       );
 
     // create employee
-    const employee =
-      await Employee.create(
-        {
-          name,
-
-          empId,
-
-          phone,
-
-          presentAddress,
-
-          gender,
-
-          email,
-
-          password:
-            hashedPassword,
-
-          role,
-
-          companyId,
-
-          departmentId,
-
-          profilePic:
-            req.file
-              ? req.file
-                  .filename
-              : "",
-        }
-      );
+const employee = await Employee.create({
+  name,
+  empId,
+  phone,
+  presentAddress,
+  gender,
+  email,
+  password: hashedPassword,
+  role: roleData._id,
+  companyId,
+  departmentId,
+  profilePic: req.file
+    ? req.file.filename
+    : "",
+});
 
     return res
       .status(201)

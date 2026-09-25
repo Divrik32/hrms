@@ -42,19 +42,8 @@ const AdminEmployeeProfile = () => {
   const [editingDepartment, setEditingDepartment] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [editingRole, setEditingRole] = useState(false);
-const [selectedRole, setSelectedRole] = useState("");
-
-const roles = [
-  "Vice President",
-  "General Manager",
-  "Senior Manager",
-  "Project Manager",
-  "Team Lead",
-  "Senior Software Engineer",
-  "Software Engineer",
-  "Associate Trainee",
-  "Intern",
-];
+  const [selectedRole, setSelectedRole] = useState("");
+  const [roles, setRoles] = useState([]);
 
   useEffect(() => {
     loadEmployeeData();
@@ -80,10 +69,12 @@ const loadEmployeeData = async () => {
     const employeeData = employeeRes.data.employee;
 
     setEmployee(employeeData);
+
     setSelectedDepartment(
       employeeData.departmentId?._id || ""
     );
-    setSelectedRole(employeeData.role || "");
+
+    setSelectedRole(employeeData.role?._id || "");
 
     // ==============================
     // 2. Create current month leave balance
@@ -108,10 +99,27 @@ const loadEmployeeData = async () => {
       }
     );
 
-    setDepartments(depRes.data.departments);
+    setDepartments(
+      Array.isArray(depRes.data.departments)
+        ? depRes.data.departments
+        : []
+    );
 
     // ==============================
-    // 4. Get leave statistics
+    // 4. Get roles
+    // ==============================
+    const roleRes = await api.get("/roles", {
+      withCredentials: true,
+    });
+
+    setRoles(
+      Array.isArray(roleRes.data.roles)
+        ? roleRes.data.roles
+        : []
+    );
+
+    // ==============================
+    // 5. Get leave statistics
     // ==============================
     const leaveStatsRes = await api.post(
       "/superadmin/employee-leave-stats",
@@ -467,11 +475,11 @@ const stats = [
         }
         className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
       >
-        {roles.map((role) => (
-          <option key={role} value={role}>
-            {role}
-          </option>
-        ))}
+      {roles.map((role) => (
+        <option key={role._id} value={role._id}>
+          {role.roleName}
+        </option>
+      ))}
       </select>
 
       <button
@@ -484,7 +492,7 @@ const stats = [
       <button
         onClick={() => {
           setEditingRole(false);
-          setSelectedRole(employee.role);
+          setSelectedRole(employee.role?._id || "");
         }}
         className="p-2 rounded-lg bg-red-600 hover:bg-red-700"
       >
@@ -493,7 +501,7 @@ const stats = [
     </div>
   ) : (
     <p className="text-white text-base">
-      {employee.role}
+      {employee.role?.roleName || "—"}
     </p>
   )}
 </motion.div>

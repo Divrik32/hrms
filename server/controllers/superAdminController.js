@@ -10,6 +10,7 @@ import RejectedLeave from "../models/RejectedLeave.js";
 import Holiday from "../models/Holiday.js";
 import EmployeeLeaveBalance from "../models/EmployeeLeaveBalance.js";
 import Department from "../models/departmentModel.js";
+import RoleModel from "../models/RoleModel.js";
 
 // Create Super Admin
 export const createSuperAdmin = async (req, res) => {
@@ -1027,12 +1028,13 @@ export const getEmployeeByIdForAdmin = async (
       });
     }
 
-    const employee =
-      await Employee.findById(
-        employeeId
-      )
-    .populate("companyId")
-    .populate("departmentId")
+    const employee = 
+    await Employee.findById( 
+      employeeId 
+    ) 
+    .populate("companyId") 
+    .populate("departmentId") 
+    .populate("role", "roleName") 
     .select("-password");
 
     if (!employee) {
@@ -1437,31 +1439,35 @@ export const editEmployeeForSuperAdmin = async (req, res) => {
     }
 
     // Update Role
-    if (role) {
-      const allowedRoles = Employee.schema.path("role").enumValues;
+if (role) {
+  const roleData = await RoleModel.findById(role);
 
-      if (!allowedRoles.includes(role)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid role selected",
-        });
-      }
+  if (!roleData) {
+    return res.status(404).json({
+      success: false,
+      message: "Role not found",
+    });
+  }
 
-      employee.role = role;
-    }
+  employee.role = roleData._id;
+}
 
     await employee.save();
 
-    const updatedEmployee = await Employee.findById(employeeId)
-      .populate({
-        path: "companyId",
-        select: "-createdAt -updatedAt -__v",
-      })
-      .populate({
-        path: "departmentId",
-        select: "-createdAt -updatedAt -__v",
-      })
-      .select("-password");
+const updatedEmployee = await Employee.findById(employeeId)
+  .populate({
+    path: "companyId",
+    select: "-createdAt -updatedAt -__v",
+  })
+  .populate({
+    path: "departmentId",
+    select: "-createdAt -updatedAt -__v",
+  })
+  .populate({
+    path: "role",
+    select: "roleName",
+  })
+  .select("-password");
 
     return res.status(200).json({
       success: true,

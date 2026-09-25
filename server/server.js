@@ -14,6 +14,7 @@ import leaveRoutes from "./routes/leaveRequests.js";
 import salaryRoutes from "./routes/salaryRoutes.js";
 import absentRoutes from "./routes/absentRoutes.js";
 import payrollRoutes from "./routes/payrollRoutes.js";
+import roleRoutes from "./routes/roleRoutes.js";
 import superAdminDashboardRoutes from "./routes/superAdminDashboardRoutes.js";
 import { fileURLToPath } from "url";
 import { startMonthlyLeaveCreditJob } from "./jobs/monthlyLeaveCredit.js";
@@ -51,6 +52,7 @@ app.use("/api/salary", salaryRoutes);
 app.use("/api/absent", absentRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/superadmin-dashboard", superAdminDashboardRoutes);
+app.use("/api/roles", roleRoutes);
 
 // Test Route
 app.get("/", (req, res) => {
