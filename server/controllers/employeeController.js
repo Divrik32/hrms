@@ -772,3 +772,64 @@ export const resendOtp =
       });
     }
   };
+
+export const getEmployeesWithoutDepartment = async (req, res) => {
+  try {
+    const { companyId } = req.params;
+
+    if (!companyId) {
+      return res.status(400).json({
+        success: false,
+        message: "Company ID is required",
+      });
+    }
+
+    // Get all departments that currently exist for this company
+    const departments = await Department.find({
+      companyId,
+    }).select("_id");
+
+    const departmentIds = departments.map(
+      (department) => department._id
+    );
+
+    // Get employees whose departmentId:
+    // 1. does not exist
+    // 2. is null
+    // 3. belongs to a deleted/non-existing department
+    const employees = await Employee.find({
+      companyId,
+      $or: [
+        {
+          departmentId: {
+            $exists: false,
+          },
+        },
+        {
+          departmentId: null,
+        },
+        {
+          departmentId: {
+            $nin: departmentIds,
+          },
+        },
+      ],
+    }).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      count: employees.length,
+      employees,
+    });
+  } catch (error) {
+    console.error(
+      "Get Employees Without Department Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

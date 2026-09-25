@@ -99,11 +99,22 @@ const loadEmployeeData = async () => {
       }
     );
 
-    setDepartments(
-      Array.isArray(depRes.data.departments)
-        ? depRes.data.departments
-        : []
-    );
+    const departmentList = Array.isArray(
+  depRes.data.departments
+)
+  ? depRes.data.departments
+  : [];
+
+setDepartments(departmentList);
+
+if (
+  !employeeData.departmentId?._id &&
+  departmentList.length > 0
+) {
+  setSelectedDepartment(
+    departmentList[0]._id
+  );
+}
 
     // ==============================
     // 4. Get roles
@@ -403,19 +414,20 @@ const stats = [
 
   {editingDepartment ? (
     <div className="flex items-center gap-2">
-      <select
-        value={selectedDepartment}
-        onChange={(e) =>
-          setSelectedDepartment(e.target.value)
-        }
-        className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
-      >
-        {departments.map((dept) => (
-          <option key={dept._id} value={dept._id}>
-            {dept.departmentName}
-          </option>
-        ))}
-      </select>
+<select
+  value={selectedDepartment}
+  onChange={(e) => {
+    console.log("SELECTED DEPARTMENT:", e.target.value);
+    setSelectedDepartment(e.target.value);
+  }}
+  className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
+>
+  {departments.map((dept) => (
+    <option key={dept._id} value={dept._id}>
+      {dept.departmentName}
+    </option>
+  ))}
+</select>
 
       <button
         onClick={updateDepartment}

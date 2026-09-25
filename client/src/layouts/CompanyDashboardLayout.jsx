@@ -11,6 +11,7 @@ const CompanyDashboardLayout = () => {
 
   const [departments, setDepartments] = useState([]);
   const [departmentEmployees, setDepartmentEmployees] = useState({});
+  const [withoutDepartmentEmployees, setWithoutDepartmentEmployees] = useState([]);
 
   useEffect(() => {
     fetchCompanies();
@@ -47,42 +48,69 @@ const CompanyDashboardLayout = () => {
   }
 };
 
-  const loadCompanyData = async (
-    company
-  ) => {
-    try {
-      setSelectedCompany(company);
+const loadCompanyData = async (
+  company
+) => {
+  try {
+    setSelectedCompany(company);
 
-      const departmentRes =
+    const departmentRes =
+      await api.get(
+        `/departments/company/${company._id}`
+      );
+
+    const companyDepartments =
+      Array.isArray(
+        departmentRes.data.departments
+      )
+        ? departmentRes.data.departments
+        : [];
+
+    setDepartments(
+      companyDepartments
+    );
+
+    const employeesObj = {};
+
+    for (
+      let department of companyDepartments
+    ) {
+      const empRes =
         await api.get(
-          `/departments/company/${company._id}`
+          `/employees/department/${department._id}`
         );
 
-      setDepartments(
-        departmentRes.data.departments
-      );
-
-      const employeesObj = {};
-
-      for (
-        let department of departmentRes.data.departments
-      ) {
-        const empRes =
-          await api.get(
-            `/employees/department/${department._id}`
-          );
-
-        employeesObj[department._id] = empRes.data.employees;
-      }
-
-      setDepartmentEmployees(
-        employeesObj
-      );
-
-    } catch (error) {
-      console.log(error);
+      employeesObj[department._id] =
+        Array.isArray(
+          empRes.data.employees
+        )
+          ? empRes.data.employees
+          : [];
     }
-  };
+
+    setDepartmentEmployees(
+      employeesObj
+    );
+
+    // Employees whose department
+    // does not exist / is not selected
+    const withoutDepartmentRes =
+      await api.get(
+        `/employees/company/${company._id}/without-department`
+      );
+
+    setWithoutDepartmentEmployees(
+      Array.isArray(
+        withoutDepartmentRes.data.employees
+      )
+        ? withoutDepartmentRes.data.employees
+        : []
+    );
+
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -107,6 +135,7 @@ const CompanyDashboardLayout = () => {
         selectedCompany,
         departments,
         departmentEmployees,
+        withoutDepartmentEmployees,
       }}
     />
 
