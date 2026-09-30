@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import api from "../services/axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -15,181 +15,428 @@ import {
   ChevronDown,
   UserPlus,
   CheckCircle2,
-  XCircle,
+  AlertCircle,
+  Loader2,
+  Eye,
+  EyeOff,
+  Sun,
+  Moon,
+  Star,
+  X,
+  Trash2,
+  Check,
 } from "lucide-react";
 
-// ── tiny helpers ──────────────────────────────────────────────
-const containerVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.07 } },
+/* ------------------------------------------------------------------ */
+/*  Themes: dark (default) · light · midnight                          */
+/* ------------------------------------------------------------------ */
+const THEMES = {
+  dark: {
+    label: "Dark",
+    icon: Moon,
+    scheme: "dark",
+    vars: {
+      "--bg": "#272c3a",
+      "--card": "#323849",
+      "--card2": "#3c4358",
+      "--input": "#2a3040",
+      "--border": "rgba(255,255,255,0.12)",
+      "--text": "#f2f4fa",
+      "--muted": "#b4bbce",
+      "--faint": "#7d859b",
+      "--accent": "#6366f1",
+      "--accent2": "#8b5cf6",
+      "--soft": "rgba(99,102,241,0.18)",
+      "--glow1": "rgba(99,102,241,0.16)",
+      "--glow2": "rgba(139,92,246,0.11)",
+      "--shadow": "rgba(0,0,0,0.35)",
+      "--danger": "#f87171",
+      "--ok": "#34d399",
+    },
+  },
+  light: {
+    label: "Light",
+    icon: Sun,
+    scheme: "light",
+    vars: {
+      "--bg": "#f3f5fa",
+      "--card": "#ffffff",
+      "--card2": "#f6f7fc",
+      "--input": "#f6f7fb",
+      "--border": "rgba(15,23,42,0.10)",
+      "--text": "#0f172a",
+      "--muted": "#4b5568",
+      "--faint": "#8792a6",
+      "--accent": "#4f46e5",
+      "--accent2": "#7c3aed",
+      "--soft": "rgba(79,70,229,0.12)",
+      "--glow1": "rgba(99,102,241,0.15)",
+      "--glow2": "rgba(167,139,250,0.14)",
+      "--shadow": "rgba(30,41,90,0.16)",
+      "--danger": "#dc2626",
+      "--ok": "#059669",
+    },
+  },
+  midnight: {
+    label: "Midnight",
+    icon: Star,
+    scheme: "dark",
+    vars: {
+      "--bg": "#1b2247",
+      "--card": "#262f5a",
+      "--card2": "#303a6c",
+      "--input": "#1e2650",
+      "--border": "rgba(160,175,255,0.16)",
+      "--text": "#eef1fb",
+      "--muted": "#aab3d6",
+      "--faint": "#7580aa",
+      "--accent": "#7c83ff",
+      "--accent2": "#a78bfa",
+      "--soft": "rgba(124,131,255,0.18)",
+      "--glow1": "rgba(99,102,241,0.18)",
+      "--glow2": "rgba(56,189,248,0.08)",
+      "--shadow": "rgba(4,6,25,0.45)",
+      "--danger": "#fb7185",
+      "--ok": "#4ade80",
+    },
+  },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 18 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 260, damping: 22 } },
-};
+const THEME_KEY = "department-page-theme"; // shared with the other pages
 
-// Floating-label text/email/password input
-const FloatingInput = ({ icon: Icon, label, name, type = "text", value, onChange, required }) => (
-  <motion.div variants={itemVariants} className="relative group">
-    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-400 transition-colors duration-200 pointer-events-none z-10">
-      <Icon size={16} />
-    </div>
-    <input
-      type={type}
-      name={name}
-      value={value}
-      onChange={onChange}
-      required={required}
-      placeholder=" "
-      className="peer w-full bg-slate-800/60 border border-slate-700 rounded-xl pl-10 pr-4 pt-5 pb-2 text-sm text-slate-100 placeholder-transparent focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 hover:border-slate-600"
-    />
-    <label className="absolute left-10 top-2 text-[10px] font-medium tracking-wide text-indigo-400 opacity-0 peer-not-placeholder-shown:opacity-100 peer-focus:opacity-100 transition-all duration-200 pointer-events-none uppercase">
+/* shared class strings */
+const surface =
+  "bg-[var(--card)] border border-[color:var(--border)] rounded-2xl shadow-[0_24px_60px_-28px_var(--shadow)]";
+const fieldWrap =
+  "flex gap-3 items-center bg-[var(--input)] border border-[color:var(--border)] rounded-xl px-4 py-3 transition-all duration-200 hover:border-[color:var(--faint)] focus-within:!border-[color:var(--accent)] focus-within:ring-4 focus-within:ring-[color:var(--soft)]";
+const inputCls =
+  "min-w-0 flex-1 bg-transparent text-sm text-[color:var(--text)] outline-none placeholder:text-[color:var(--faint)] disabled:cursor-not-allowed disabled:opacity-50";
+const labelCls = "block text-xs font-semibold text-[color:var(--muted)] mb-1.5 tracking-wide";
+
+/* ---------------- small building blocks ---------------- */
+const Field = ({ icon: Icon, label, name, required, className = "", children, trailing }) => (
+  <div className={className}>
+    <label htmlFor={name} className={labelCls}>
       {label}
+      {required && <span className="text-[color:var(--accent)]"> *</span>}
     </label>
-    <span className="absolute left-10 top-1/2 -translate-y-1/2 text-sm text-slate-500 pointer-events-none transition-all duration-200 peer-not-placeholder-shown:opacity-0 peer-focus:opacity-0">
-      {label}
-    </span>
-  </motion.div>
-);
-
-// Custom styled select
-const FloatingSelect = ({ icon: Icon, label, name, value, onChange, children, required }) => (
-  <motion.div variants={itemVariants} className="relative group">
-    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-400 transition-colors duration-200 pointer-events-none z-10">
-      <Icon size={16} />
-    </div>
-    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none z-10">
-      <ChevronDown size={15} />
-    </div>
-    {value && (
-      <span className="absolute left-10 top-2 text-[10px] font-medium tracking-wide text-indigo-400 uppercase pointer-events-none z-10">
-        {label}
-      </span>
-    )}
-    <select
-      name={name}
-      value={value}
-      onChange={onChange}
-      required={required}
-      className={`w-full bg-slate-800/60 border border-slate-700 rounded-xl pl-10 pr-9 text-sm text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 hover:border-slate-600 appearance-none cursor-pointer ${value ? "pt-5 pb-2" : "py-3.5"}`}
-    >
+    <div className={fieldWrap}>
+      <Icon size={16} className="shrink-0 text-[color:var(--faint)]" />
       {children}
-    </select>
-  </motion.div>
+      {trailing}
+    </div>
+  </div>
 );
 
-// Toast notification
-const Toast = ({ type, message, onClose }) => (
-  <AnimatePresence>
-    {message && (
-      <motion.div
-        initial={{ opacity: 0, y: -24, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -16, scale: 0.95 }}
-        className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl border text-sm font-medium max-w-sm ${
-          type === "success"
-            ? "bg-emerald-950/90 border-emerald-700 text-emerald-300"
-            : "bg-red-950/90 border-red-700 text-red-300"
-        }`}
-      >
-        {type === "success" ? <CheckCircle2 size={18} /> : <XCircle size={18} />}
-        {message}
-        <button onClick={onClose} className="ml-2 opacity-60 hover:opacity-100 transition-opacity">×</button>
-      </motion.div>
-    )}
-  </AnimatePresence>
+const CustomSelect = ({
+  icon: Icon,
+  label,
+  name,
+  value,
+  onChange,
+  options,
+  placeholder,
+  required,
+  disabled,
+  loading,
+  className = "",
+}) => {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const [place, setPlace] = useState({ up: false, maxH: 240 });
+  const ref = useRef(null);
+
+  // Open upward when there is not enough room below the field
+  const measure = () => {
+    const btn = ref.current?.querySelector("button");
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const below = window.innerHeight - r.bottom - 16;
+    const above = r.top - 16;
+    const want = Math.min(240, options.length * 44 + 12);
+    const up = below < want && above > below;
+    setPlace({ up, maxH: Math.max(120, Math.min(240, up ? above : below)) });
+  };
+
+  useEffect(() => {
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = (e) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
+  const selected = options.find((o) => o.value === value);
+
+  const choose = (v) => {
+    onChange({ target: { name, value: v } });
+    setOpen(false);
+  };
+
+  const onKeyDown = (e) => {
+    if (disabled) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      if (!open) {
+        measure();
+        setOpen(true);
+        setActive(Math.max(0, options.findIndex((o) => o.value === value)));
+        return;
+      }
+      setActive((i) =>
+        e.key === "ArrowDown"
+          ? Math.min(options.length - 1, i + 1)
+          : Math.max(0, i - 1)
+      );
+    } else if (e.key === "Enter" && open && active >= 0 && options[active]) {
+      e.preventDefault();
+      choose(options[active].value);
+    }
+  };
+
+  return (
+    <div ref={ref} className={`${className} ${open ? "relative z-30" : ""}`}>
+      <span className={labelCls}>
+        {label}
+        {required && <span className="text-[color:var(--accent)]"> *</span>}
+      </span>
+
+      <div className="relative">
+        <button
+          type="button"
+          id={name}
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => {
+            if (!open) measure();
+            setOpen((v) => !v);
+          }}
+          onKeyDown={onKeyDown}
+          className={`${fieldWrap} w-full text-left disabled:cursor-not-allowed disabled:opacity-50 ${
+            open ? "!border-[color:var(--accent)] ring-4 ring-[color:var(--soft)]" : ""
+          }`}
+        >
+          <Icon size={16} className="shrink-0 text-[color:var(--faint)]" />
+          <span
+            className={`flex-1 truncate text-sm ${
+              selected
+                ? "font-medium text-[color:var(--text)]"
+                : "text-[color:var(--faint)]"
+            }`}
+          >
+            {selected ? selected.label : placeholder}
+          </span>
+          {loading ? (
+            <Loader2 size={15} className="shrink-0 animate-spin text-[color:var(--faint)]" />
+          ) : (
+            <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <ChevronDown size={15} className="text-[color:var(--faint)]" />
+            </motion.span>
+          )}
+        </button>
+
+        <AnimatePresence>
+          {open && (
+            <motion.ul
+              role="listbox"
+              initial={{ opacity: 0, y: place.up ? 6 : -6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: place.up ? 6 : -6, scale: 0.98 }}
+              transition={{ duration: 0.15 }}
+              style={{ maxHeight: place.maxH }}
+              className={`absolute left-0 right-0 z-40 overflow-y-auto rounded-xl ${
+                place.up ? "bottom-full mb-2" : "top-full mt-2"
+              } border border-[color:var(--border)] bg-[var(--card2)] p-1.5 shadow-[0_20px_50px_-15px_var(--shadow)]`}
+            >
+              {options.length === 0 ? (
+                <li className="px-3 py-3 text-xs text-[color:var(--faint)]">
+                  Nothing to choose from yet
+                </li>
+              ) : (
+                options.map((o, i) => {
+                  const isSel = o.value === value;
+                  return (
+                    <li key={o.value} role="option" aria-selected={isSel}>
+                      <button
+                        type="button"
+                        onClick={() => choose(o.value)}
+                        onMouseEnter={() => setActive(i)}
+                        className={`flex w-full items-center gap-3 rounded-lg px-3.5 py-2.5 text-left text-sm transition-colors ${
+                          isSel
+                            ? "bg-[var(--soft)] font-medium text-[color:var(--accent)]"
+                            : active === i
+                            ? "bg-[var(--soft)] text-[color:var(--text)]"
+                            : "text-[color:var(--text)] hover:bg-[var(--soft)]"
+                        }`}
+                      >
+                        <span className="flex-1 truncate">{o.label}</span>
+                        {isSel && <Check size={15} className="shrink-0" />}
+                      </button>
+                    </li>
+                  );
+                })
+              )}
+            </motion.ul>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+const SectionTitle = ({ icon: Icon, title, hint }) => (
+  <div className="mb-3 flex items-center gap-3">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--soft)]">
+      <Icon size={16} className="text-[color:var(--accent)]" />
+    </div>
+    <div>
+      <h3 className="text-sm font-semibold">{title}</h3>
+      <p className="text-xs text-[color:var(--muted)]">{hint}</p>
+    </div>
+  </div>
 );
 
-// ── main component ─────────────────────────────────────────────
+const emptyForm = {
+  name: "",
+  empId: "",
+  phone: "",
+  presentAddress: "",
+  gender: "Male",
+  email: "",
+  password: "",
+  role: "",
+  companyId: "",
+  departmentId: "",
+  profilePic: null,
+};
+
 const CreateEmployee = () => {
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem(THEME_KEY);
+      return THEMES[saved] ? saved : "dark";
+    } catch {
+      return "dark";
+    }
+  });
+
   const [companies, setCompanies] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState({ type: "", message: "" });
+  const [loadingDepts, setLoadingDepts] = useState(false);
+  const [toast, setToast] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState(emptyForm);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    empId: "",
-    phone: "",
-    presentAddress: "",
-    gender: "Male",
-    email: "",
-    password: "",
-    role: "",
-    companyId: "",
-    departmentId: "",
-    profilePic: null,
-  });
+  const toastTimer = useRef(null);
+  const fileRef = useRef(null);
 
-useEffect(() => {
-  const fetchInitialData = async () => {
+  const showToast = useCallback((type, message) => {
+    clearTimeout(toastTimer.current);
+    setToast({ type, message });
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  }, []);
+
+  const changeTheme = (key) => {
+    setTheme(key);
     try {
-      const [companyRes, roleRes] = await Promise.all([
-        api.get("/companies"),
-        api.get("/roles"),
-      ]);
-
-      setCompanies(
-        Array.isArray(companyRes.data.companies)
-          ? companyRes.data.companies
-          : []
-      );
-
-      setRoles(
-        Array.isArray(roleRes.data.roles)
-          ? roleRes.data.roles
-          : []
-      );
-    } catch (error) {
-      console.log(error);
+      localStorage.setItem(THEME_KEY, key);
+    } catch {
+      /* ignore */
     }
   };
 
-  fetchInitialData();
-}, []);
+  /* ---------------- data ---------------- */
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const [companyRes, roleRes] = await Promise.all([
+          api.get("/companies"),
+          api.get("/roles"),
+        ]);
+        setCompanies(
+          Array.isArray(companyRes.data.companies) ? companyRes.data.companies : []
+        );
+        setRoles(Array.isArray(roleRes.data.roles) ? roleRes.data.roles : []);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchInitialData();
+    return () => clearTimeout(toastTimer.current);
+  }, []);
 
   useEffect(() => {
-    if (!formData.companyId) return;
+    if (!formData.companyId) {
+      setDepartments([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingDepts(true);
     api
       .get(`/departments/company/${formData.companyId}`)
-      .then((res) => setDepartments(res.data.departments || []))
-      .catch((err) => console.log(err));
+      .then((res) => !cancelled && setDepartments(res.data.departments || []))
+      .catch((err) => console.log(err))
+      .finally(() => !cancelled && setLoadingDepts(false));
+    return () => {
+      cancelled = true;
+    };
   }, [formData.companyId]);
 
+  /* free the preview object URL */
+  useEffect(() => {
+    return () => previewUrl && URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  /* ---------------- handlers ---------------- */
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
-      setFormData((prev) => ({ ...prev, [name]: files[0] }));
-      setPreviewUrl(URL.createObjectURL(files[0]));
+      const file = files[0];
+      if (!file) return;
+      setFormData((prev) => ({ ...prev, [name]: file }));
+      setPreviewUrl(URL.createObjectURL(file));
+    } else if (name === "companyId") {
+      // changing company invalidates the chosen department
+      setFormData((prev) => ({ ...prev, companyId: value, departmentId: "" }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
-  const showToast = (type, message) => {
-    setToast({ type, message });
-    setTimeout(() => setToast({ type: "", message: "" }), 4000);
+  const removePhoto = () => {
+    setFormData((prev) => ({ ...prev, profilePic: null }));
+    setPreviewUrl(null);
+    if (fileRef.current) fileRef.current.value = "";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.role || !formData.companyId || !formData.departmentId) {
+      showToast("error", "Please select role, company and department");
+      return;
+    }
     setLoading(true);
     try {
       const data = new FormData();
-      Object.keys(formData).forEach((key) => data.append(key, formData[key]));
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== null) data.append(key, formData[key]);
+      });
       const res = await api.post("/employees", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       showToast("success", res.data.message || "Employee created successfully!");
-      setFormData({
-        name: "", empId: "", phone: "", presentAddress: "",
-        gender: "Male", email: "", password: "", role: "",
-        companyId: "", departmentId: "", profilePic: null,
-      });
+      setFormData(emptyForm);
       setPreviewUrl(null);
+      if (fileRef.current) fileRef.current.value = "";
     } catch (error) {
       showToast("error", error.response?.data?.message || "Employee create failed");
     } finally {
@@ -197,172 +444,376 @@ useEffect(() => {
     }
   };
 
+  /* ---------------- derived (live summary) ---------------- */
+  const roleName = roles.find((r) => r._id === formData.role)?.roleName;
+  const companyName = companies.find((c) => c._id === formData.companyId)?.companyName;
+  const deptName = departments.find((d) => d._id === formData.departmentId)?.departmentName;
+  const initial = formData.name?.trim()?.[0]?.toUpperCase();
+
+  const genders = ["Male", "Female", "Other"];
+
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 font-sans">
-      {/* ambient glow */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-700/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-violet-700/10 rounded-full blur-3xl" />
-      </div>
+    <div
+      style={{ ...THEMES[theme].vars, colorScheme: THEMES[theme].scheme }}
+      className="dept-root relative min-h-screen overflow-x-hidden bg-[var(--bg)] text-[color:var(--text)] transition-colors duration-500 font-sans antialiased"
+    >
+      {/* Global h1/h2/h3 styles must not override the theme */}
+      <style>{`
+        .dept-root h1, .dept-root h2, .dept-root h3 {
+          color: var(--text) !important;
+          margin: 0 !important;
+          line-height: 1.2 !important;
+          background: none !important;
+          -webkit-text-fill-color: currentColor !important;
+        }
+        .dept-root p { margin-bottom: 0; }
+      `}</style>
 
-      <Toast type={toast.type} message={toast.message} onClose={() => setToast({ type: "", message: "" })} />
+      {/* Soft ambient glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(60rem 32rem at 12% -8%, var(--glow1), transparent 60%), radial-gradient(48rem 28rem at 100% 0%, var(--glow2), transparent 60%)",
+        }}
+      />
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97, y: 24 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="relative w-full max-w-lg"
-      >
-        {/* card */}
-        <div className="bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl shadow-black/60 overflow-hidden">
-
-          {/* header strip */}
-          <div className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 px-6 py-5">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 rounded-xl p-2.5">
-                <UserPlus size={22} className="text-white" />
-              </div>
-              <div>
-                <h1 className="text-white font-semibold text-lg leading-tight">New Employee</h1>
-                <p className="text-indigo-200 text-xs mt-0.5">Fill in the details to add a team member</p>
-              </div>
+      <div className="relative z-10 mx-auto w-full max-w-5xl px-3 py-4 sm:px-5 sm:py-6">
+        {/* ============ Header ============ */}
+        <motion.header
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent2)] shadow-lg shadow-[color:var(--soft)]">
+              <UserPlus size={22} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+                New Employee
+              </h1>
+              <p className="mt-1 text-sm text-[color:var(--muted)]">
+                Fill in the details to add a team member.
+              </p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6">
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-              className="space-y-3"
-            >
-
-              {/* Avatar upload */}
-              <motion.div variants={itemVariants} className="flex justify-center mb-2">
-                <label className="relative cursor-pointer group">
-                  <div className={`w-20 h-20 rounded-full border-2 border-dashed border-slate-700 group-hover:border-indigo-500 transition-colors duration-200 overflow-hidden flex items-center justify-center bg-slate-800 ${previewUrl ? "border-solid border-indigo-500" : ""}`}>
-                    {previewUrl ? (
-                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex flex-col items-center gap-1 text-slate-500 group-hover:text-indigo-400 transition-colors duration-200">
-                        <Camera size={20} />
-                        <span className="text-[9px] font-medium uppercase tracking-wider">Photo</span>
-                      </div>
-                    )}
-                  </div>
-                  {previewUrl && (
-                    <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                      <Camera size={18} className="text-white" />
-                    </div>
-                  )}
-                  <input type="file" name="profilePic" accept="image/*" onChange={handleChange} className="hidden" />
-                </label>
-              </motion.div>
-
-              {/* section label */}
-              <motion.p variants={itemVariants} className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 pt-1">
-                Personal Info
-              </motion.p>
-
-              <FloatingInput icon={User} label="Full Name" name="name" value={formData.name} onChange={handleChange} required />
-
-              <div className="grid grid-cols-2 gap-3">
-                <FloatingInput icon={Hash} label="Employee ID" name="empId" value={formData.empId} onChange={handleChange} required />
-                <FloatingInput icon={Phone} label="Phone" name="phone" value={formData.phone} onChange={handleChange} required />
-              </div>
-
-              <FloatingInput icon={MapPin} label="Present Address" name="presentAddress" value={formData.presentAddress} onChange={handleChange} required />
-
-              <FloatingSelect icon={User} label="Gender" name="gender" value={formData.gender} onChange={handleChange}>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
-              </FloatingSelect>
-
-              {/* section label */}
-              <motion.p variants={itemVariants} className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 pt-2">
-                Account
-              </motion.p>
-
-              <FloatingInput icon={Mail} label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} required />
-              <FloatingInput icon={Lock} label="Password" name="password" type="password" value={formData.password} onChange={handleChange} required />
-
-              {/* section label */}
-              <motion.p variants={itemVariants} className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 pt-2">
-                Organisation
-              </motion.p>
-
-              <FloatingSelect
-                icon={Briefcase}
-                label="Role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Role</option>
-              
-                {roles.map((role) => (
-                  <option key={role._id} value={role._id}>
-                    {role.roleName}
-                  </option>
-                ))}
-              </FloatingSelect>
-
-              <div className="grid grid-cols-2 gap-3">
-                <FloatingSelect icon={Building2} label="Company" name="companyId" value={formData.companyId} onChange={handleChange} required>
-                  <option value="">Select Company</option>
-                  {companies.map((c) => (
-                    <option key={c._id} value={c._id}>{c.companyName}</option>
-                  ))}
-                </FloatingSelect>
-
-                <FloatingSelect icon={LayoutGrid} label="Department" name="departmentId" value={formData.departmentId} onChange={handleChange} required>
-                  <option value="">Select Dept.</option>
-                  {departments.map((d) => (
-                    <option key={d._id} value={d._id}>{d.departmentName}</option>
-                  ))}
-                </FloatingSelect>
-              </div>
-
-              {/* submit */}
-              <motion.div variants={itemVariants} className="pt-3">
-                <motion.button
-                  type="submit"
-                  disabled={loading}
-                  whileHover={{ scale: loading ? 1 : 1.015 }}
-                  whileTap={{ scale: loading ? 1 : 0.98 }}
-                  className="w-full relative overflow-hidden bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 hover:from-indigo-500 hover:via-violet-500 hover:to-purple-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-semibold text-sm py-3.5 rounded-xl shadow-lg shadow-indigo-900/40 transition-all duration-200 flex items-center justify-center gap-2"
+          {/* Theme switcher */}
+          <div
+            role="radiogroup"
+            aria-label="Theme"
+            className="inline-flex self-start rounded-xl border border-[color:var(--border)] bg-[var(--card)] p-1 sm:self-auto"
+          >
+            {Object.entries(THEMES).map(([key, t]) => {
+              const Icon = t.icon;
+              const active = theme === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => changeTheme(key)}
+                  className={`relative flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+                    active
+                      ? "text-white"
+                      : "text-[color:var(--muted)] hover:text-[color:var(--text)]"
+                  }`}
                 >
-                  {loading ? (
-                    <>
-                      <motion.span
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                        className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                      />
-                      Creating…
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus size={16} />
-                      Create Employee
-                    </>
+                  {active && (
+                    <motion.span
+                      layoutId="theme-pill-emp"
+                      transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                      className="absolute inset-0 rounded-lg bg-gradient-to-r from-[var(--accent)] to-[var(--accent2)]"
+                    />
                   )}
-                  {/* shine sweep */}
-                  <motion.span
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 pointer-events-none"
-                    initial={{ x: "-100%" }}
-                    animate={{ x: "200%" }}
-                    transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1.5, ease: "easeInOut" }}
-                  />
-                </motion.button>
-              </motion.div>
+                  <Icon size={14} className="relative" />
+                  <span className="relative">{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </motion.header>
 
-            </motion.div>
-          </form>
-        </div>
-      </motion.div>
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 gap-3 lg:grid-cols-3 lg:gap-4"
+        >
+          {/* ============ Left: photo + live summary ============ */}
+          <motion.aside
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+            className={`${surface} h-fit p-4 sm:p-5 lg:sticky lg:top-6`}
+          >
+            <div className="flex flex-col items-center text-center">
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  aria-label="Upload profile photo"
+                  className="group relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-[color:var(--faint)] bg-[var(--input)] transition-all duration-200 hover:border-[color:var(--accent)] hover:ring-4 hover:ring-[color:var(--soft)]"
+                >
+                  {previewUrl ? (
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : initial ? (
+                    <span className="text-3xl font-bold text-[color:var(--accent)]">
+                      {initial}
+                    </span>
+                  ) : (
+                    <Camera size={28} className="text-[color:var(--faint)]" />
+                  )}
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+                    <Camera size={22} className="text-white" />
+                  </span>
+                </button>
+
+                {previewUrl && (
+                  <button
+                    type="button"
+                    onClick={removePhoto}
+                    aria-label="Remove photo"
+                    className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full border border-[color:var(--border)] bg-[var(--card2)] text-[color:var(--danger)] shadow-md transition-transform hover:scale-110"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+
+                <input
+                  ref={fileRef}
+                  type="file"
+                  name="profilePic"
+                  accept="image/*"
+                  onChange={handleChange}
+                  className="hidden"
+                />
+              </div>
+
+              <p className="mt-3 text-xs text-[color:var(--muted)]">
+                {previewUrl ? "Tap the photo to change it" : "Tap to add a profile photo"}
+              </p>
+
+              <div className="mt-4 w-full rounded-xl border border-[color:var(--border)] bg-[var(--card2)] p-3.5 text-left">
+                <p className="truncate text-sm font-semibold !text-[color:var(--text)]">
+                  {formData.name || "Full name"}
+                </p>
+                <p className="mt-0.5 truncate text-xs text-[color:var(--accent)]">
+                  {roleName || "Role not selected"}
+                </p>
+                <div className="mt-3 space-y-1.5 text-xs text-[color:var(--muted)]">
+                  <p className="flex items-center gap-2 truncate">
+                    <Hash size={12} className="shrink-0 text-[color:var(--faint)]" />
+                    {formData.empId || "Employee ID"}
+                  </p>
+                  <p className="flex items-center gap-2 truncate">
+                    <Building2 size={12} className="shrink-0 text-[color:var(--faint)]" />
+                    {companyName || "Company"}
+                  </p>
+                  <p className="flex items-center gap-2 truncate">
+                    <LayoutGrid size={12} className="shrink-0 text-[color:var(--faint)]" />
+                    {deptName || "Department"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.aside>
+
+          {/* ============ Right: form sections ============ */}
+          <motion.div
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-3 lg:col-span-2 lg:space-y-4"
+          >
+            {/* Personal */}
+            <section className={`${surface} p-4 sm:p-5`}>
+              <SectionTitle icon={User} title="Personal info" hint="Basic details about the employee" />
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                <Field icon={User} label="Full name" name="name" required className="sm:col-span-2">
+                  <input id="name" name="name" value={formData.name} onChange={handleChange} required placeholder="e.g. Rahim Uddin" className={inputCls} />
+                </Field>
+
+                <Field icon={Hash} label="Employee ID" name="empId" required>
+                  <input id="empId" name="empId" value={formData.empId} onChange={handleChange} required placeholder="e.g. EMP-001" className={inputCls} />
+                </Field>
+
+                <Field icon={Phone} label="Phone" name="phone" required>
+                  <input id="phone" name="phone" type="tel" inputMode="tel" value={formData.phone} onChange={handleChange} required placeholder="01XXXXXXXXX" className={inputCls} />
+                </Field>
+
+                <Field icon={MapPin} label="Present address" name="presentAddress" required className="sm:col-span-2">
+                  <input id="presentAddress" name="presentAddress" value={formData.presentAddress} onChange={handleChange} required placeholder="House, road, area, city" className={inputCls} />
+                </Field>
+
+                {/* Gender segmented control */}
+                <div className="sm:col-span-2">
+                  <span className={labelCls}>Gender</span>
+                  <div role="radiogroup" aria-label="Gender" className="grid grid-cols-3 gap-1 rounded-xl border border-[color:var(--border)] bg-[var(--input)] p-1">
+                    {genders.map((g) => {
+                      const active = formData.gender === g;
+                      return (
+                        <button
+                          key={g}
+                          type="button"
+                          role="radio"
+                          aria-checked={active}
+                          onClick={() => setFormData((p) => ({ ...p, gender: g }))}
+                          className={`relative rounded-lg py-2 text-sm font-medium transition-colors ${
+                            active ? "text-white" : "text-[color:var(--muted)] hover:text-[color:var(--text)]"
+                          }`}
+                        >
+                          {active && (
+                            <motion.span
+                              layoutId="gender-pill"
+                              transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                              className="absolute inset-0 rounded-lg bg-gradient-to-r from-[var(--accent)] to-[var(--accent2)]"
+                            />
+                          )}
+                          <span className="relative">{g}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Account */}
+            <section className={`${surface} p-4 sm:p-5`}>
+              <SectionTitle icon={Lock} title="Account" hint="Login credentials for this employee" />
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                <Field icon={Mail} label="Email address" name="email" required>
+                  <input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required placeholder="name@company.com" className={inputCls} />
+                </Field>
+
+                <Field
+                  icon={Lock}
+                  label="Password"
+                  name="password"
+                  required
+                  trailing={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      className="shrink-0 text-[color:var(--faint)] transition-colors hover:text-[color:var(--text)]"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  }
+                >
+                  <input id="password" name="password" type={showPassword ? "text" : "password"} value={formData.password} onChange={handleChange} required placeholder="Create a password" autoComplete="new-password" className={inputCls} />
+                </Field>
+              </div>
+            </section>
+
+            {/* Organisation */}
+            <section className={`${surface} p-4 sm:p-5`}>
+              <SectionTitle icon={Briefcase} title="Organisation" hint="Where this employee works" />
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                <CustomSelect
+                  icon={Briefcase}
+                  label="Role"
+                  name="role"
+                  required
+                  className="sm:col-span-2"
+                  placeholder="Select role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  options={roles.map((r) => ({ value: r._id, label: r.roleName }))}
+                />
+
+                <CustomSelect
+                  icon={Building2}
+                  label="Company"
+                  name="companyId"
+                  required
+                  placeholder="Select company"
+                  value={formData.companyId}
+                  onChange={handleChange}
+                  options={companies.map((c) => ({ value: c._id, label: c.companyName }))}
+                />
+
+                <CustomSelect
+                  icon={LayoutGrid}
+                  label="Department"
+                  name="departmentId"
+                  required
+                  placeholder={formData.companyId ? "Select department" : "Choose a company first"}
+                  value={formData.departmentId}
+                  onChange={handleChange}
+                  disabled={!formData.companyId}
+                  loading={loadingDepts}
+                  options={departments.map((d) => ({ value: d._id, label: d.departmentName }))}
+                />
+              </div>
+            </section>
+
+            {/* Submit */}
+            <motion.button
+              type="submit"
+              disabled={loading}
+              whileHover={{ y: loading ? 0 : -1 }}
+              whileTap={{ scale: loading ? 1 : 0.98 }}
+              className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-[var(--accent)] to-[var(--accent2)] py-3.5 text-sm font-semibold text-white shadow-lg shadow-[color:var(--soft)] transition-opacity disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent transition-transform duration-700 ease-in-out group-hover:translate-x-full" />
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Creating…
+                </>
+              ) : (
+                <>
+                  <UserPlus size={16} />
+                  Create employee
+                </>
+              )}
+            </motion.button>
+          </motion.div>
+        </form>
+      </div>
+
+      {/* ============ Toast ============ */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key={toast.message}
+            role="status"
+            initial={{ opacity: 0, y: 20, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className={`fixed bottom-4 left-4 right-4 z-[60] flex items-center gap-3 rounded-xl border bg-[var(--card)] px-4 py-3.5 text-sm font-medium shadow-[0_20px_50px_-15px_var(--shadow)] sm:left-auto sm:w-96 ${
+              toast.type === "success"
+                ? "border-emerald-500/40 text-[color:var(--ok)]"
+                : "border-red-500/40 text-[color:var(--danger)]"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <CheckCircle2 size={18} className="shrink-0" />
+            ) : (
+              <AlertCircle size={18} className="shrink-0" />
+            )}
+            <span className="flex-1 text-[color:var(--text)]">{toast.message}</span>
+            <button
+              type="button"
+              onClick={() => setToast(null)}
+              aria-label="Dismiss"
+              className="text-[color:var(--faint)] hover:text-[color:var(--text)]"
+            >
+              <X size={15} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../services/axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -39,12 +39,7 @@ import {
   Legend,
 } from "recharts";
 
-
-const LEAVE_COLORS = [
-  "#f59e0b",
-  "#10b981",
-  "#ef4444",
-];
+const LEAVE_COLORS = ["#f59e0b", "#10b981", "#ef4444"];
 
 /* =========================================================
    THEMES
@@ -55,168 +50,97 @@ const THEMES = {
     name: "Dark",
     icon: Moon,
 
-    page:
-      "bg-[#0b1120] text-slate-100",
+    page: "bg-[#172036] text-white",
+    main: "bg-gradient-to-br from-[#172036] via-[#1a2542] to-[#1f2b58]",
+    sidebar: "bg-[#131b30] border-slate-600",
+    topbar: "bg-[#131b30]/95 border-slate-600",
+    card: "bg-[#27375a] border-slate-500/60",
+    cardHover: "hover:border-slate-400",
+    userCard: "bg-[#27375a] border-slate-500",
+    navHover: "hover:bg-slate-600/50",
+    navIcon: "bg-slate-600 group-hover:bg-indigo-600",
 
-    main:
-      "bg-gradient-to-br from-[#0b1120] via-[#111827] to-[#17134a]",
+    primaryText: "text-white",
+    secondaryText: "text-white",
+    mutedText: "text-white",
+    subtleText: "text-slate-100",
 
-    sidebar:
-      "bg-[#0b1120] border-slate-800",
-
-    topbar:
-      "bg-[#0b1120]/95 border-slate-800",
-
-    card:
-      "bg-[#111827]/90 border-slate-700/80",
-
-    cardHover:
-      "hover:border-slate-600",
-
-    userCard:
-      "bg-[#111827] border-slate-700",
-
-    navHover:
-      "hover:bg-slate-800",
-
-    navIcon:
-      "bg-slate-800 group-hover:bg-indigo-600",
-
-    primaryText:
-      "text-slate-100",
-
-    secondaryText:
-      "text-slate-300",
-
-    mutedText:
-      "text-slate-400",
-
-    subtleText:
-      "text-slate-500",
-
-    border:
-      "border-slate-700",
-
-    chartGrid:
-      "#334155",
-
-    chartText:
-      "#cbd5e1",
-
-    tooltip:
-      "#020617",
+    border: "border-slate-500",
+    chartGrid: "#5b6b8a",
+    chartText: "#ffffff",
+    tooltip: "#172036",
   },
 
   light: {
     name: "Light",
     icon: Sun,
 
-    page:
-      "bg-slate-100 text-slate-900",
+    page: "bg-slate-100 text-black",
+    main: "bg-gradient-to-br from-slate-100 via-white to-indigo-50",
+    sidebar: "bg-white border-slate-200",
+    topbar: "bg-white/95 border-slate-200",
+    card: "bg-white border-slate-200",
+    cardHover: "hover:border-slate-300",
+    userCard: "bg-slate-50 border-slate-200",
+    navHover: "hover:bg-indigo-50",
+    navIcon: "bg-slate-100 group-hover:bg-indigo-600",
 
-    main:
-      "bg-gradient-to-br from-slate-100 via-white to-indigo-50",
+    primaryText: "text-black",
+    secondaryText: "text-black",
+    mutedText: "text-black",
+    subtleText: "text-black",
 
-    sidebar:
-      "bg-white border-slate-200",
-
-    topbar:
-      "bg-white/95 border-slate-200",
-
-    card:
-      "bg-white border-slate-200",
-
-    cardHover:
-      "hover:border-slate-300",
-
-    userCard:
-      "bg-slate-50 border-slate-200",
-
-    navHover:
-      "hover:bg-indigo-50",
-
-    navIcon:
-      "bg-slate-100 group-hover:bg-indigo-600",
-
-    primaryText:
-      "text-slate-900",
-
-    secondaryText:
-      "text-slate-700",
-
-    mutedText:
-      "text-slate-600",
-
-    subtleText:
-      "text-slate-500",
-
-    border:
-      "border-slate-200",
-
-    chartGrid:
-      "#e2e8f0",
-
-    chartText:
-      "#475569",
-
-    tooltip:
-      "#ffffff",
+    border: "border-slate-200",
+    chartGrid: "#e2e8f0",
+    chartText: "#000000",
+    tooltip: "#ffffff",
   },
 
   midnight: {
     name: "Midnight",
     icon: MonitorCog,
 
-    page:
-      "bg-[#050816] text-white",
+    page: "bg-[#12183a] text-white",
+    main: "bg-gradient-to-br from-[#12183a] via-[#1a2350] to-[#243070]",
+    sidebar: "bg-[#0f1533] border-indigo-700/60",
+    topbar: "bg-[#0f1533]/95 border-indigo-700/60",
+    card: "bg-[#1c2657]/95 border-indigo-600/50",
+    cardHover: "hover:border-indigo-400",
+    userCard: "bg-[#1c2657] border-indigo-600/50",
+    navHover: "hover:bg-indigo-800/50",
+    navIcon: "bg-indigo-800 group-hover:bg-indigo-600",
 
-    main:
-      "bg-gradient-to-br from-[#050816] via-[#0a1025] to-[#101c3d]",
+    primaryText: "text-white",
+    secondaryText: "text-white",
+    mutedText: "text-white",
+    subtleText: "text-indigo-100",
 
-    sidebar:
-      "bg-[#060b19] border-indigo-900/50",
+    border: "border-indigo-600/50",
+    chartGrid: "#4a5a99",
+    chartText: "#ffffff",
+    tooltip: "#12183a",
+  },
+};
 
-    topbar:
-      "bg-[#060b19]/95 border-indigo-900/50",
-
-    card:
-      "bg-[#0b1226]/95 border-indigo-900/50",
-
-    cardHover:
-      "hover:border-indigo-800",
-
-    userCard:
-      "bg-[#0b1226] border-indigo-900/50",
-
-    navHover:
-      "hover:bg-indigo-950/70",
-
-    navIcon:
-      "bg-indigo-950 group-hover:bg-indigo-600",
-
-    primaryText:
-      "text-white",
-
-    secondaryText:
-      "text-slate-200",
-
-    mutedText:
-      "text-slate-300",
-
-    subtleText:
-      "text-slate-400",
-
-    border:
-      "border-indigo-900/50",
-
-    chartGrid:
-      "#26365f",
-
-    chartText:
-      "#cbd5e1",
-
-    tooltip:
-      "#020617",
+/* Sidebar text colours (kept exactly as the original design) */
+const SIDEBAR_TEXT = {
+  dark: {
+    primary: "text-slate-100",
+    secondary: "text-slate-300",
+    muted: "text-slate-400",
+    subtle: "text-slate-500",
+  },
+  light: {
+    primary: "text-slate-900",
+    secondary: "text-slate-700",
+    muted: "text-slate-600",
+    subtle: "text-slate-500",
+  },
+  midnight: {
+    primary: "text-white",
+    secondary: "text-slate-200",
+    muted: "text-slate-300",
+    subtle: "text-slate-400",
   },
 };
 
@@ -232,6 +156,8 @@ const SidebarAction = ({
   badge,
   theme,
 }) => {
+  const sb = SIDEBAR_TEXT[theme.name.toLowerCase()];
+
   return (
     <motion.button
       onClick={onClick}
@@ -268,7 +194,7 @@ const SidebarAction = ({
           className={`
             w-4
             h-4
-            ${theme.mutedText}
+            ${sb.muted}
             group-hover:text-white
           `}
         />
@@ -280,7 +206,7 @@ const SidebarAction = ({
             text-sm
             font-semibold
             truncate
-            ${theme.secondaryText}
+            ${sb.secondary}
             group-hover:text-indigo-500
           `}
         >
@@ -293,7 +219,7 @@ const SidebarAction = ({
               text-[11px]
               truncate
               mt-0.5
-              ${theme.subtleText}
+              ${sb.subtle}
             `}
           >
             {description}
@@ -325,7 +251,7 @@ const SidebarAction = ({
         className={`
           w-4
           h-4
-          ${theme.subtleText}
+          ${sb.subtle}
           group-hover:text-indigo-500
           shrink-0
         `}
@@ -348,20 +274,14 @@ const StatCard = ({
 }) => {
   return (
     <motion.div
-      initial={{
-        opacity: 0,
-        y: 15,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
       className={`
         ${theme.card}
         ${theme.cardHover}
-        backdrop-blur-xl
         border
         rounded-2xl
+        shadow-lg
         p-5
         transition
         shadow-sm
@@ -382,44 +302,18 @@ const StatCard = ({
           <Icon className="w-5 h-5 text-white" />
         </div>
 
-        <BarChart3
-          className={`
-            w-4
-            h-4
-            ${theme.subtleText}
-          `}
-        />
+        <BarChart3 className={`w-4 h-4 ${theme.subtleText}`} />
       </div>
 
-      <p
-        className={`
-          text-xs
-          mt-4
-          font-medium
-          ${theme.mutedText}
-        `}
-      >
+      <p className={`text-sm mt-4 font-medium ${theme.mutedText}`}>
         {label}
       </p>
 
-      <p
-        className={`
-          text-2xl
-          font-bold
-          mt-1
-          ${theme.primaryText}
-        `}
-      >
+      <p className={`text-4xl font-bold mt-1 ${theme.primaryText}`}>
         {value}
       </p>
 
-      <p
-        className={`
-          text-[11px]
-          mt-1
-          ${theme.subtleText}
-        `}
-      >
+      <p className={`text-sm mt-1 ${theme.subtleText}`}>
         {description}
       </p>
     </motion.div>
@@ -440,20 +334,14 @@ const ChartCard = ({
 }) => {
   return (
     <motion.div
-      initial={{
-        opacity: 0,
-        y: 18,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-      }}
+      initial={{ opacity: 0, y: 18 }}
+      animate={{ opacity: 1, y: 0 }}
       className={`
         ${theme.card}
         ${theme.cardHover}
-        backdrop-blur-xl
         border
         rounded-2xl
+        shadow-lg
         p-5
         sm:p-6
         transition
@@ -483,21 +371,15 @@ const ChartCard = ({
           <h3
             className={`
               font-semibold
-              text-sm
-              sm:text-base
+              text-base
+              sm:text-lg
               ${theme.primaryText}
             `}
           >
             {title}
           </h3>
 
-          <p
-            className={`
-              text-xs
-              mt-1
-              ${theme.mutedText}
-            `}
-          >
+          <p className={`text-sm mt-1 ${theme.mutedText}`}>
             {description}
           </p>
         </div>
@@ -512,12 +394,7 @@ const ChartCard = ({
    CUSTOM TOOLTIP
 ========================================================= */
 
-const EmployeeTooltip = ({
-  active,
-  payload,
-  label,
-  theme,
-}) => {
+const EmployeeTooltip = ({ active, payload, label, theme }) => {
   if (!active || !payload || !payload.length) {
     return null;
   }
@@ -531,30 +408,12 @@ const EmployeeTooltip = ({
         shadow-xl
         border
         ${theme.border}
-        ${
-          theme.name === "Light"
-            ? "bg-white"
-            : "bg-slate-950"
-        }
+        ${theme.name === "Light" ? "bg-white" : "bg-slate-950"}
       `}
     >
-      <p
-        className={`
-          text-xs
-          mb-1
-          ${theme.mutedText}
-        `}
-      >
-        {label}
-      </p>
+      <p className={`text-sm mb-1 ${theme.mutedText}`}>{label}</p>
 
-      <p
-        className={`
-          text-sm
-          font-semibold
-          ${theme.primaryText}
-        `}
-      >
+      <p className={`text-base font-semibold ${theme.primaryText}`}>
         {payload[0].value} Employees
       </p>
     </div>
@@ -565,12 +424,10 @@ const EmployeeTooltip = ({
    THEME SWITCHER
 ========================================================= */
 
-const ThemeSwitcher = ({
-  currentTheme,
-  setCurrentTheme,
-  theme,
-}) => {
+const ThemeSwitcher = ({ currentTheme, setCurrentTheme, theme }) => {
   const [open, setOpen] = useState(false);
+
+  const CurrentIcon = THEMES[currentTheme].icon;
 
   return (
     <div className="relative">
@@ -589,34 +446,23 @@ const ThemeSwitcher = ({
           ${
             theme.name === "Light"
               ? "bg-white hover:bg-slate-50"
-              : "bg-slate-900/70 hover:bg-slate-800"
+              : "bg-slate-900/40 hover:bg-slate-700/60"
           }
         `}
       >
-        {(() => {
-          const ThemeIcon =
-            THEMES[currentTheme].icon;
-
-          return (
-            <ThemeIcon
-              className={`
-                w-4
-                h-4
-                ${
-                  currentTheme === "light"
-                    ? "text-amber-500"
-                    : "text-indigo-400"
-                }
-              `}
-            />
-          );
-        })()}
+        <CurrentIcon
+          className={`
+            w-4
+            h-4
+            ${currentTheme === "light" ? "text-amber-500" : "text-indigo-300"}
+          `}
+        />
 
         <span
           className={`
             hidden
             sm:block
-            text-xs
+            text-sm
             font-semibold
             ${theme.secondaryText}
           `}
@@ -646,72 +492,62 @@ const ThemeSwitcher = ({
               ${
                 theme.name === "Light"
                   ? "bg-white border-slate-200"
-                  : "bg-slate-900 border-slate-700"
+                  : "bg-slate-800 border-slate-500"
               }
             `}
           >
-            {Object.entries(THEMES).map(
-              ([key, item]) => {
-                const Icon = item.icon;
+            {Object.entries(THEMES).map(([key, item]) => {
+              const Icon = item.icon;
 
-                return (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      setCurrentTheme(key);
-                      setOpen(false);
-                    }}
+              return (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setCurrentTheme(key);
+                    setOpen(false);
+                  }}
+                  className={`
+                    w-full
+                    flex
+                    items-center
+                    gap-3
+                    px-3
+                    py-2.5
+                    rounded-lg
+                    transition
+                    ${
+                      currentTheme === key
+                        ? "bg-indigo-500/20"
+                        : "hover:bg-slate-500/20"
+                    }
+                  `}
+                >
+                  <Icon
                     className={`
-                      w-full
-                      flex
-                      items-center
-                      gap-3
-                      px-3
-                      py-2.5
-                      rounded-lg
-                      transition
-                      ${
-                        currentTheme === key
-                          ? "bg-indigo-500/10"
-                          : "hover:bg-slate-500/10"
-                      }
+                      w-4
+                      h-4
+                      ${key === "light" ? "text-amber-500" : "text-indigo-300"}
+                    `}
+                  />
+
+                  <span
+                    className={`
+                      flex-1
+                      text-left
+                      text-sm
+                      font-semibold
+                      ${theme.name === "Light" ? "text-black" : "text-white"}
                     `}
                   >
-                    <Icon
-                      className={`
-                        w-4
-                        h-4
-                        ${
-                          key === "light"
-                            ? "text-amber-500"
-                            : "text-indigo-400"
-                        }
-                      `}
-                    />
+                    {item.name}
+                  </span>
 
-                    <span
-                      className={`
-                        flex-1
-                        text-left
-                        text-xs
-                        font-semibold
-                        ${
-                          theme.name === "Light"
-                            ? "text-slate-700"
-                            : "text-slate-200"
-                        }
-                      `}
-                    >
-                      {item.name}
-                    </span>
-
-                    {currentTheme === key && (
-                      <Check className="w-4 h-4 text-indigo-500" />
-                    )}
-                  </button>
-                );
-              }
-            )}
+                  {currentTheme === key && (
+                    <Check className="w-4 h-4 text-indigo-400" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </>
       )}
@@ -724,70 +560,45 @@ const ThemeSwitcher = ({
 ========================================================= */
 
 const SuperAdminDashboard = () => {
-const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);
 
-const [pendingCount, setPendingCount] =
-  useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
 
-const [companyEmployeeData, setCompanyEmployeeData] =
-  useState([]);
+  const [companyEmployeeData, setCompanyEmployeeData] = useState([]);
 
-const [leaveData, setLeaveData] =
-  useState([
-    {
-      name: "Pending",
-      value: 0,
-    },
-    {
-      name: "Approved",
-      value: 0,
-    },
-    {
-      name: "Rejected",
-      value: 0,
-    },
+  const [leaveData, setLeaveData] = useState([
+    { name: "Pending", value: 0 },
+    { name: "Approved", value: 0 },
+    { name: "Rejected", value: 0 },
   ]);
 
-const [departmentEmployeeData, setDepartmentEmployeeData] =
-  useState([]);
+  const [departmentEmployeeData, setDepartmentEmployeeData] = useState([]);
 
-const [payrollData, setPayrollData] =
-  useState([]);
+  const [payrollData, setPayrollData] = useState([]);
 
-const [totalEmployees, setTotalEmployees] =
-  useState(0);
+  const [totalEmployees, setTotalEmployees] = useState(0);
 
-const [totalCompanies, setTotalCompanies] =
-  useState(0);
+  const [totalCompanies, setTotalCompanies] = useState(0);
 
-const [totalDepartments, setTotalDepartments] =
-  useState(0);
+  const [totalDepartments, setTotalDepartments] = useState(0);
 
-  const [sidebarOpen, setSidebarOpen] =
-    useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [currentTheme, setCurrentTheme] =
-    useState(() => {
-      return (
-        localStorage.getItem(
-          "superAdminTheme"
-        ) || "dark"
-      );
-    });
+  const [currentTheme, setCurrentTheme] = useState(() => {
+    return localStorage.getItem("superAdminTheme") || "dark";
+  });
 
   const navigate = useNavigate();
 
-  const theme = THEMES[currentTheme];
+  const theme = THEMES[currentTheme] || THEMES.dark;
+  const sb = SIDEBAR_TEXT[currentTheme] || SIDEBAR_TEXT.dark;
 
   /* =======================================================
      SAVE THEME
   ======================================================= */
 
   useEffect(() => {
-    localStorage.setItem(
-      "superAdminTheme",
-      currentTheme
-    );
+    localStorage.setItem("superAdminTheme", currentTheme);
   }, [currentTheme]);
 
   /* =======================================================
@@ -795,8 +606,7 @@ const [totalDepartments, setTotalDepartments] =
   ======================================================= */
 
   useEffect(() => {
-    const storedUser =
-      localStorage.getItem("user");
+    const storedUser = localStorage.getItem("user");
 
     if (!storedUser) {
       navigate("/");
@@ -812,175 +622,110 @@ const [totalDepartments, setTotalDepartments] =
     }
   }, [navigate]);
 
-/* =======================================================
-   FETCH DASHBOARD DATA
-======================================================= */
+  /* =======================================================
+     FETCH DASHBOARD DATA
+  ======================================================= */
 
-useEffect(() => {
-  const fetchDashboardData = async () => {
-    try {
-      const [
-        companyRes,
-        leaveRes,
-        departmentRes,
-        payrollRes,
-        employeeRes,
-      ] = await Promise.all([
-        api.get(
-          "/superadmin-dashboard/company-employee-count",
-          {
-            withCredentials: true,
-          }
-        ),
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [companyRes, leaveRes, departmentRes, payrollRes, employeeRes] =
+          await Promise.all([
+            api.get("/superadmin-dashboard/company-employee-count", {
+              withCredentials: true,
+            }),
 
-        api.get(
-          "/superadmin-dashboard/leave-request-status-count",
-          {
-            withCredentials: true,
-          }
-        ),
+            api.get("/superadmin-dashboard/leave-request-status-count", {
+              withCredentials: true,
+            }),
 
-        api.get(
-          "/superadmin-dashboard/department-employee-count",
-          {
-            withCredentials: true,
-          }
-        ),
+            api.get("/superadmin-dashboard/department-employee-count", {
+              withCredentials: true,
+            }),
 
-        api.get(
-          "/superadmin-dashboard/monthly-payroll-count",
-          {
-            withCredentials: true,
-          }
-        ),
+            api.get("/superadmin-dashboard/monthly-payroll-count", {
+              withCredentials: true,
+            }),
 
-        api.get(
-          "/superadmin-dashboard/total-employee-count",
-          {
-            withCredentials: true,
-          }
-        ),
-      ]);
+            api.get("/superadmin-dashboard/total-employee-count", {
+              withCredentials: true,
+            }),
+          ]);
 
-      /* ================================================
-         COMPANY EMPLOYEE DATA
-      ================================================= */
+        /* ---------- COMPANY EMPLOYEE DATA ---------- */
 
-      const companies =
-        companyRes.data.companies || [];
+        const companies = companyRes.data.companies || [];
 
-      setCompanyEmployeeData(
-        companies.map((company) => ({
-          company: company.companyName,
-          employees: company.employeeCount,
-        }))
-      );
+        setCompanyEmployeeData(
+          companies.map((company) => ({
+            company: company.companyName,
+            employees: company.employeeCount,
+          }))
+        );
 
-      setTotalCompanies(
-        companies.length
-      );
+        setTotalCompanies(companies.length);
 
+        /* ---------- LEAVE DATA ---------- */
 
-      /* ================================================
-         LEAVE DATA
-      ================================================= */
+        const leaveResponse = leaveRes.data;
 
-      const leaveResponse =
-        leaveRes.data;
+        setPendingCount(leaveResponse.pending || 0);
 
-      setPendingCount(
-        leaveResponse.pending || 0
-      );
+        setLeaveData([
+          { name: "Pending", value: leaveResponse.pending || 0 },
+          { name: "Approved", value: leaveResponse.approved || 0 },
+          { name: "Rejected", value: leaveResponse.rejected || 0 },
+        ]);
 
-      setLeaveData([
-        {
-          name: "Pending",
-          value: leaveResponse.pending || 0,
-        },
-        {
-          name: "Approved",
-          value: leaveResponse.approved || 0,
-        },
-        {
-          name: "Rejected",
-          value: leaveResponse.rejected || 0,
-        },
-      ]);
+        /* ---------- DEPARTMENT EMPLOYEE DATA ---------- */
 
+        const departments = departmentRes.data.departments || [];
 
-      /* ================================================
-         DEPARTMENT EMPLOYEE DATA
-      ================================================= */
+        setDepartmentEmployeeData(
+          departments.map((department) => ({
+            department: `${department.companyName} - ${department.departmentName}`,
+            employees: department.employeeCount,
+          }))
+        );
 
-      const departments =
-        departmentRes.data.departments || [];
+        setTotalDepartments(departments.length);
 
-      setDepartmentEmployeeData(
-        departments.map((department) => ({
-          department:
-            `${department.companyName} - ${department.departmentName}`,
+        /* ---------- PAYROLL DATA ---------- */
 
-          employees:
-            department.employeeCount,
-        }))
-      );
+        const payroll = payrollRes.data.payroll || [];
 
-      setTotalDepartments(
-        departments.length
-      );
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
 
+        setPayrollData(
+          payroll.map((item) => ({
+            month: `${monthNames[item.month - 1]} ${item.year}`,
+            payrolls: item.payrollCount,
+          }))
+        );
 
-      /* ================================================
-         PAYROLL DATA
-      ================================================= */
+        /* ---------- TOTAL EMPLOYEE DATA ---------- */
 
-      const payroll =
-        payrollRes.data.payroll || [];
+        setTotalEmployees(employeeRes.data.employeeCount || 0);
+      } catch (error) {
+        console.error("Dashboard data fetch error:", error);
+      }
+    };
 
-      const monthNames = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ];
-
-      setPayrollData(
-        payroll.map((item) => ({
-          month:
-            `${monthNames[item.month - 1]} ${item.year}`,
-
-          payrolls:
-            item.payrollCount,
-        }))
-      );
-
-
-      /* ================================================
-         TOTAL EMPLOYEE DATA
-      ================================================= */
-
-      setTotalEmployees(
-        employeeRes.data.employeeCount || 0
-      );
-
-    } catch (error) {
-      console.error(
-        "Dashboard data fetch error:",
-        error
-      );
-    }
-  };
-
-  fetchDashboardData();
-}, []);
+    fetchDashboardData();
+  }, []);
 
   /* =======================================================
      ATTENDANCE TRACKER
@@ -990,13 +735,10 @@ useEffect(() => {
     try {
       const res = await api.get("/companies");
 
-      const companies =
-        res.data.companies || [];
-      
+      const companies = res.data.companies || [];
+
       if (companies.length > 0) {
-        navigate(
-          `/${companies[0]._id}/company/attendance-tracker`
-        );
+        navigate(`/${companies[0]._id}/company/attendance-tracker`);
       }
     } catch (error) {
       console.log(error);
@@ -1009,13 +751,7 @@ useEffect(() => {
 
   const handleLogout = async () => {
     try {
-      await api.post(
-        "/superadmin/logout",
-        {},
-        {
-          withCredentials: true,
-        }
-      );
+      await api.post("/superadmin/logout", {}, { withCredentials: true });
 
       localStorage.removeItem("user");
 
@@ -1032,6 +768,29 @@ useEffect(() => {
   const closeSidebar = () => {
     setSidebarOpen(false);
   };
+
+  /* =======================================================
+     SHARED CHART STYLES
+  ======================================================= */
+
+  const tooltipStyle = {
+    background: theme.tooltip,
+    border:
+      currentTheme === "light" ? "1px solid #e2e8f0" : "1px solid #64748b",
+    borderRadius: "12px",
+    color: currentTheme === "light" ? "#000000" : "#ffffff",
+    fontSize: 14,
+  };
+
+  const sectionHeading = `
+    text-[10px]
+    font-bold
+    uppercase
+    tracking-widest
+    px-3
+    mb-3
+    ${sb.subtle}
+  `;
 
   return (
     <div
@@ -1077,11 +836,7 @@ useEffect(() => {
           transition-transform
           duration-300
           ${theme.sidebar}
-          ${
-            sidebarOpen
-              ? "translate-x-0"
-              : "-translate-x-full"
-          }
+          ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
         `}
       >
@@ -1118,22 +873,11 @@ useEffect(() => {
             </div>
 
             <div>
-              <p
-                className={`
-                  font-bold
-                  text-sm
-                  ${theme.primaryText}
-                `}
-              >
+              <p className={`font-bold text-sm ${sb.primary}`}>
                 Admin Panel
               </p>
 
-              <p
-                className={`
-                  text-[11px]
-                  ${theme.subtleText}
-                `}
-              >
+              <p className={`text-[11px] ${sb.subtle}`}>
                 HRMS Management
               </p>
             </div>
@@ -1147,16 +891,10 @@ useEffect(() => {
               lg:hidden
               p-2
               rounded-lg
-              hover:bg-slate-800
+              hover:bg-slate-500/30
             "
           >
-            <X
-              className={`
-                w-5
-                h-5
-                ${theme.mutedText}
-              `}
-            />
+            <X className={`w-5 h-5 ${sb.muted}`} />
           </button>
         </div>
 
@@ -1196,7 +934,7 @@ useEffect(() => {
                     text-sm
                     font-semibold
                     truncate
-                    ${theme.primaryText}
+                    ${sb.primary}
                   `}
                 >
                   {user.name}
@@ -1206,7 +944,7 @@ useEffect(() => {
                   className={`
                     text-[11px]
                     truncate
-                    ${theme.mutedText}
+                    ${sb.muted}
                   `}
                 >
                   {user.role}
@@ -1231,19 +969,7 @@ useEffect(() => {
         >
           {/* MANAGEMENT */}
 
-          <p
-            className={`
-              text-[10px]
-              font-bold
-              uppercase
-              tracking-widest
-              px-3
-              mb-3
-              ${theme.subtleText}
-            `}
-          >
-            Management
-          </p>
+          <p className={sectionHeading}>Management</p>
 
           <div className="space-y-1">
             <SidebarAction
@@ -1252,9 +978,7 @@ useEffect(() => {
               description="Register new company"
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/create-company"
-                );
+                navigate("/admin/create-company");
                 closeSidebar();
               }}
             />
@@ -1265,24 +989,20 @@ useEffect(() => {
               description="Add new department"
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/create-department"
-                );
+                navigate("/admin/create-department");
                 closeSidebar();
               }}
             />
 
-            <SidebarAction 
-              icon={BriefcaseBusiness} 
-              label="Create Role" 
-              description="Add new role" 
-              theme={theme} 
-              onClick={() => { 
-                navigate(
-                  "/admin/create-role"
-                ); 
-                closeSidebar(); 
-              }} 
+            <SidebarAction
+              icon={BriefcaseBusiness}
+              label="Create Role"
+              description="Add new role"
+              theme={theme}
+              onClick={() => {
+                navigate("/admin/create-role");
+                closeSidebar();
+              }}
             />
 
             <SidebarAction
@@ -1291,9 +1011,7 @@ useEffect(() => {
               description="Add new employee"
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/create-employee"
-                );
+                navigate("/admin/create-employee");
                 closeSidebar();
               }}
             />
@@ -1316,9 +1034,7 @@ useEffect(() => {
               badge={pendingCount}
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/pending-leaves"
-                );
+                navigate("/admin/pending-leaves");
                 closeSidebar();
               }}
             />
@@ -1329,9 +1045,7 @@ useEffect(() => {
               description="Manage holidays"
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/create-holiday"
-                );
+                navigate("/admin/create-holiday");
                 closeSidebar();
               }}
             />
@@ -1339,20 +1053,7 @@ useEffect(() => {
 
           {/* PAYROLL */}
 
-          <p
-            className={`
-              text-[10px]
-              font-bold
-              uppercase
-              tracking-widest
-              px-3
-              mb-3
-              mt-7
-              ${theme.subtleText}
-            `}
-          >
-            Payroll
-          </p>
+          <p className={`${sectionHeading} mt-7`}>Payroll</p>
 
           <div className="space-y-1">
             <SidebarAction
@@ -1361,9 +1062,7 @@ useEffect(() => {
               description="Create salary structure"
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/create-employee-salary"
-                );
+                navigate("/admin/create-employee-salary");
                 closeSidebar();
               }}
             />
@@ -1374,9 +1073,7 @@ useEffect(() => {
               description="Update salary structure"
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/edit-employee-salary"
-                );
+                navigate("/admin/edit-employee-salary");
                 closeSidebar();
               }}
             />
@@ -1387,9 +1084,7 @@ useEffect(() => {
               description="Generate & manage payroll"
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/payroll-management"
-                );
+                navigate("/admin/payroll-management");
                 closeSidebar();
               }}
             />
@@ -1397,20 +1092,7 @@ useEffect(() => {
 
           {/* ADMINISTRATION */}
 
-          <p
-            className={`
-              text-[10px]
-              font-bold
-              uppercase
-              tracking-widest
-              px-3
-              mb-3
-              mt-7
-              ${theme.subtleText}
-            `}
-          >
-            Administration
-          </p>
+          <p className={`${sectionHeading} mt-7`}>Administration</p>
 
           <div className="space-y-1">
             <SidebarAction
@@ -1419,9 +1101,7 @@ useEffect(() => {
               description="Manage registered companies"
               theme={theme}
               onClick={() => {
-                navigate(
-                  "/admin/company-management"
-                );
+                navigate("/admin/company-management");
                 closeSidebar();
               }}
             />
@@ -1446,7 +1126,7 @@ useEffect(() => {
         >
           <button
             onClick={handleLogout}
-            className="
+            className={`
               w-full
               flex
               items-center
@@ -1458,13 +1138,11 @@ useEffect(() => {
               hover:text-red-500
               hover:bg-red-500/5
               transition
-            "
+            `}
           >
             <LogOut className="w-4 h-4" />
 
-            <span className="text-sm font-semibold">
-              Sign Out
-            </span>
+            <span className="text-sm font-semibold">Sign Out</span>
           </button>
         </div>
       </aside>
@@ -1504,31 +1182,17 @@ useEffect(() => {
         >
           <div className="flex items-center">
             <button
-              onClick={() =>
-                setSidebarOpen(true)
-              }
+              onClick={() => setSidebarOpen(true)}
               className="
                 p-2
                 rounded-lg
-                hover:bg-slate-800/50
+                hover:bg-slate-500/30
               "
             >
-              <Menu
-                className={`
-                  w-5
-                  h-5
-                  ${theme.secondaryText}
-                `}
-              />
+              <Menu className={`w-6 h-6 ${theme.secondaryText}`} />
             </button>
 
-            <p
-              className={`
-                ml-3
-                font-semibold
-                ${theme.primaryText}
-              `}
-            >
+            <p className={`ml-3 text-lg font-semibold ${theme.primaryText}`}>
               Admin Dashboard
             </p>
           </div>
@@ -1554,9 +1218,7 @@ useEffect(() => {
             py-8
           "
         >
-          {/* =================================================
-              DESKTOP HEADER
-          ================================================= */}
+          {/* DESKTOP HEADER */}
 
           <div className="hidden lg:flex justify-end mb-5">
             <ThemeSwitcher
@@ -1566,20 +1228,12 @@ useEffect(() => {
             />
           </div>
 
-          {/* =================================================
-              WELCOME
-          ================================================= */}
+          {/* WELCOME */}
 
           {user && (
             <motion.div
-              initial={{
-                opacity: 0,
-                y: -15,
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-              }}
+              initial={{ opacity: 0, y: -15 }}
+              animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
               <div
@@ -1595,8 +1249,8 @@ useEffect(() => {
                 <div>
                   <p
                     className="
-                      text-indigo-500
-                      text-xs
+                      text-indigo-400
+                      text-sm
                       font-bold
                       uppercase
                       tracking-widest
@@ -1606,41 +1260,29 @@ useEffect(() => {
                     Dashboard
                   </p>
 
-<h1
-  className={`
-    text-3xl
-    sm:text-4xl
-    font-bold
-    leading-tight
-    tracking-tight
-    break-words
-    ${
-      currentTheme === "light"
-        ? "!text-slate-900"
-        : "!text-zinc-100"
-    }
-  `}
->
-  Welcome back,{" "}
-  <span
-    className="
-      text-indigo-500
-      break-words
-    "
-  >
-    {user.name}
-  </span>
-</h1>
-
-                  <p
+                  <h1
                     className={`
-                      text-sm
-                      mt-2
-                      ${theme.mutedText}
+                      text-3xl
+                      sm:text-4xl
+                      font-bold
+                      leading-tight
+                      tracking-tight
+                      break-words
+                      ${
+                        currentTheme === "light"
+                          ? "!text-black"
+                          : "!text-white"
+                      }
                     `}
                   >
-                    Here's what's happening
-                    across your organization.
+                    Welcome back,{" "}
+                    <span className="text-indigo-400 break-words">
+                      {user.name}
+                    </span>
+                  </h1>
+
+                  <p className={`text-base mt-2 ${theme.mutedText}`}>
+                    Here's what's happening across your organization.
                   </p>
                 </div>
 
@@ -1651,7 +1293,7 @@ useEffect(() => {
                     flex
                     items-center
                     gap-2
-                    text-xs
+                    text-sm
                     font-medium
                     border
                     px-3
@@ -1659,11 +1301,7 @@ useEffect(() => {
                     rounded-xl
                     w-fit
                     ${theme.border}
-                    ${
-                      theme.name === "Light"
-                        ? "bg-white"
-                        : "bg-slate-900/60"
-                    }
+                    ${theme.name === "Light" ? "bg-white" : "bg-slate-900/40"}
                     ${theme.secondaryText}
                   `}
                 >
@@ -1677,16 +1315,13 @@ useEffect(() => {
                       shadow-emerald-500/50
                     "
                   />
-
                   System Active
                 </div>
               </div>
             </motion.div>
           )}
 
-          {/* =================================================
-              KPI CARDS
-          ================================================= */}
+          {/* KPI CARDS */}
 
           <div
             className="
@@ -1735,9 +1370,7 @@ useEffect(() => {
             />
           </div>
 
-          {/* =================================================
-              CHART ROW 1
-          ================================================= */}
+          {/* CHART ROW 1 */}
 
           <div
             className="
@@ -1758,18 +1391,10 @@ useEffect(() => {
               theme={theme}
             >
               <div className="h-[340px]">
-                <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                >
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={companyEmployeeData}
-                    margin={{
-                      top: 10,
-                      right: 10,
-                      left: -15,
-                      bottom: 55,
-                    }}
+                    margin={{ top: 10, right: 10, left: 10, bottom: 70 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -1779,47 +1404,29 @@ useEffect(() => {
 
                     <XAxis
                       dataKey="company"
-                      tick={{
-                        fill: theme.chartText,
-                        fontSize: 10,
-                      }}
+                      tick={{ fill: theme.chartText, fontSize: 13 }}
                       angle={-25}
                       textAnchor="end"
                       interval={0}
                     />
 
-                    <YAxis
-                      tick={{
-                        fill: theme.chartText,
-                        fontSize: 11,
-                      }}
-                    />
+                    <YAxis tick={{ fill: theme.chartText, fontSize: 13 }} />
 
                     <Tooltip
                       cursor={{
                         fill:
-                          currentTheme ===
-                          "light"
+                          currentTheme === "light"
                             ? "rgba(99,102,241,0.06)"
-                            : "rgba(99,102,241,0.12)",
+                            : "rgba(99,102,241,0.2)",
                       }}
-                      content={
-                        <EmployeeTooltip
-                          theme={theme}
-                        />
-                      }
+                      content={<EmployeeTooltip theme={theme} />}
                     />
 
                     <Bar
                       dataKey="employees"
                       name="Employees"
                       fill="#6366f1"
-                      radius={[
-                        6,
-                        6,
-                        0,
-                        0,
-                      ]}
+                      radius={[6, 6, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -1836,10 +1443,7 @@ useEffect(() => {
               theme={theme}
             >
               <div className="h-[340px]">
-                <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                >
+                <ResponsiveContainer width="100%" height="100%">
                   <RechartsPieChart>
                     <Pie
                       data={leaveData}
@@ -1849,38 +1453,17 @@ useEffect(() => {
                       outerRadius={105}
                       paddingAngle={4}
                       dataKey="value"
+                      stroke="none"
                     >
-                      {leaveData.map(
-                        (entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={
-                              LEAVE_COLORS[
-                                index
-                              ]
-                            }
-                          />
-                        )
-                      )}
+                      {leaveData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={LEAVE_COLORS[index]}
+                        />
+                      ))}
                     </Pie>
 
-                    <Tooltip
-                      contentStyle={{
-                        background:
-                          theme.tooltip,
-                        border:
-                          currentTheme ===
-                          "light"
-                            ? "1px solid #e2e8f0"
-                            : "1px solid #334155",
-                        borderRadius: "12px",
-                        color:
-                          currentTheme ===
-                          "light"
-                            ? "#0f172a"
-                            : "#ffffff",
-                      }}
-                    />
+                    <Tooltip contentStyle={tooltipStyle} />
 
                     <Legend
                       verticalAlign="bottom"
@@ -1888,7 +1471,7 @@ useEffect(() => {
                       formatter={(value) => (
                         <span
                           className={`
-                            text-xs
+                            text-sm
                             font-medium
                             ${theme.secondaryText}
                           `}
@@ -1903,9 +1486,7 @@ useEffect(() => {
             </ChartCard>
           </div>
 
-          {/* =================================================
-              CHART ROW 2
-          ================================================= */}
+          {/* CHART ROW 2 */}
 
           <div
             className="
@@ -1924,19 +1505,11 @@ useEffect(() => {
               theme={theme}
             >
               <div className="h-[430px]">
-                <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                >
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={departmentEmployeeData}
                     layout="vertical"
-                    margin={{
-                      top: 5,
-                      right: 20,
-                      left: 5,
-                      bottom: 5,
-                    }}
+                    margin={{ top: 5, right: 20, left: 5, bottom: 5 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -1946,50 +1519,23 @@ useEffect(() => {
 
                     <XAxis
                       type="number"
-                      tick={{
-                        fill: theme.chartText,
-                        fontSize: 11,
-                      }}
+                      tick={{ fill: theme.chartText, fontSize: 13 }}
                     />
 
                     <YAxis
                       type="category"
                       dataKey="department"
-                      width={135}
-                      tick={{
-                        fill: theme.chartText,
-                        fontSize: 10,
-                      }}
+                      width={190}
+                      tick={{ fill: theme.chartText, fontSize: 13 }}
                     />
 
-                    <Tooltip
-                      contentStyle={{
-                        background:
-                          theme.tooltip,
-                        border:
-                          currentTheme ===
-                          "light"
-                            ? "1px solid #e2e8f0"
-                            : "1px solid #334155",
-                        borderRadius: "12px",
-                        color:
-                          currentTheme ===
-                          "light"
-                            ? "#0f172a"
-                            : "#ffffff",
-                      }}
-                    />
+                    <Tooltip contentStyle={tooltipStyle} />
 
                     <Bar
                       dataKey="employees"
                       name="Employees"
                       fill="#06b6d4"
-                      radius={[
-                        0,
-                        6,
-                        6,
-                        0,
-                      ]}
+                      radius={[0, 6, 6, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -2005,18 +1551,10 @@ useEffect(() => {
               theme={theme}
             >
               <div className="h-[430px]">
-                <ResponsiveContainer
-                  width="100%"
-                  height="100%"
-                >
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={payrollData}
-                    margin={{
-                      top: 10,
-                      right: 10,
-                      left: -15,
-                      bottom: 5,
-                    }}
+                    margin={{ top: 10, right: 10, left: -15, bottom: 5 }}
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
@@ -2026,47 +1564,18 @@ useEffect(() => {
 
                     <XAxis
                       dataKey="month"
-                      tick={{
-                        fill: theme.chartText,
-                        fontSize: 11,
-                      }}
+                      tick={{ fill: theme.chartText, fontSize: 13 }}
                     />
 
-                    <YAxis
-                      tick={{
-                        fill: theme.chartText,
-                        fontSize: 11,
-                      }}
-                    />
+                    <YAxis tick={{ fill: theme.chartText, fontSize: 13 }} />
 
-                    <Tooltip
-                      contentStyle={{
-                        background:
-                          theme.tooltip,
-                        border:
-                          currentTheme ===
-                          "light"
-                            ? "1px solid #e2e8f0"
-                            : "1px solid #334155",
-                        borderRadius: "12px",
-                        color:
-                          currentTheme ===
-                          "light"
-                            ? "#0f172a"
-                            : "#ffffff",
-                      }}
-                    />
+                    <Tooltip contentStyle={tooltipStyle} />
 
                     <Bar
                       dataKey="payrolls"
                       name="Payrolls Generated"
                       fill="#ec4899"
-                      radius={[
-                        6,
-                        6,
-                        0,
-                        0,
-                      ]}
+                      radius={[6, 6, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -2074,17 +1583,10 @@ useEffect(() => {
             </ChartCard>
           </div>
 
-          {/* =================================================
-              FOOTER
-          ================================================= */}
+          {/* FOOTER */}
 
           <div className="text-center py-6">
-            <p
-              className={`
-                text-[11px]
-                ${theme.subtleText}
-              `}
-            >
+            <p className={`text-sm ${theme.subtleText}`}>
               HRMS Admin Dashboard
             </p>
           </div>
