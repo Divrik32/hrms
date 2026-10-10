@@ -89,15 +89,15 @@ const employeeSchema = new mongoose.Schema(
         "active",
     },
         
-        resetOtp: {
-          type: String,
-          default: "",
-        },
-        
-        resetOtpExpire: {
-          type: Date,
-          default: null,
-        },
+    resetOtp: {
+      type: String,
+      default: "",
+    },
+    
+    resetOtpExpire: {
+      type: Date,
+      default: null,
+    },
   },
 
   {

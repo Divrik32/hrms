@@ -47,6 +47,7 @@ const EmployeeDashboard = () => {
   const [employee,          setEmployee]          = useState(null);
   const [loading,           setLoading]           = useState(false);
   const [lastAction,        setLastAction]        = useState(null);
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
   const [selectedShift,     setSelectedShift]     = useState("");
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [currentTime,       setCurrentTime]       = useState(new Date());
@@ -67,18 +68,46 @@ const EmployeeDashboard = () => {
 
   /* ── api helpers ── */
   const checkIn = async () => {
+    if (hasCheckedInToday) {
+      toast.error("You have already checked in today");
+      return;
+    }
+  
     try {
       setLoading(true);
+  
       const urlMap = {
-        day:       "/attendance/checkin",
+        day: "/attendance/checkin",
         afternoon: "/attendance/afternoon-checkin",
-        night:     "/attendance/night-checkin",
+        night: "/attendance/night-checkin",
       };
-      const res = await api.post(urlMap[selectedShift] ?? urlMap.day, {}, { withCredentials: true });
-      setLastAction({ type: "in", message: res.data.message, timing: res.data.attendance?.timing });
+  
+      const res = await api.post(
+        urlMap[selectedShift] ?? urlMap.day,
+        {},
+        { withCredentials: true }
+      );
+  
+      setHasCheckedInToday(true);
+  
+      setLastAction({
+        type: "in",
+        message: res.data.message,
+        timing: res.data.attendance?.timing,
+      });
+  
       toast.success(res.data.message);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Check in failed");
+      const message = err.response?.data?.message || "Check in failed";
+  
+      if (
+        message.toLowerCase().includes("already checked in") ||
+        message.toLowerCase().includes("already checked in today")
+      ) {
+        setHasCheckedInToday(true);
+      }
+  
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -295,7 +324,7 @@ const EmployeeDashboard = () => {
             {/* check in */}
             <motion.button
               onClick={checkIn}
-              disabled={loading || !selectedShift}
+              disabled={loading || !selectedShift || hasCheckedInToday}
               whileHover={selectedShift ? { scale: 1.02 } : {}}
               whileTap={selectedShift ? { scale: 0.97 } : {}}
               style={{

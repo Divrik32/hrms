@@ -205,16 +205,19 @@ export const afternoonCheckIn = async (req, res) => {
       });
     }
 
-    const openAttendance = await Attendance.findOne({
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const existingAttendance = await Attendance.findOne({
       employeeId,
-      shift: "afternoon",
-      checkOutTime: "",
+      date: today,
     });
-
-    if (openAttendance) {
+    
+    if (existingAttendance) {
       return res.status(400).json({
         success: false,
-        message: "Already checked in",
+        message: "You have already checked in today",
+        attendance: existingAttendance,
       });
     }
 
@@ -228,8 +231,6 @@ export const afternoonCheckIn = async (req, res) => {
       11 * 60 + 51,
       12 * 60 + 20
     );
-    const today = new Date();
-    today.setHours(0,0,0,0);
 
     const attendance = await Attendance.create({
       employeeId,
@@ -304,18 +305,21 @@ export const nightCheckIn = async (req, res) => {
       });
     }
 
-    const openAttendance = await Attendance.findOne({
-      employeeId,
-      shift: "night",
-      checkOutTime: "",
-    });
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
-    if (openAttendance) {
-      return res.status(400).json({
-        success: false,
-        message: "Already checked in",
-      });
-    }
+const existingAttendance = await Attendance.findOne({
+  employeeId,
+  date: today,
+});
+
+if (existingAttendance) {
+  return res.status(400).json({
+    success: false,
+    message: "You have already checked in today",
+    attendance: existingAttendance,
+  });
+}
 
     const now = new Date();
     const totalMinutes = now.getHours() * 60 + now.getMinutes();
@@ -325,8 +329,6 @@ export const nightCheckIn = async (req, res) => {
       17 * 60 + 51,
       18 * 60 + 20
     );
-    const today = new Date();
-    today.setHours(0,0,0,0);
 
     const attendance = await Attendance.create({
       employeeId,
