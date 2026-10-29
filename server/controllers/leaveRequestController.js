@@ -39,10 +39,18 @@ export const getCurrentLeaveBalance = async (req, res) => {
 
 export const applyLeave = async (req, res) => {
   try {
-    const employeeId = req.user._id;
-    const { leaveDetails, extraLeaveDetails, reason } = req.body;
+const employeeId = req.user._id;
+const { leaveDetails, extraLeaveDetails, reason } = req.body;
 
-    const employee = await Employee.findById(employeeId);
+// Validate leave reason before processing the request
+if (typeof reason !== "string" || !reason.trim()) {
+  return res.status(400).json({
+    success: false,
+    message: "Please enter a reason for your leave request.",
+  });
+}
+
+const employee = await Employee.findById(employeeId);
 
     if (!employee) {
       return res.status(404).json({
